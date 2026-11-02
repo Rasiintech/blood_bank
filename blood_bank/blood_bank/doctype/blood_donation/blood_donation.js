@@ -8,6 +8,17 @@ frappe.ui.form.on("Blood Donation", {
 		frm.set_query("donor_test", () => ({ filters: { donor: frm.doc.donor, docstatus: 1, overall_result: "Non-Reactive", blood_donation: ["is", "not set"] } }));
 		frm.set_query("storage", () => ({ filters: { disabled: 0 } }));
 	},
+	onload(frm) {
+		frappe.db.get_single_value("Blood Bank Settings", "testing_mode").then(mode => {
+			frm.toggle_display("donor_test", mode !== "Test the Bag");
+			frm.toggle_reqd("donor_test", mode !== "Test the Bag" && frm.doc.docstatus === 0);
+		});
+		if (frm.doc.docstatus === 0 && frm.doc.donor_screening && !frm.doc.donor_test) {
+			frappe.db.get_list("Blood Donor Test", { filters: { donor_screening: frm.doc.donor_screening, docstatus: 1,
+				overall_result: "Non-Reactive" }, fields: ["name"], order_by: "creation desc", limit: 1 })
+				.then(rows => { if (rows.length) frm.set_value("donor_test", rows[0].name); });
+		}
+	},
 	refresh(frm) {
 		if (frm.doc.docstatus !== 1 || !frm.doc.blood_unit) return;
 		frm.add_custom_button(__("Print Bag Label"), () => {

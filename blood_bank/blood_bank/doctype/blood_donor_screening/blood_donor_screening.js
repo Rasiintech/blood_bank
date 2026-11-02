@@ -12,12 +12,18 @@ frappe.ui.form.on("Blood Donor Screening", {
 			frm.page.set_indicator(__(frm.doc.result), frm.doc.result === "Accepted" ? "green" : "red");
 		}
 		if (frm.doc.docstatus === 1 && frm.doc.result === "Accepted") {
-			frm.add_custom_button(__("Donor Test"), () => {
-				frappe.new_doc("Blood Donor Test", { donor: frm.doc.donor, donor_screening: frm.doc.name });
-			}, __("Create"));
-			frm.add_custom_button(__("Donation"), () => {
-				frappe.new_doc("Blood Donation", { donor: frm.doc.donor, donor_screening: frm.doc.name });
-			}, __("Create"));
+			// Test Donor First: test, then donation from the test. Test the Bag: donation straight away.
+			frappe.db.get_single_value("Blood Bank Settings", "testing_mode").then(mode => {
+				if (mode === "Test the Bag") {
+					frm.add_custom_button(__("Next: Donation"), () => {
+						frappe.new_doc("Blood Donation", { donor: frm.doc.donor, donor_screening: frm.doc.name });
+					}).addClass("btn-primary");
+				} else {
+					frm.add_custom_button(__("Next: Donor Test"), () => {
+						frappe.new_doc("Blood Donor Test", { donor: frm.doc.donor, donor_screening: frm.doc.name });
+					}).addClass("btn-primary");
+				}
+			});
 		}
 	},
 	donor(frm) {

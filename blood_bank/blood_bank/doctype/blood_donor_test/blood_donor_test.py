@@ -26,6 +26,42 @@ class BloodDonorTest(Document):
 		if not self.lab_doctype:
 			self.lab_doctype = get_settings().lab_doctype
 
+	@frappe.whitelist()
+	def prepare(self):
+		"""Called when the form opens: load the test list and find the donor's Lab Result."""
+		if not self.tests:
+			self.load_tests()
+		if not self.lab_doctype:
+			self.lab_doctype = get_settings().lab_doctype
+		patients = self.lab_patients()
+		if self.lab_doctype and not self.lab_reference and patients:
+			meta = frappe.get_meta(self.lab_doctype)
+			if meta.has_field("patient"):
+				rows = frappe.get_all(self.lab_doctype, filters={"patient": ["in", patients], "docstatus": ["<", 2]},
+					fields=["name", "docstatus"], order_by="creation desc", limit=1)
+				if rows:
+					self.lab_reference = rows[0].name
+					if rows[0].docstatus == 1:
+						try:
+							fill_donor_test(self)
+						except Exception:
+							pass
+		self.evaluate()
+		return {"patients": patients}
+
+	def lab_patients(self):
+		"""The donor's own Patient, plus the patient a replacement donor gives for."""
+		patients = []
+		if self.donor:
+			p = frappe.db.get_value("Blood Donor", self.donor, "patient")
+			if p:
+				patients.append(p)
+		if self.donor_screening:
+			p = frappe.db.get_value("Blood Donor Screening", self.donor_screening, "replacement_for")
+			if p:
+				patients.append(p)
+		return patients
+
 	def validate(self):
 		scr = frappe.db.get_value("Blood Donor Screening", self.donor_screening, ["donor", "docstatus", "result"], as_dict=True)
 		if not scr or scr.donor != self.donor:
