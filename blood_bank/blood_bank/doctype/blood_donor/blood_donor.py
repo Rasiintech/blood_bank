@@ -4,58 +4,41 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import getdate, nowdate
 
-from blood_bank.utils import donor_age
+from blood_bank.utils import donor_age, get_patient_blood_group, set_patient_blood_group
 
 
 class BloodDonor(Document):
 	def validate(self):
-		self.donor_name = " ".join((self.donor_name or "").split())
-		if self.date_of_birth:
-			if getdate(self.date_of_birth) > getdate(nowdate()):
-				frappe.throw(_("Date of birth cannot be in the future"))
-			self.age_years = donor_age(self)
-		self.check_duplicate()
+		other = frappe.db.get_value("Blood Donor", {"patient": self.patient, "name": ["!=", self.name]})
+		if other:
+			frappe.throw(_("Patient {0} is already registered as donor {1}").format(self.patient, other), title=_("Duplicate Donor"))
+		self.sync_from_patient()
 
-	def check_duplicate(self):
-		for field, label in (("id_number", _("ID Number")), ("mobile_no", _("Mobile No"))):
-			value = (self.get(field) or "").strip()
-			if not value:
-				continue
-			other = frappe.db.get_value("Blood Donor", {field: value, "name": ["!=", self.name]}, ["name", "donor_name"], as_dict=True)
-			if other:
-				msg = _("{0} {1} is already registered to donor {2} ({3})").format(label, value, other.name, other.donor_name)
-				if field == "id_number":
-					frappe.throw(msg, title=_("Duplicate Donor"))
-				frappe.msgprint(msg, indicator="orange", alert=True)
+	def sync_from_patient(self):
+		"""Keep name, sex, DOB and mobile identical to the Patient record."""
+		p = frappe.db.get_value("Patient", self.patient, ["patient_name", "sex", "dob", "mobile"], as_dict=True) or {}
+		self.donor_name = p.get("patient_name")
+		self.sex = p.get("sex")
+		self.date_of_birth = p.get("dob")
+		self.mobile_no = p.get("mobile")
+		self.age_years = donor_age(self) if self.date_of_birth else None
+		on_file = get_patient_blood_group(self.patient)
+		if on_file and not self.blood_group:
+			self.blood_group = on_file
+
+	def on_update(self):
+		if self.blood_group:
+			set_patient_blood_group(self.patient, self.blood_group)
 
 
 @frappe.whitelist()
-def make_patient(donor):
-	"""Create (or reuse) a Patient so the lab can record the donor's tests."""
-	d = frappe.get_doc("Blood Donor", donor)
-	d.check_permission("write")
-	if d.patient:
-		return d.patient
-	if d.mobile_no:
-		existing = frappe.db.get_value("Patient", {"mobile": d.mobile_no, "patient_name": d.donor_name}, "name")
-		if existing:
-			d.db_set("patient", existing)
-			return existing
-	parts = d.donor_name.split(" ", 1)
-	p = frappe.new_doc("Patient")
-	p.first_name = parts[0]
-	if len(parts) > 1 and p.meta.has_field("last_name"):
-		p.last_name = parts[1]
-	p.sex = d.sex
-	if d.date_of_birth:
-		p.dob = d.date_of_birth
-	if d.mobile_no and p.meta.has_field("mobile"):
-		p.mobile = d.mobile_no
-	if d.blood_group and p.meta.has_field("blood_group"):
-		p.blood_group = d.blood_group
-	p.flags.ignore_mandatory = True
-	p.insert(ignore_permissions=True)
-	d.db_set("patient", p.name)
-	return p.name
+def get_or_create_donor(patient):
+	"""Called from the Patient form: open the donor record for this patient, creating it if needed."""
+	frappe.has_permission("Blood Donor", "create", throw=True)
+	existing = frappe.db.get_value("Blood Donor", {"patient": patient})
+	if existing:
+		return existing
+	donor = frappe.get_doc({"doctype": "Blood Donor", "patient": patient})
+	donor.insert()
+	return donor.name

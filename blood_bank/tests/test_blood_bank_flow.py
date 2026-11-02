@@ -19,8 +19,12 @@ def settings(**values):
 
 
 def make_donor(name, sex="Male"):
-	return frappe.get_doc({"doctype": "Blood Donor", "donor_name": name, "sex": sex, "date_of_birth": "1990-01-01",
-		"mobile_no": f"+25261{random.randint(1000000, 9999999)}"}).insert()
+	for g in ("Male", "Female"):
+		if not frappe.db.exists("Gender", g):
+			frappe.get_doc({"doctype": "Gender", "gender": g}).insert()
+	patient = frappe.get_doc({"doctype": "Patient", "first_name": name, "sex": sex, "dob": "1990-01-01",
+		"mobile": f"+25261{random.randint(1000000, 9999999)}"}).insert()
+	return frappe.get_doc({"doctype": "Blood Donor", "patient": patient.name}).insert()
 
 
 def make_screening(donor, **kw):
@@ -65,6 +69,17 @@ class TestCompatibility(FrappeTestCase):
 		self.assertEqual(parse_blood_group("A+"), "A Positive")
 		self.assertEqual(parse_blood_group("O Rh -ve"), "O Negative")
 		self.assertIsNone(parse_blood_group("A"))
+
+
+class TestDonorFromPatient(FrappeTestCase):
+	def test_donor_reuses_patient(self):
+		donor = make_donor("Reuse Patient", sex="Female")
+		self.assertEqual(donor.sex, "Female")
+		self.assertEqual(donor.age_years, frappe.utils.getdate().year - 1990 - (1 if (frappe.utils.getdate().month, frappe.utils.getdate().day) < (1, 1) else 0))
+		self.assertTrue(donor.donor_name.startswith("Reuse Patient"))
+		self.assertRaises(frappe.ValidationError, frappe.get_doc({"doctype": "Blood Donor", "patient": donor.patient}).insert)
+		from blood_bank.blood_bank.doctype.blood_donor.blood_donor import get_or_create_donor
+		self.assertEqual(get_or_create_donor(donor.patient), donor.name)
 
 
 class TestBloodBankFlow(FrappeTestCase):
@@ -126,6 +141,7 @@ class TestBloodBankFlow(FrappeTestCase):
 		make_test(donor, sc, "B Positive", reactive="HIV", donation=don.name)
 		self.assertEqual(frappe.db.get_value("Blood Unit", don.blood_unit, "status"), "Discarded")
 		self.assertEqual(frappe.db.get_value("Blood Donor", donor.name, "status"), "Permanently Deferred")
+		self.assertEqual(frappe.db.get_value("Patient", donor.patient, "blood_group"), "B Positive")
 
 	def test_screening_defers_low_hb(self):
 		donor = make_donor("Low Hb", sex="Female")

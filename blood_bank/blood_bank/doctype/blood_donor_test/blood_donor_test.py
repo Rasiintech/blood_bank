@@ -7,8 +7,8 @@ from frappe.model.document import Document
 from frappe.utils import flt
 
 from blood_bank.lab import fill_donor_test
-from blood_bank.utils import (clear_deferral_from, defer_donor, get_settings, min_hb, setting,
-	update_unit)
+from blood_bank.utils import (clear_deferral_from, defer_donor, get_settings, min_hb, set_patient_blood_group,
+	setting, update_unit)
 
 
 class BloodDonorTest(Document):
@@ -72,6 +72,7 @@ class BloodDonorTest(Document):
 				.format(donor.name, donor.blood_group, self.blood_group), title=_("Blood Group Mismatch"))
 		if not donor.blood_group:
 			frappe.db.set_value("Blood Donor", self.donor, "blood_group", self.blood_group)
+		set_patient_blood_group(donor.patient, self.blood_group)
 
 		if self.overall_result == "Reactive":
 			reactive = [t.screening_test for t in self.tests if t.result == "Reactive"]

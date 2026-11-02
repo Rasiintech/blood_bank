@@ -7,17 +7,15 @@
  "engine": "InnoDB",
  "field_order": [
   "naming_series",
+  "patient",
   "donor_name",
   "sex",
   "date_of_birth",
   "age_years",
   "cb1",
   "mobile_no",
-  "id_number",
   "blood_group",
   "default_donor_type",
-  "patient",
-  "address",
   "sb_status",
   "status",
   "deferred_until",
@@ -41,31 +39,44 @@
    "hidden": 1
   },
   {
+   "fieldname": "patient",
+   "fieldtype": "Link",
+   "label": "Patient",
+   "options": "Patient",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1,
+   "description": "Pick the person's Patient record (create one first if new). Name, sex, age and mobile come from it."
+  },
+  {
    "fieldname": "donor_name",
    "fieldtype": "Data",
    "label": "Full Name",
-   "reqd": 1,
+   "read_only": 1,
+   "fetch_from": "patient.patient_name",
    "in_list_view": 1,
    "bold": 1
   },
   {
    "fieldname": "sex",
-   "fieldtype": "Select",
+   "fieldtype": "Data",
    "label": "Sex",
-   "options": "\nMale\nFemale",
-   "reqd": 1,
+   "read_only": 1,
+   "fetch_from": "patient.sex",
    "in_list_view": 1
   },
   {
    "fieldname": "date_of_birth",
    "fieldtype": "Date",
-   "label": "Date Of Birth"
+   "label": "Date Of Birth",
+   "read_only": 1,
+   "fetch_from": "patient.dob"
   },
   {
    "fieldname": "age_years",
    "fieldtype": "Int",
    "label": "Age (years)",
-   "description": "Calculated from date of birth when given"
+   "read_only": 1
   },
   {
    "fieldname": "cb1",
@@ -75,13 +86,9 @@
    "fieldname": "mobile_no",
    "fieldtype": "Data",
    "label": "Mobile No",
-   "options": "Phone",
+   "read_only": 1,
+   "fetch_from": "patient.mobile",
    "in_list_view": 1
-  },
-  {
-   "fieldname": "id_number",
-   "fieldtype": "Data",
-   "label": "ID Number"
   },
   {
    "fieldname": "blood_group",
@@ -89,7 +96,8 @@
    "label": "Blood Group",
    "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
    "in_list_view": 1,
-   "in_standard_filter": 1
+   "in_standard_filter": 1,
+   "description": "Set by the first donor test; also saved on the Patient"
   },
   {
    "fieldname": "default_donor_type",
@@ -97,18 +105,6 @@
    "label": "Default Donor Type",
    "options": "Voluntary\nReplacement",
    "default": "Voluntary"
-  },
-  {
-   "fieldname": "patient",
-   "fieldtype": "Link",
-   "label": "Patient",
-   "options": "Patient",
-   "description": "Only needed when the lab must record the donor's tests under a Patient"
-  },
-  {
-   "fieldname": "address",
-   "fieldtype": "Small Text",
-   "label": "Address"
   },
   {
    "fieldname": "sb_status",
@@ -251,6 +247,6 @@
  "autoname": "naming_series:",
  "naming_rule": "By \"Naming Series\" field",
  "title_field": "donor_name",
- "search_fields": "donor_name,mobile_no,id_number,blood_group",
+ "search_fields": "donor_name,patient,mobile_no,blood_group",
  "show_title_field_in_link": 1
 }
