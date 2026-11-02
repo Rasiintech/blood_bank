@@ -164,6 +164,9 @@ class BloodDonorScreening(Document):
 		for dt, field in (("Sample Collection", "sample_collection"), ("Sales Invoice", "sales_invoice")):
 			name = self.get(field)
 			if name and frappe.db.exists(dt, name) and frappe.db.get_value(dt, name, "docstatus") != 2:
+				# tag documents made before the link field existed, so the HIS bridge recognises them
+				if frappe.get_meta(dt).has_field("blood_donor_screening") and not frappe.db.get_value(dt, name, "blood_donor_screening"):
+					frappe.db.set_value(dt, name, "blood_donor_screening", self.name)
 				return frappe.get_doc(dt, name)
 		templates = [r.lab_test_template for r in get_settings().donor_lab_tests]
 		if not templates:
