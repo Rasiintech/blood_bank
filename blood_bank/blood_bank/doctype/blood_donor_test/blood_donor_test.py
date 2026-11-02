@@ -105,7 +105,9 @@ class BloodDonorTest(Document):
 	def on_submit(self):
 		donor = frappe.get_doc("Blood Donor", self.donor)
 		if donor.blood_group and donor.blood_group != self.blood_group:
-			frappe.throw(_("Donor {0} is recorded as {1} but this test says {2}. Re-group before continuing.")
+			frappe.throw(_("Donor {0} is recorded as {1} but this test says {2}.<br><br>Ask the lab to repeat BLOOD GROUPING on a new sample. "
+				"If the repeat confirms {2}, a Blood Bank Officer opens the donor and uses <b>Actions → Correct Blood Group</b>, then submit this test again. "
+				"If the repeat shows {1}, correct the result on this test.")
 				.format(donor.name, donor.blood_group, self.blood_group), title=_("Blood Group Mismatch"))
 		if not donor.blood_group:
 			frappe.db.set_value("Blood Donor", self.donor, "blood_group", self.blood_group)

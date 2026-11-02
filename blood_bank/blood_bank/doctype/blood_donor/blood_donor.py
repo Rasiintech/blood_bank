@@ -5,7 +5,10 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
-from blood_bank.utils import donor_age, get_patient_blood_group, set_patient_blood_group
+from frappe.utils import now_datetime
+
+from blood_bank.utils import (BLOOD_GROUPS, OFFICER, donor_age, get_patient_blood_group, has_role,
+	patient_blood_group_field, set_patient_blood_group)
 
 
 class BloodDonor(Document):
@@ -42,3 +45,28 @@ def get_or_create_donor(patient):
 	donor = frappe.get_doc({"doctype": "Blood Donor", "patient": patient})
 	donor.insert()
 	return donor.name
+
+
+@frappe.whitelist()
+def correct_blood_group(donor, blood_group, reason):
+	"""Blood Bank Officer corrects a wrong group after a repeat grouping, on the donor and the Patient."""
+	if not has_role(OFFICER):
+		frappe.throw(_("Only a Blood Bank Officer can correct a blood group"), frappe.PermissionError)
+	if blood_group not in BLOOD_GROUPS:
+		frappe.throw(_("Choose a valid blood group"))
+	if not (reason or "").strip():
+		frappe.throw(_("Give the reason (e.g. the repeat grouping Lab Result number)"))
+	d = frappe.get_doc("Blood Donor", donor)
+	old = d.blood_group or "-"
+	if frappe.db.exists("Blood Unit", {"donor": d.name, "status": ["in", ["Quarantine", "Available", "Reserved", "Issued"]]}):
+		frappe.throw(_("This donor has bags in stock or issued. Quarantine and re-group those bags before correcting."))
+	field = patient_blood_group_field()
+	if field and d.patient:
+		frappe.db.set_value("Patient", d.patient, field, blood_group)
+	note = _("{0}: blood group corrected {1} -> {2} by {3}. Reason: {4}").format(
+		frappe.format(now_datetime(), "Datetime"), old, blood_group, frappe.session.user, reason.strip())
+	d.blood_group = blood_group
+	d.notes = ((d.notes or "") + "\n" + note).strip()
+	d.flags.ignore_permissions = True
+	d.save()
+	return d.blood_group

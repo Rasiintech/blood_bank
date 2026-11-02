@@ -95,9 +95,10 @@
    "fieldtype": "Select",
    "label": "Blood Group",
    "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
+   "read_only": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "description": "Set by the first donor test; also saved on the Patient"
+   "description": "Set by the first donor test; also saved on the Patient. To change it use Correct Blood Group (Blood Bank Officer)."
   },
   {
    "fieldname": "default_donor_type",
