@@ -24,6 +24,19 @@ frappe.ui.form.on("Blood Donation", {
 		frm.add_custom_button(__("Print Bag Label"), () => {
 			frappe.set_route("print", "Blood Unit", frm.doc.blood_unit);
 		});
+		if (frappe.user.has_role("Blood Bank Officer")) {
+			frm.add_custom_button(__("Correct Bag Type"), () => {
+				frappe.prompt([
+					{ fieldname: "bag_type", fieldtype: "Select", label: __("Correct Bag Type"), reqd: 1,
+						options: "Single\nDouble\nTriple\nQuadruple", default: frm.doc.bag_type },
+					{ fieldname: "reason", fieldtype: "Small Text", label: __("Reason"), reqd: 1 },
+				], (v) => {
+					frappe.call("blood_bank.blood_bank.doctype.blood_donation.blood_donation.correct_bag_type",
+						{ donation: frm.doc.name, bag_type: v.bag_type, reason: v.reason })
+						.then(() => { frappe.show_alert({ message: __("Bag type corrected"), indicator: "green" }); frm.reload_doc(); });
+				}, __("Correct Bag Type"), __("Save"));
+			}, __("Actions"));
+		}
 		frm.add_custom_button(__("Split into Components"), () => {
 			frappe.new_doc("Blood Component Preparation", { source_unit: frm.doc.blood_unit });
 		}, __("Create"));

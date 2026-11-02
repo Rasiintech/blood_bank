@@ -102,6 +102,28 @@ class TestBloodBankFlow(FrappeTestCase):
 	def setUp(self):
 		settings(testing_mode="Test Donor First", require_invoice_before_issue=0, auto_release_cleared_units=0)
 
+	def test_bag_type_correction(self):
+		from blood_bank.blood_bank.doctype.blood_donation.blood_donation import correct_bag_type
+		donor = make_donor("Bag Donor")
+		sc = make_screening(donor)
+		sc.submit()
+		t = make_test(donor, sc, "B Positive")
+		don = frappe.get_doc({"doctype": "Blood Donation", "donor": donor.name, "donor_screening": sc.name,
+			"donor_test": t.name, "bag_type": "Single", "volume_ml": 450}).insert()
+		don.submit()
+		release_units([don.blood_unit])
+		rows = [{"component": "Red Cells (RBC)"}, {"component": "Fresh Frozen Plasma (FFP)"}, {"component": "Platelets (PLT)"}]
+		with self.assertRaises(frappe.ValidationError):
+			frappe.get_doc({"doctype": "Blood Component Preparation", "source_unit": don.blood_unit, "items": rows}).insert()
+		self.assertEqual(correct_bag_type(don.name, "Triple", "Wrong entry"), "Triple")
+		with self.assertRaises(frappe.ValidationError):
+			frappe.get_doc({"doctype": "Blood Component Preparation", "source_unit": don.blood_unit,
+				"items": [{"component": "Fresh Frozen Plasma (FFP)"}, {"component": "Plasma"}]}).insert()
+		prep = frappe.get_doc({"doctype": "Blood Component Preparation", "source_unit": don.blood_unit, "items": rows}).insert()
+		prep.submit()
+		with self.assertRaises(frappe.ValidationError):
+			correct_bag_type(don.name, "Quadruple", "late")
+
 	def test_donor_to_transfusion(self):
 		donor = make_donor("Flow Donor")
 		sc = make_screening(donor)

@@ -99,3 +99,29 @@ class BloodDonation(Document):
 		refresh_donor_stats(self.donor)
 		if self.blood_request and frappe.db.get_value("Blood Request", self.blood_request, "docstatus") == 1:
 			frappe.get_doc("Blood Request", self.blood_request).update_counts_and_status()
+
+
+@frappe.whitelist()
+def correct_bag_type(donation, bag_type, reason):
+	"""Blood Bank Officer fixes a wrongly entered bag type while the bag is still unsplit."""
+	from frappe.utils import now_datetime
+	from blood_bank.utils import OFFICER, has_role
+
+	if not has_role(OFFICER):
+		frappe.throw(_("Only a Blood Bank Officer can correct the bag type"), frappe.PermissionError)
+	if bag_type not in ("Single", "Double", "Triple", "Quadruple"):
+		frappe.throw(_("Choose a valid bag type"))
+	if not (reason or "").strip():
+		frappe.throw(_("Give the reason for the correction"))
+	d = frappe.get_doc("Blood Donation", donation)
+	if d.docstatus != 1:
+		frappe.throw(_("Edit the bag type directly on a draft donation"))
+	if frappe.db.exists("Blood Component Preparation", {"source_unit": d.blood_unit, "docstatus": 1}):
+		frappe.throw(_("This bag is already split. Cancel the Component Preparation first."))
+	note = _("{0}: bag type corrected {1} -> {2} by {3}. Reason: {4}").format(
+		frappe.format(now_datetime(), "Datetime"), d.bag_type, bag_type, frappe.session.user, reason.strip())
+	d.db_set("bag_type", bag_type)
+	if d.meta.has_field("remarks"):
+		d.db_set("remarks", ((d.remarks or "") + "\n" + note).strip())
+	d.add_comment("Info", note)
+	return bag_type

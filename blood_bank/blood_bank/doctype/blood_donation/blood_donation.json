@@ -137,7 +137,8 @@
    "label": "Bag Type",
    "options": "Single\nDouble\nTriple\nQuadruple",
    "default": "Single",
-   "reqd": 1
+   "reqd": 1,
+   "description": "The collection bag set used: number of attached pouches = how many components the bag can be split into. Single = keep as Whole Blood only. Double = Red Cells + Plasma/FFP. Triple = Red Cells + FFP + Platelets. Quadruple = Red Cells + FFP + Platelets + one more (e.g. Cryo). Pick the bag before collection; an officer can correct it later with Actions > Correct Bag Type while the bag is not split."
   },
   {
    "fieldname": "volume_ml",

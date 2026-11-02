@@ -26,7 +26,15 @@ class BloodComponentPreparation(Document):
 
 		bag = frappe.db.get_value("Blood Donation", src.blood_donation, "bag_type")
 		if len(self.items) > bag_pouches(bag):
-			frappe.throw(_("A {0} bag can make at most {1} components").format(bag, bag_pouches(bag)))
+			frappe.throw(_("Donation {0} was collected in a {1} bag, which can be split into at most {2} component(s), "
+				"but {3} rows are listed.<br><br>If the wrong bag type was entered, a Blood Bank Officer can open the donation "
+				"and use Actions > Correct Bag Type, then split again.").format(
+				src.blood_donation, bag, bag_pouches(bag), len(self.items)), title=_("Too many components for this bag"))
+		plasma = [r.component for r in self.items
+			if frappe.db.get_value("Blood Component", r.component, "abbreviation") in ("FFP", "PL")]
+		if len(plasma) > 1:
+			frappe.throw(_("{0} both come from the same plasma of this bag. Choose only one of them (FFP if frozen within hours of collection, otherwise Plasma).").format(", ".join(plasma)),
+				title=_("Same plasma listed twice"))
 		seen = set()
 		for row in self.items:
 			comp = frappe.get_cached_doc("Blood Component", row.component)
