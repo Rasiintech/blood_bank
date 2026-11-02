@@ -79,16 +79,20 @@ def get_lab_rows(doctype, name):
 		cmeta = frappe.get_meta(tdf.options)
 		same = s.lab_doctype == doctype
 		name_f = _pick(cmeta, s.lab_test_name_field if same else None, NAME_FIELDS)
-		value_f = _pick(cmeta, s.lab_result_value_field if same else None, VALUE_FIELDS)
-		if not (name_f and value_f):
+		configured = s.lab_result_value_field if same and s.lab_result_value_field and cmeta.has_field(s.lab_result_value_field) else None
+		value_fs = [configured] if configured else [f for f in VALUE_FIELDS if cmeta.has_field(f)]
+		value_fs += [df.fieldname for df in cmeta.fields if df.fieldtype == "Select" and df.fieldname not in value_fs
+			and "result" in (df.fieldname + " " + (df.label or "")).lower()]
+		if not (name_f and value_fs):
 			continue
 		for row in doc.get(tdf.fieldname) or []:
+			# grouped/compound rows keep the test name in lab_test_event, single tests in lab_test_name
 			label = row.get(name_f)
-			# Standard Lab Test keeps grouped tests in lab_test_event
 			if name_f == "lab_test_event" and not label:
 				label = row.get("lab_test_name")
+			value = next((row.get(f) for f in value_fs if row.get(f) not in (None, "")), None)
 			if label:
-				rows.append((str(label), row.get(value_f)))
+				rows.append((str(label), value))
 	return rows
 
 
@@ -102,10 +106,19 @@ def find_value(rows, labels):
 
 def fill_donor_test(test_doc):
 	"""Copy results from the linked lab document into a Blood Donor Test. Returns a summary."""
-	rows = get_lab_rows(test_doc.lab_doctype, test_doc.lab_reference)
+	names = []
+	if test_doc.lab_reference:
+		names.append(test_doc.lab_reference)
+	if test_doc.lab_doctype and test_doc.donor_screening:
+		for n in lab_documents_for_screening(test_doc.lab_doctype, test_doc.donor_screening):
+			if n not in names:
+				names.append(n)
+	rows = []
+	for n in names:
+		rows += get_lab_rows(test_doc.lab_doctype, n)
 	if not rows:
 		frappe.throw(_("No result lines found in {0} {1}. Check the Lab Integration settings.")
-			.format(test_doc.lab_doctype, test_doc.lab_reference))
+			.format(test_doc.lab_doctype, ", ".join(names) or "-"))
 	s = get_settings()
 	filled, unread = [], []
 
@@ -151,20 +164,29 @@ def on_lab_document_submit(doc, method=None):
 	if doc.doctype not in (lab_dt, "Lab Test"):
 		return
 	screening = screening_for_lab_document(doc)
-	if screening and not frappe.db.exists("Blood Donor Test", {"donor_screening": screening, "docstatus": ["<", 2]}):
+	if screening:
 		try:
 			scr = frappe.db.get_value("Blood Donor Screening", screening, ["donor", "docstatus", "result"], as_dict=True)
-			if scr and scr.docstatus == 1 and scr.result == "Accepted":
+			existing = frappe.db.get_value("Blood Donor Test", {"donor_screening": screening, "docstatus": ["<", 2]}, ["name", "docstatus"], as_dict=True)
+			if existing and existing.docstatus == 0:
+				test = frappe.get_doc("Blood Donor Test", existing.name)
+				test.lab_doctype = test.lab_doctype or doc.doctype
+				test.lab_reference = test.lab_reference or doc.name
+				fill_donor_test(test)
+				test.flags.ignore_permissions = True
+				test.save()
+			elif not existing and scr and scr.docstatus == 1 and scr.result == "Accepted":
 				test = frappe.new_doc("Blood Donor Test")
 				test.donor = scr.donor
 				test.donor_screening = screening
 				test.lab_doctype = doc.doctype
 				test.lab_reference = doc.name
 				test.load_tests()
+				fill_donor_test(test)
 				test.flags.ignore_permissions = True
 				test.insert()
 		except Exception:
-			frappe.log_error(title=f"Blood Bank: could not create Donor Test from {doc.doctype} {doc.name}")
+			frappe.log_error(title=f"Blood Bank: could not fill Donor Test from {doc.doctype} {doc.name}")
 	for name in frappe.get_all("Blood Donor Test", filters={"docstatus": 0, "lab_doctype": doc.doctype,
 			"lab_reference": doc.name}, pluck="name"):
 		test = frappe.get_doc("Blood Donor Test", name)
@@ -194,20 +216,74 @@ def fill_crossmatch(xm_doc):
 	return result
 
 
+SAMPLE_FIELDS = ["sample_collection", "reff_collection"]
+INVOICE_FIELDS = ["sales_invoice", "invoice_no", "reff_invoice"]
+
+
+def _ref_fields(meta, names, target):
+	"""Fields of a lab doctype that point to a Sample Collection / Sales Invoice (Link or Data)."""
+	found = [n for n in names if meta.has_field(n)]
+	for df in meta.fields:
+		if df.fieldtype == "Link" and df.options == target and df.fieldname not in found:
+			found.append(df.fieldname)
+	return found
+
+
 def screening_for_lab_document(doc):
 	"""The Blood Donor Screening whose tests this lab document holds: via its Sample Collection or Sales Invoice."""
-	sc = doc.get("sample_collection")
-	if sc and frappe.get_meta("Sample Collection").has_field("blood_donor_screening"):
-		name = frappe.db.get_value("Sample Collection", sc, "blood_donor_screening")
-		if name:
-			return name
+	meta = frappe.get_meta(doc.doctype)
+	for f in _ref_fields(meta, SAMPLE_FIELDS, "Sample Collection"):
+		sc = doc.get(f)
+		if not sc or not frappe.db.exists("Sample Collection", sc):
+			continue
+		if frappe.get_meta("Sample Collection").has_field("blood_donor_screening"):
+			name = frappe.db.get_value("Sample Collection", sc, "blood_donor_screening")
+			if name:
+				return name
 		name = frappe.db.get_value("Blood Donor Screening", {"sample_collection": sc}, "name")
 		if name:
 			return name
-	si = doc.get("sales_invoice")
-	if si and frappe.get_meta("Sales Invoice").has_field("blood_donor_screening"):
-		return frappe.db.get_value("Sales Invoice", si, "blood_donor_screening")
+		scm = frappe.get_meta("Sample Collection")
+		for inv_f in [f for f in ("reff_invoice", "sales_invoice") if scm.has_field(f)]:
+			si = frappe.db.get_value("Sample Collection", sc, inv_f)
+			if si and frappe.get_meta("Sales Invoice").has_field("blood_donor_screening"):
+				name = frappe.db.get_value("Sales Invoice", si, "blood_donor_screening")
+				if name:
+					return name
+	if frappe.get_meta("Sales Invoice").has_field("blood_donor_screening"):
+		for f in _ref_fields(meta, INVOICE_FIELDS, "Sales Invoice"):
+			si = doc.get(f)
+			if si and frappe.db.exists("Sales Invoice", si):
+				name = frappe.db.get_value("Sales Invoice", si, "blood_donor_screening")
+				if name:
+					return name
 	return None
+
+
+def lab_documents_for_screening(lab_doctype, screening, submitted_only=True):
+	"""All lab documents made from the screening's Sample Collection or invoice."""
+	meta = frappe.get_meta(lab_doctype)
+	sc, si = frappe.db.get_value("Blood Donor Screening", screening, ["sample_collection", "sales_invoice"]) or (None, None)
+	pairs = [(f, sc) for f in _ref_fields(meta, SAMPLE_FIELDS, "Sample Collection")]
+	pairs += [(f, si) for f in _ref_fields(meta, INVOICE_FIELDS, "Sales Invoice")]
+	names = []
+	for field, value in pairs:
+		if value:
+			flt = {field: value, "docstatus": 1 if submitted_only else ["<", 2]}
+			for n in frappe.get_all(lab_doctype, filters=flt, pluck="name"):
+				if n not in names:
+					names.append(n)
+	# invoice-made samples: HIS links the Lab Result to the Sample Collection made from the invoice
+	if si and frappe.db.exists("DocType", "Sample Collection"):
+		scm = frappe.get_meta("Sample Collection")
+		for inv_f in [f for f in ("reff_invoice", "sales_invoice") if scm.has_field(f)]:
+			for sc2 in frappe.get_all("Sample Collection", filters={inv_f: si, "docstatus": ["<", 2]}, pluck="name"):
+				for f in _ref_fields(meta, SAMPLE_FIELDS, "Sample Collection"):
+					flt = {f: sc2, "docstatus": 1 if submitted_only else ["<", 2]}
+					for n in frappe.get_all(lab_doctype, filters=flt, pluck="name"):
+						if n not in names:
+							names.append(n)
+	return names
 
 
 def lab_document_for_screening(lab_doctype, screening):
@@ -216,8 +292,10 @@ def lab_document_for_screening(lab_doctype, screening):
 		return None
 	meta = frappe.get_meta(lab_doctype)
 	sc, si = frappe.db.get_value("Blood Donor Screening", screening, ["sample_collection", "sales_invoice"])
-	for field, value in (("sample_collection", sc), ("sales_invoice", si)):
-		if value and meta.has_field(field):
+	pairs = [(f, sc) for f in _ref_fields(meta, SAMPLE_FIELDS, "Sample Collection")]
+	pairs += [(f, si) for f in _ref_fields(meta, INVOICE_FIELDS, "Sales Invoice")]
+	for field, value in pairs:
+		if value:
 			rows = frappe.get_all(lab_doctype, filters={field: value, "docstatus": ["<", 2]},
 				fields=["name", "docstatus"], order_by="creation desc", limit=1)
 			if rows:

@@ -230,11 +230,17 @@ def make_sample_collection(screening, patient, templates):
 				sample = frappe.get_doc({"doctype": "Lab Test Sample", "sample": "Blood"}).insert(ignore_permissions=True).name
 		sc.sample = sample
 	if table:
+		child = frappe.get_meta(meta.get_field(table).options)
 		for t in templates:
-			sc.append(table, {link: t})
+			row = {link: t}
+			if child.has_field("department"):
+				row["department"] = frappe.db.get_value("Lab Test Template", t, "department")
+			sc.append(table, row)
 	elif meta.has_field("template"):
 		sc.template = templates[0]
 	sc.insert()
+	if meta.has_field("lab_ref") and not sc.get("lab_ref"):
+		sc.db_set("lab_ref", sc.name.split("-")[-1])  # same numbering HIS uses
 	screening.db_set("sample_collection", sc.name)
 	return sc
 
