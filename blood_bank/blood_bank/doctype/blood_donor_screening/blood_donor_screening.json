@@ -19,6 +19,8 @@
   "sb_q",
   "questionnaire",
   "sb_v",
+  "vital_signs",
+  "get_vital_signs",
   "weight_kg",
   "hb_g_dl",
   "cb2",
@@ -125,6 +127,18 @@
    "fieldname": "sb_v",
    "fieldtype": "Section Break",
    "label": "Physical Check"
+  },
+  {
+   "fieldname": "vital_signs",
+   "fieldtype": "Link",
+   "label": "Vital Signs",
+   "options": "Vital Signs",
+   "description": "Filled automatically from the donor's latest Vital Signs"
+  },
+  {
+   "fieldname": "get_vital_signs",
+   "fieldtype": "Button",
+   "label": "Get Latest Vital Signs"
   },
   {
    "fieldname": "weight_kg",

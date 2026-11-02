@@ -26,6 +26,7 @@
   "min_pulse",
   "max_pulse",
   "max_temperature",
+  "vital_signs_max_age_hours",
   "sb_q",
   "screening_questions",
   "sb_test",
@@ -174,6 +175,13 @@
    "fieldtype": "Float",
    "label": "Max Temperature (°C)",
    "default": "37.5"
+  },
+  {
+   "fieldname": "vital_signs_max_age_hours",
+   "fieldtype": "Int",
+   "label": "Use Vital Signs Recorded Within (hours)",
+   "default": "24",
+   "description": "Screening copies weight, BP, pulse and temperature from the donor's latest Vital Signs in this window"
   },
   {
    "fieldname": "sb_q",

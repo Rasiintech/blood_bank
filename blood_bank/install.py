@@ -27,7 +27,7 @@ DEFERRAL_REASONS = [
 	("Pulse Out of Range", "Temporary", 7), ("Fever / Recent Illness", "Temporary", 14),
 	("Donated Too Recently", "Temporary", 0), ("Questionnaire Answer", "Temporary", 30),
 	("Antibiotics", "Temporary", 7), ("Aspirin / Painkillers", "Temporary", 5),
-	("Tattoo / Piercing", "Temporary", 365), ("Pregnancy / Breastfeeding", "Temporary", 365),
+	("Pregnancy / Breastfeeding", "Temporary", 365),
 	("Recent Surgery", "Temporary", 365), ("Not Eaten", "Temporary", 0),
 	("Malaria (Recent)", "Temporary", 180), ("Reactive Malaria", "Temporary", 180),
 	("Reactive HIV", "Permanent", 0), ("Reactive Hepatitis B", "Permanent", 0),
@@ -44,13 +44,13 @@ SCREENING_TESTS = [
 	("Malaria", 0, "Malaria\nMalaria RDT\nBS for MPS", "Reactive Malaria"),
 ]
 
+# (question, defer if answer, deferral reason[, applies to])
 QUESTIONS = [
 	("Do you feel unwell today, or have you had a fever in the last 2 weeks?", "Yes", "Fever / Recent Illness"),
 	("Have you eaten in the last 4 hours?", "No", "Not Eaten"),
 	("Have you taken antibiotics in the last 7 days?", "Yes", "Antibiotics"),
 	("Have you taken aspirin or painkillers in the last 5 days?", "Yes", "Aspirin / Painkillers"),
-	("Have you had a tattoo, piercing or acupuncture in the last 12 months?", "Yes", "Tattoo / Piercing"),
-	("Are you pregnant, or have you given birth or breastfed in the last 12 months?", "Yes", "Pregnancy / Breastfeeding"),
+	("Are you pregnant, or have you given birth or breastfed in the last 12 months?", "Yes", "Pregnancy / Breastfeeding", "Female"),
 	("Have you had an operation in the last 12 months?", "Yes", "Recent Surgery"),
 	("Have you had malaria in the last 6 months?", "Yes", "Malaria (Recent)"),
 	("Have you ever had hepatitis, HIV or syphilis?", "Yes", "Infectious Disease History"),
@@ -132,12 +132,34 @@ def setup_settings():
 	if not s.lab_doctype or not frappe.db.exists("DocType", s.lab_doctype):
 		s.lab_doctype = next((dt for dt in ("Lab Result", "Lab Test") if frappe.db.exists("DocType", dt)), None)
 	if not s.screening_questions:
-		for q, ans, reason in QUESTIONS:
-			s.append("screening_questions", {"question": q, "defer_if_answer": ans, "deferral_reason": reason})
+		for row in QUESTIONS:
+			q, ans, reason = row[:3]
+			s.append("screening_questions", {"question": q, "defer_if_answer": ans, "deferral_reason": reason,
+				"applies_to": row[3] if len(row) > 3 else "All"})
+	if not s.stock_levels:
+		add_default_stock_levels(s)
 	if not s.label_hospital_name:
 		s.label_hospital_name = frappe.db.get_single_value("Global Defaults", "default_company") or ""
 	s.flags.ignore_permissions = True
 	s.save()
+
+
+# Starting minimum stock (units) per component and group; edit in Blood Bank Settings
+STOCK_LEVELS = {
+	"Whole Blood": {"O Positive": 6, "A Positive": 4, "B Positive": 4, "AB Positive": 2,
+		"O Negative": 2, "A Negative": 1, "B Negative": 1, "AB Negative": 1},
+	"Red Cells (RBC)": {"O Positive": 6, "A Positive": 4, "B Positive": 4, "AB Positive": 2,
+		"O Negative": 2, "A Negative": 1, "B Negative": 1, "AB Negative": 1},
+	"Fresh Frozen Plasma (FFP)": {"O Positive": 2, "A Positive": 2, "B Positive": 2, "AB Positive": 1},
+}
+
+
+def add_default_stock_levels(settings_doc):
+	for component, groups in STOCK_LEVELS.items():
+		if not frappe.db.exists("Blood Component", component):
+			continue
+		for group, qty in groups.items():
+			settings_doc.append("stock_levels", {"component": component, "blood_group": group, "min_units": qty})
 
 
 def make_custom_fields():

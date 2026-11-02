@@ -82,6 +82,22 @@ class TestDonorFromPatient(FrappeTestCase):
 		self.assertEqual(get_or_create_donor(donor.patient), donor.name)
 
 
+class TestScreening(FrappeTestCase):
+	def test_questions_follow_sex_and_vitals_are_read(self):
+		s = frappe.get_single("Blood Bank Settings")
+		self.assertFalse(any("tattoo" in q.question.lower() for q in s.screening_questions))
+		male = make_donor("Male Q", sex="Male")
+		frappe.get_doc({"doctype": "Vital Signs", "patient": male.patient, "signs_date": frappe.utils.nowdate(),
+			"signs_time": frappe.utils.nowtime(), "weight": 72, "bp": "118/76", "pulse": "70", "temperature": "36.6"}).insert()
+		sc = frappe.get_doc({"doctype": "Blood Donor Screening", "donor": male.name, "donor_type": "Voluntary"}).insert()
+		self.assertFalse(any("pregnant" in q.question.lower() for q in sc.questionnaire))
+		self.assertEqual((sc.weight_kg, sc.bp_systolic, sc.bp_diastolic, sc.pulse), (72, 118, 76, 70))
+		female = make_donor("Female Q", sex="Female")
+		sc2 = frappe.get_doc({"doctype": "Blood Donor Screening", "donor": female.name, "donor_type": "Voluntary"}).insert()
+		self.assertTrue(any("pregnant" in q.question.lower() for q in sc2.questionnaire))
+		self.assertTrue(s.stock_levels)
+
+
 class TestBloodBankFlow(FrappeTestCase):
 	def setUp(self):
 		settings(testing_mode="Test Donor First", require_invoice_before_issue=0, auto_release_cleared_units=0)

@@ -1,28 +1,74 @@
 # Copyright (c) 2026, Cibaar Technologies and contributors
 # For license information, please see license.txt
 
+import re
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_days, cint, flt, getdate
+from frappe.utils import add_days, add_to_date, cint, flt, get_datetime, getdate, now_datetime
 
 from blood_bank.utils import (clear_deferral_from, defer_donor, donation_interval_days, donor_age,
 	get_settings, min_hb, setting)
 
 
 class BloodDonorScreening(Document):
-	def onload(self):
-		if self.is_new() and not self.questionnaire:
-			self.load_questions()
-
 	def before_insert(self):
 		if not self.questionnaire:
 			self.load_questions()
+		if not self.vital_signs:
+			self.fetch_vital_signs(quiet=True)
+
+	@frappe.whitelist()
+	def load_for_donor(self):
+		"""Called when the donor is picked: questions for the donor's sex + latest vital signs."""
+		self.set("questionnaire", [])
+		self.load_questions()
+		self.fetch_vital_signs(quiet=True)
 
 	def load_questions(self):
+		sex = frappe.db.get_value("Blood Donor", self.donor, "sex") if self.donor else None
 		for q in get_settings().screening_questions:
+			applies = q.get("applies_to") or "All"
+			if applies != "All" and sex and applies != sex:
+				continue
 			self.append("questionnaire", {"question": q.question, "defer_if_answer": q.defer_if_answer,
 				"deferral_reason": q.deferral_reason})
+
+	@frappe.whitelist()
+	def fetch_vital_signs(self, quiet=False):
+		"""Copy weight, BP, pulse and temperature from the donor's latest Vital Signs."""
+		patient = frappe.db.get_value("Blood Donor", self.donor, "patient") if self.donor else None
+		if not patient:
+			return None
+		hours = cint(setting("vital_signs_max_age_hours")) or 24
+		rows = frappe.get_all("Vital Signs", filters={"patient": patient, "docstatus": ["<", 2]},
+			fields=["name", "signs_date", "signs_time", "weight", "bp_systolic", "bp_diastolic", "bp", "pulse", "temperature"],
+			order_by="signs_date desc, signs_time desc, creation desc", limit=1)
+		if not rows:
+			if not quiet:
+				frappe.msgprint(_("No Vital Signs found for this donor. Record them in Vital Signs or type them here."))
+			return None
+		v = rows[0]
+		taken = get_datetime(f"{v.signs_date} {v.signs_time or '00:00:00'}")
+		if taken < add_to_date(now_datetime(), hours=-hours):
+			if not quiet:
+				frappe.msgprint(_("Latest Vital Signs ({0}) are older than {1} hours. Record new ones.").format(v.name, hours))
+			return None
+		sys_bp, dia_bp = v.bp_systolic, v.bp_diastolic
+		if (not sys_bp or not dia_bp) and v.bp and "/" in str(v.bp):
+			sys_bp, dia_bp = str(v.bp).split("/", 1)
+		self.vital_signs = v.name
+		if v.weight:
+			self.weight_kg = flt(v.weight)
+		for field, value in (("bp_systolic", sys_bp), ("bp_diastolic", dia_bp), ("pulse", v.pulse)):
+			n = _number(value)
+			if n:
+				self.set(field, int(n))
+		t = _number(v.temperature)
+		if t:
+			self.temperature = t
+		return v.name
 
 	def validate(self):
 		donor = frappe.get_doc("Blood Donor", self.donor)
@@ -112,3 +158,8 @@ class BloodDonorScreening(Document):
 
 	def on_cancel(self):
 		clear_deferral_from(self)
+
+
+def _number(value):
+	m = re.search(r"\d+(\.\d+)?", str(value or ""))
+	return flt(m.group(0)) if m else None

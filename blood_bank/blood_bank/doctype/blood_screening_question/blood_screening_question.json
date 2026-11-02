@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "question",
+  "applies_to",
   "defer_if_answer",
   "deferral_reason"
  ],
@@ -17,6 +18,15 @@
    "label": "Question",
    "reqd": 1,
    "in_list_view": 1
+  },
+  {
+   "fieldname": "applies_to",
+   "fieldtype": "Select",
+   "label": "Applies To",
+   "options": "All\nMale\nFemale",
+   "default": "All",
+   "in_list_view": 1,
+   "columns": 1
   },
   {
    "fieldname": "defer_if_answer",
