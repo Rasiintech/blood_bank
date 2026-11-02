@@ -1,0 +1,59 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "screening_test",
+  "result",
+  "lab_value",
+  "mandatory"
+ ],
+ "fields": [
+  {
+   "fieldname": "screening_test",
+   "fieldtype": "Link",
+   "label": "Screening Test",
+   "options": "Blood Screening Test",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "result",
+   "fieldtype": "Select",
+   "label": "Result",
+   "options": "Pending\nNon-Reactive\nReactive",
+   "default": "Pending",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "lab_value",
+   "fieldtype": "Data",
+   "label": "Lab Value",
+   "in_list_view": 1,
+   "description": "Raw value as written by the lab"
+  },
+  {
+   "fieldname": "mandatory",
+   "fieldtype": "Check",
+   "label": "Mandatory",
+   "read_only": 1,
+   "fetch_from": "screening_test.mandatory"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Donor Test Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0,
+ "istable": 1
+}

@@ -1,0 +1,21 @@
+{
+ "creation": "2026-11-02 12:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Number Card",
+ "document_type": "Blood Donation",
+ "filters_json": "[[\"Blood Donation\", \"docstatus\", \"=\", 1, false], [\"Blood Donation\", \"collection_datetime\", \"Timespan\", \"this month\", false]]",
+ "function": "Count",
+ "idx": 0,
+ "is_public": 1,
+ "is_standard": 1,
+ "label": "Donations This Month",
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Donations This Month",
+ "owner": "Administrator",
+ "show_percentage_stats": 0,
+ "stats_time_interval": "Daily",
+ "type": "Document Type",
+ "color": "Red"
+}

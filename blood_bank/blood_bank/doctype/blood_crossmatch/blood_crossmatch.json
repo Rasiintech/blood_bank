@@ -1,0 +1,228 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "blood_request",
+  "patient",
+  "patient_name",
+  "patient_blood_group",
+  "cb1",
+  "crossmatch_datetime",
+  "sample_datetime",
+  "method",
+  "valid_until",
+  "sb_lab",
+  "lab_doctype",
+  "lab_reference",
+  "sb_i",
+  "get_compatible_units",
+  "items",
+  "sb_by",
+  "performed_by",
+  "cb2",
+  "verified_by",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "blood_request",
+   "fieldtype": "Link",
+   "label": "Blood Request",
+   "options": "Blood Request",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "patient",
+   "fieldtype": "Link",
+   "label": "Patient",
+   "options": "Patient",
+   "read_only": 1,
+   "fetch_from": "blood_request.patient",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "patient_name",
+   "fieldtype": "Data",
+   "label": "Patient Name",
+   "read_only": 1,
+   "fetch_from": "blood_request.patient_name"
+  },
+  {
+   "fieldname": "patient_blood_group",
+   "fieldtype": "Select",
+   "label": "Patient Blood Group",
+   "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
+   "reqd": 1,
+   "description": "Must match the patient's grouping"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "crossmatch_datetime",
+   "fieldtype": "Datetime",
+   "label": "Crossmatch Datetime",
+   "reqd": 1,
+   "default": "Now"
+  },
+  {
+   "fieldname": "sample_datetime",
+   "fieldtype": "Datetime",
+   "label": "Patient Sample Taken"
+  },
+  {
+   "fieldname": "method",
+   "fieldtype": "Select",
+   "label": "Method",
+   "options": "Saline / Immediate Spin\nAHG (Coombs)\nGel Card\nOther",
+   "default": "Saline / Immediate Spin"
+  },
+  {
+   "fieldname": "valid_until",
+   "fieldtype": "Datetime",
+   "label": "Valid Until",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "sb_lab",
+   "fieldtype": "Section Break",
+   "label": "Lab Result (optional)",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "lab_doctype",
+   "fieldtype": "Link",
+   "label": "Lab Doctype",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "lab_reference",
+   "fieldtype": "Dynamic Link",
+   "label": "Lab Reference",
+   "options": "lab_doctype"
+  },
+  {
+   "fieldname": "sb_i",
+   "fieldtype": "Section Break",
+   "label": "Units Tested"
+  },
+  {
+   "fieldname": "get_compatible_units",
+   "fieldtype": "Button",
+   "label": "Get Compatible Units"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Blood Crossmatch Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sb_by",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "performed_by",
+   "fieldtype": "Link",
+   "label": "Performed By",
+   "options": "User",
+   "default": "__user"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "verified_by",
+   "fieldtype": "Link",
+   "label": "Verified By",
+   "options": "User"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Blood Crossmatch",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Crossmatch",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Blood Bank Officer",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Blood Bank Technician",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Physician",
+   "read": 1,
+   "report": 1,
+   "print": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "is_submittable": 1,
+ "autoname": "BXM-.YYYY.-.#####",
+ "naming_rule": "Expression (old style)",
+ "title_field": "patient_name"
+}

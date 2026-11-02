@@ -1,0 +1,67 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "component",
+  "volume_ml",
+  "storage",
+  "expiry_datetime",
+  "blood_unit"
+ ],
+ "fields": [
+  {
+   "fieldname": "component",
+   "fieldtype": "Link",
+   "label": "Component",
+   "options": "Blood Component",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "volume_ml",
+   "fieldtype": "Int",
+   "label": "Volume (ml)",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "storage",
+   "fieldtype": "Link",
+   "label": "Storage",
+   "options": "Blood Storage",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "expiry_datetime",
+   "fieldtype": "Datetime",
+   "label": "Expiry",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "blood_unit",
+   "fieldtype": "Link",
+   "label": "Blood Unit",
+   "options": "Blood Unit",
+   "read_only": 1,
+   "in_list_view": 1,
+   "no_copy": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Component Preparation Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0,
+ "istable": 1
+}

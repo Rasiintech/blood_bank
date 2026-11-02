@@ -1,0 +1,76 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "blood_unit",
+  "component",
+  "blood_group",
+  "reason",
+  "status_before",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "blood_unit",
+   "fieldtype": "Link",
+   "label": "Blood Unit",
+   "options": "Blood Unit",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "component",
+   "fieldtype": "Link",
+   "label": "Component",
+   "options": "Blood Component",
+   "read_only": 1,
+   "in_list_view": 1,
+   "fetch_from": "blood_unit.component"
+  },
+  {
+   "fieldname": "blood_group",
+   "fieldtype": "Data",
+   "label": "Blood Group",
+   "read_only": 1,
+   "in_list_view": 1,
+   "fetch_from": "blood_unit.blood_group"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Select",
+   "label": "Reason",
+   "options": "Expired\nReactive Test\nDamaged / Leaking Bag\nTemperature Excursion\nReturned Late\nHaemolysed / Clotted\nTransfusion Reaction\nOther",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "status_before",
+   "fieldtype": "Data",
+   "label": "Status Before",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Unit Discard Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0,
+ "istable": 1
+}

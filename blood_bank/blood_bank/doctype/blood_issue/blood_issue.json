@@ -1,0 +1,222 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "blood_request",
+  "patient",
+  "patient_name",
+  "patient_blood_group",
+  "inpatient_record",
+  "cb1",
+  "issue_datetime",
+  "issued_by",
+  "received_by",
+  "sales_invoice",
+  "sb_em",
+  "emergency_release",
+  "authorised_by",
+  "sb_i",
+  "get_reserved_units",
+  "items",
+  "remarks",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "blood_request",
+   "fieldtype": "Link",
+   "label": "Blood Request",
+   "options": "Blood Request",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "patient",
+   "fieldtype": "Link",
+   "label": "Patient",
+   "options": "Patient",
+   "read_only": 1,
+   "fetch_from": "blood_request.patient",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "patient_name",
+   "fieldtype": "Data",
+   "label": "Patient Name",
+   "read_only": 1,
+   "fetch_from": "blood_request.patient_name"
+  },
+  {
+   "fieldname": "patient_blood_group",
+   "fieldtype": "Data",
+   "label": "Patient Blood Group",
+   "read_only": 1,
+   "fetch_from": "blood_request.patient_blood_group"
+  },
+  {
+   "fieldname": "inpatient_record",
+   "fieldtype": "Link",
+   "label": "Inpatient Record",
+   "options": "Inpatient Record",
+   "read_only": 1,
+   "fetch_from": "blood_request.inpatient_record"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "issue_datetime",
+   "fieldtype": "Datetime",
+   "label": "Issue Datetime",
+   "reqd": 1,
+   "default": "Now",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "issued_by",
+   "fieldtype": "Link",
+   "label": "Issued By",
+   "options": "User",
+   "default": "__user"
+  },
+  {
+   "fieldname": "received_by",
+   "fieldtype": "Data",
+   "label": "Received By (Nurse)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice",
+   "read_only": 1,
+   "fetch_from": "blood_request.sales_invoice"
+  },
+  {
+   "fieldname": "sb_em",
+   "fieldtype": "Section Break",
+   "label": "Emergency"
+  },
+  {
+   "fieldname": "emergency_release",
+   "fieldtype": "Check",
+   "label": "Emergency Release",
+   "description": "Issue uncrossmatched blood. Take the patient sample first; crossmatch afterwards."
+  },
+  {
+   "fieldname": "authorised_by",
+   "fieldtype": "Link",
+   "label": "Authorised By",
+   "options": "User",
+   "depends_on": "emergency_release",
+   "description": "Blood Bank Officer who authorised the release"
+  },
+  {
+   "fieldname": "sb_i",
+   "fieldtype": "Section Break",
+   "label": "Units"
+  },
+  {
+   "fieldname": "get_reserved_units",
+   "fieldtype": "Button",
+   "label": "Get Reserved Units"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Blood Issue Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Blood Issue",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Issue",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Blood Bank Officer",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Blood Bank Technician",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Nursing User",
+   "read": 1,
+   "report": 1,
+   "print": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "is_submittable": 1,
+ "autoname": "BIS-.YYYY.-.#####",
+ "naming_rule": "Expression (old style)",
+ "title_field": "patient_name",
+ "default_print_format": "Blood Issue Slip"
+}

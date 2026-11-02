@@ -1,0 +1,256 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "donor_name",
+  "sex",
+  "date_of_birth",
+  "age_years",
+  "cb1",
+  "mobile_no",
+  "id_number",
+  "blood_group",
+  "default_donor_type",
+  "patient",
+  "address",
+  "sb_status",
+  "status",
+  "deferred_until",
+  "deferral_reason",
+  "deferral_source",
+  "deferral_source_type",
+  "cb2",
+  "last_donation_date",
+  "next_eligible_date",
+  "total_donations",
+  "sb_notes",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "BD-.#####",
+   "default": "BD-.#####",
+   "hidden": 1
+  },
+  {
+   "fieldname": "donor_name",
+   "fieldtype": "Data",
+   "label": "Full Name",
+   "reqd": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "sex",
+   "fieldtype": "Select",
+   "label": "Sex",
+   "options": "\nMale\nFemale",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "date_of_birth",
+   "fieldtype": "Date",
+   "label": "Date Of Birth"
+  },
+  {
+   "fieldname": "age_years",
+   "fieldtype": "Int",
+   "label": "Age (years)",
+   "description": "Calculated from date of birth when given"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mobile_no",
+   "fieldtype": "Data",
+   "label": "Mobile No",
+   "options": "Phone",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "id_number",
+   "fieldtype": "Data",
+   "label": "ID Number"
+  },
+  {
+   "fieldname": "blood_group",
+   "fieldtype": "Select",
+   "label": "Blood Group",
+   "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "default_donor_type",
+   "fieldtype": "Select",
+   "label": "Default Donor Type",
+   "options": "Voluntary\nReplacement",
+   "default": "Voluntary"
+  },
+  {
+   "fieldname": "patient",
+   "fieldtype": "Link",
+   "label": "Patient",
+   "options": "Patient",
+   "description": "Only needed when the lab must record the donor's tests under a Patient"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "sb_status",
+   "fieldtype": "Section Break",
+   "label": "Eligibility"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nTemporarily Deferred\nPermanently Deferred",
+   "default": "Active",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "deferred_until",
+   "fieldtype": "Date",
+   "label": "Deferred Until",
+   "read_only": 1
+  },
+  {
+   "fieldname": "deferral_reason",
+   "fieldtype": "Link",
+   "label": "Deferral Reason",
+   "options": "Blood Deferral Reason",
+   "read_only": 1
+  },
+  {
+   "fieldname": "deferral_source",
+   "fieldtype": "Dynamic Link",
+   "label": "Deferral Source",
+   "options": "deferral_source_type",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "deferral_source_type",
+   "fieldtype": "Link",
+   "label": "Deferral Source Type",
+   "options": "DocType",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "last_donation_date",
+   "fieldtype": "Date",
+   "label": "Last Donation Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "next_eligible_date",
+   "fieldtype": "Date",
+   "label": "Next Eligible Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_donations",
+   "fieldtype": "Int",
+   "label": "Total Donations",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_notes",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Donor",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Blood Bank Officer",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Blood Bank Technician",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Blood Bank Reception",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "naming_series:",
+ "naming_rule": "By \"Naming Series\" field",
+ "title_field": "donor_name",
+ "search_fields": "donor_name,mobile_no,id_number,blood_group",
+ "show_title_field_in_link": 1
+}

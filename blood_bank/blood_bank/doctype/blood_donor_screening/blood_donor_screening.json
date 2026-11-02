@@ -1,0 +1,303 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "donor",
+  "donor_name",
+  "sex",
+  "age_years",
+  "cb1",
+  "screening_datetime",
+  "donor_type",
+  "replacement_for",
+  "replacement_patient_name",
+  "blood_request",
+  "sb_q",
+  "questionnaire",
+  "sb_v",
+  "weight_kg",
+  "hb_g_dl",
+  "cb2",
+  "bp_systolic",
+  "bp_diastolic",
+  "cb3",
+  "pulse",
+  "temperature",
+  "sb_r",
+  "result",
+  "eligibility_notes",
+  "cb4",
+  "deferral_reason",
+  "deferred_until",
+  "screened_by",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "donor",
+   "fieldtype": "Link",
+   "label": "Donor",
+   "options": "Blood Donor",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "donor_name",
+   "fieldtype": "Data",
+   "label": "Donor Name",
+   "read_only": 1,
+   "fetch_from": "donor.donor_name",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "sex",
+   "fieldtype": "Data",
+   "label": "Sex",
+   "read_only": 1,
+   "fetch_from": "donor.sex"
+  },
+  {
+   "fieldname": "age_years",
+   "fieldtype": "Int",
+   "label": "Age",
+   "read_only": 1,
+   "fetch_from": "donor.age_years"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "screening_datetime",
+   "fieldtype": "Datetime",
+   "label": "Screening Datetime",
+   "reqd": 1,
+   "default": "Now"
+  },
+  {
+   "fieldname": "donor_type",
+   "fieldtype": "Select",
+   "label": "Donor Type",
+   "options": "Voluntary\nReplacement",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "replacement_for",
+   "fieldtype": "Link",
+   "label": "Replacement For (Patient)",
+   "options": "Patient",
+   "depends_on": "eval:doc.donor_type=='Replacement'"
+  },
+  {
+   "fieldname": "replacement_patient_name",
+   "fieldtype": "Data",
+   "label": "Patient Name",
+   "read_only": 1,
+   "fetch_from": "replacement_for.patient_name",
+   "depends_on": "eval:doc.donor_type=='Replacement'"
+  },
+  {
+   "fieldname": "blood_request",
+   "fieldtype": "Link",
+   "label": "Blood Request",
+   "options": "Blood Request",
+   "depends_on": "eval:doc.donor_type=='Replacement'"
+  },
+  {
+   "fieldname": "sb_q",
+   "fieldtype": "Section Break",
+   "label": "Questionnaire"
+  },
+  {
+   "fieldname": "questionnaire",
+   "fieldtype": "Table",
+   "label": "Questionnaire",
+   "options": "Blood Screening Answer"
+  },
+  {
+   "fieldname": "sb_v",
+   "fieldtype": "Section Break",
+   "label": "Physical Check"
+  },
+  {
+   "fieldname": "weight_kg",
+   "fieldtype": "Float",
+   "label": "Weight (kg)"
+  },
+  {
+   "fieldname": "hb_g_dl",
+   "fieldtype": "Float",
+   "label": "Hb (g/dL)",
+   "description": "Optional here; can come from the donor test"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bp_systolic",
+   "fieldtype": "Int",
+   "label": "BP Systolic"
+  },
+  {
+   "fieldname": "bp_diastolic",
+   "fieldtype": "Int",
+   "label": "BP Diastolic"
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pulse",
+   "fieldtype": "Int",
+   "label": "Pulse"
+  },
+  {
+   "fieldname": "temperature",
+   "fieldtype": "Float",
+   "label": "Temperature (°C)"
+  },
+  {
+   "fieldname": "sb_r",
+   "fieldtype": "Section Break",
+   "label": "Result"
+  },
+  {
+   "fieldname": "result",
+   "fieldtype": "Select",
+   "label": "Result",
+   "options": "\nAccepted\nDeferred",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "eligibility_notes",
+   "fieldtype": "Small Text",
+   "label": "Eligibility Notes",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "cb4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "deferral_reason",
+   "fieldtype": "Link",
+   "label": "Deferral Reason",
+   "options": "Blood Deferral Reason",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "deferred_until",
+   "fieldtype": "Date",
+   "label": "Deferred Until",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "screened_by",
+   "fieldtype": "Link",
+   "label": "Screened By",
+   "options": "User",
+   "default": "__user"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Blood Donor Screening",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Donor Screening",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Blood Bank Officer",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Blood Bank Technician",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Blood Bank Reception",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 0,
+   "amend": 0
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "is_submittable": 1,
+ "autoname": "BDS-.YYYY.-.#####",
+ "naming_rule": "Expression (old style)",
+ "title_field": "donor_name"
+}

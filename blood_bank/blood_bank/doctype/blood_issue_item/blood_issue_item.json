@@ -1,0 +1,71 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "blood_unit",
+  "component",
+  "blood_group",
+  "expiry_datetime",
+  "crossmatch"
+ ],
+ "fields": [
+  {
+   "fieldname": "blood_unit",
+   "fieldtype": "Link",
+   "label": "Blood Unit",
+   "options": "Blood Unit",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "component",
+   "fieldtype": "Link",
+   "label": "Component",
+   "options": "Blood Component",
+   "read_only": 1,
+   "in_list_view": 1,
+   "fetch_from": "blood_unit.component"
+  },
+  {
+   "fieldname": "blood_group",
+   "fieldtype": "Data",
+   "label": "Blood Group",
+   "read_only": 1,
+   "in_list_view": 1,
+   "fetch_from": "blood_unit.blood_group"
+  },
+  {
+   "fieldname": "expiry_datetime",
+   "fieldtype": "Datetime",
+   "label": "Expiry",
+   "read_only": 1,
+   "in_list_view": 1,
+   "fetch_from": "blood_unit.expiry_datetime"
+  },
+  {
+   "fieldname": "crossmatch",
+   "fieldtype": "Link",
+   "label": "Crossmatch",
+   "options": "Blood Crossmatch",
+   "read_only": 1,
+   "fetch_from": "blood_unit.crossmatch"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Issue Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0,
+ "istable": 1
+}

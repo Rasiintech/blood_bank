@@ -1,0 +1,183 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "component_name",
+  "abbreviation",
+  "is_whole_blood",
+  "can_prepare_from_whole_blood",
+  "compatibility_rule",
+  "cb1",
+  "storage_type",
+  "min_temp",
+  "max_temp",
+  "shelf_life_days",
+  "shelf_life_hours",
+  "sb_bill",
+  "billing_item",
+  "disabled",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "component_name",
+   "fieldtype": "Data",
+   "label": "Component Name",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "abbreviation",
+   "fieldtype": "Data",
+   "label": "Abbreviation",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1,
+   "description": "Used as suffix on unit numbers, e.g. RBC"
+  },
+  {
+   "fieldname": "is_whole_blood",
+   "fieldtype": "Check",
+   "label": "Is Whole Blood"
+  },
+  {
+   "fieldname": "can_prepare_from_whole_blood",
+   "fieldtype": "Check",
+   "label": "Can Prepare From Whole Blood",
+   "default": "1"
+  },
+  {
+   "fieldname": "compatibility_rule",
+   "fieldtype": "Select",
+   "label": "Compatibility Rule",
+   "options": "Identical\nRed Cell\nPlasma\nAny",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "Identical: same ABO. Red Cell: patient can receive own group or O (RhD negative patient needs negative). Plasma: reverse rule. Any: no ABO block (warning only)."
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "storage_type",
+   "fieldtype": "Select",
+   "label": "Storage Type",
+   "options": "Refrigerator\nFreezer\nPlatelet Agitator\nRoom Temperature",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "min_temp",
+   "fieldtype": "Float",
+   "label": "Min Storage Temp (°C)"
+  },
+  {
+   "fieldname": "max_temp",
+   "fieldtype": "Float",
+   "label": "Max Storage Temp (°C)"
+  },
+  {
+   "fieldname": "shelf_life_days",
+   "fieldtype": "Int",
+   "label": "Shelf Life Days",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "shelf_life_hours",
+   "fieldtype": "Int",
+   "label": "Shelf Life Hours",
+   "description": "Added to shelf life days"
+  },
+  {
+   "fieldname": "sb_bill",
+   "fieldtype": "Section Break",
+   "label": "Billing"
+  },
+  {
+   "fieldname": "billing_item",
+   "fieldtype": "Link",
+   "label": "Billing Item",
+   "options": "Item",
+   "description": "Item charged to the patient, e.g. the 'Blood transfusion + cross matching (RBC)' lab template item"
+  },
+  {
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Component",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Blood Bank Officer",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Blood Bank Technician",
+   "read": 1,
+   "report": 1,
+   "print": 1
+  },
+  {
+   "role": "Blood Bank Reception",
+   "read": 1,
+   "report": 1,
+   "print": 1
+  },
+  {
+   "role": "Physician",
+   "read": 1,
+   "report": 1,
+   "print": 1
+  },
+  {
+   "role": "Nursing User",
+   "read": 1,
+   "report": 1,
+   "print": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "field:component_name",
+ "naming_rule": "By fieldname"
+}

@@ -1,0 +1,257 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "donor",
+  "donor_name",
+  "sex",
+  "donor_screening",
+  "cb1",
+  "test_datetime",
+  "blood_donation",
+  "sb_lab",
+  "lab_doctype",
+  "lab_reference",
+  "fetch_lab_results",
+  "sb_res",
+  "blood_group",
+  "cb2",
+  "hb_g_dl",
+  "hb_ok",
+  "sb_tests",
+  "tests",
+  "sb_v",
+  "overall_result",
+  "tested_by",
+  "cb3",
+  "verified_by",
+  "remarks",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "donor",
+   "fieldtype": "Link",
+   "label": "Donor",
+   "options": "Blood Donor",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "donor_name",
+   "fieldtype": "Data",
+   "label": "Donor Name",
+   "read_only": 1,
+   "fetch_from": "donor.donor_name",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "sex",
+   "fieldtype": "Data",
+   "label": "Sex",
+   "read_only": 1,
+   "fetch_from": "donor.sex"
+  },
+  {
+   "fieldname": "donor_screening",
+   "fieldtype": "Link",
+   "label": "Donor Screening",
+   "options": "Blood Donor Screening",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "test_datetime",
+   "fieldtype": "Datetime",
+   "label": "Test Datetime",
+   "reqd": 1,
+   "default": "Now"
+  },
+  {
+   "fieldname": "blood_donation",
+   "fieldtype": "Link",
+   "label": "Blood Donation",
+   "options": "Blood Donation",
+   "description": "Test the Bag mode: the donation whose bag this test clears"
+  },
+  {
+   "fieldname": "sb_lab",
+   "fieldtype": "Section Break",
+   "label": "Lab Result"
+  },
+  {
+   "fieldname": "lab_doctype",
+   "fieldtype": "Link",
+   "label": "Lab Doctype",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "lab_reference",
+   "fieldtype": "Dynamic Link",
+   "label": "Lab Reference",
+   "options": "lab_doctype",
+   "description": "For replacement donors this can be the patient's 'Blood transfusion + cross matching' lab result"
+  },
+  {
+   "fieldname": "fetch_lab_results",
+   "fieldtype": "Button",
+   "label": "Fetch Results From Lab"
+  },
+  {
+   "fieldname": "sb_res",
+   "fieldtype": "Section Break",
+   "label": "Results"
+  },
+  {
+   "fieldname": "blood_group",
+   "fieldtype": "Select",
+   "label": "Blood Group",
+   "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hb_g_dl",
+   "fieldtype": "Float",
+   "label": "Hb (g/dL)"
+  },
+  {
+   "fieldname": "hb_ok",
+   "fieldtype": "Check",
+   "label": "Hb Acceptable",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "sb_tests",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "tests",
+   "fieldtype": "Table",
+   "label": "Tests",
+   "options": "Blood Donor Test Item"
+  },
+  {
+   "fieldname": "sb_v",
+   "fieldtype": "Section Break",
+   "label": "Verdict"
+  },
+  {
+   "fieldname": "overall_result",
+   "fieldtype": "Select",
+   "label": "Overall Result",
+   "options": "Incomplete\nNon-Reactive\nReactive",
+   "default": "Incomplete",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "tested_by",
+   "fieldtype": "Link",
+   "label": "Tested By",
+   "options": "User",
+   "default": "__user"
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "verified_by",
+   "fieldtype": "Link",
+   "label": "Verified By",
+   "options": "User",
+   "description": "Second person who checked the results"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Blood Donor Test",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Donor Test",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Blood Bank Officer",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Blood Bank Technician",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "is_submittable": 1,
+ "autoname": "BDT-.YYYY.-.#####",
+ "naming_rule": "Expression (old style)",
+ "title_field": "donor_name"
+}

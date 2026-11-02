@@ -1,0 +1,358 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "patient",
+  "patient_name",
+  "sex",
+  "patient_blood_group",
+  "cb1",
+  "request_datetime",
+  "urgency",
+  "required_by",
+  "status",
+  "sb_src",
+  "practitioner",
+  "practitioner_name",
+  "external_practitioner",
+  "cb2",
+  "inpatient_record",
+  "encounter",
+  "medical_department",
+  "sb_clin",
+  "indication",
+  "cb3",
+  "hb_g_dl",
+  "platelet_count",
+  "previous_transfusion",
+  "sb_items",
+  "items",
+  "sb_rep",
+  "replacement_donors_needed",
+  "cb4",
+  "replacement_donations",
+  "sb_bill",
+  "sales_invoice",
+  "cb5",
+  "invoice_status",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "patient",
+   "fieldtype": "Link",
+   "label": "Patient",
+   "options": "Patient",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "patient_name",
+   "fieldtype": "Data",
+   "label": "Patient Name",
+   "read_only": 1,
+   "fetch_from": "patient.patient_name",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "sex",
+   "fieldtype": "Data",
+   "label": "Sex",
+   "read_only": 1,
+   "fetch_from": "patient.sex"
+  },
+  {
+   "fieldname": "patient_blood_group",
+   "fieldtype": "Select",
+   "label": "Patient Blood Group",
+   "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
+   "description": "Taken from the patient record; enter it from the grouping result if empty"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "request_datetime",
+   "fieldtype": "Datetime",
+   "label": "Request Datetime",
+   "reqd": 1,
+   "default": "Now"
+  },
+  {
+   "fieldname": "urgency",
+   "fieldtype": "Select",
+   "label": "Urgency",
+   "options": "Routine\nUrgent\nEmergency",
+   "default": "Routine",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "required_by",
+   "fieldtype": "Datetime",
+   "label": "Required By"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nRequested\nAwaiting Donor\nCrossmatched\nPartially Issued\nIssued\nCompleted\nCancelled",
+   "default": "Draft",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "sb_src",
+   "fieldtype": "Section Break",
+   "label": "Ordered By"
+  },
+  {
+   "fieldname": "practitioner",
+   "fieldtype": "Link",
+   "label": "Doctor",
+   "options": "Healthcare Practitioner"
+  },
+  {
+   "fieldname": "practitioner_name",
+   "fieldtype": "Data",
+   "label": "Doctor Name",
+   "read_only": 1,
+   "fetch_from": "practitioner.practitioner_name"
+  },
+  {
+   "fieldname": "external_practitioner",
+   "fieldtype": "Data",
+   "label": "External Doctor",
+   "description": "For patients referred with a paper request"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "inpatient_record",
+   "fieldtype": "Link",
+   "label": "Inpatient Record",
+   "options": "Inpatient Record"
+  },
+  {
+   "fieldname": "encounter",
+   "fieldtype": "Link",
+   "label": "Patient Encounter",
+   "options": "Patient Encounter"
+  },
+  {
+   "fieldname": "medical_department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Medical Department"
+  },
+  {
+   "fieldname": "sb_clin",
+   "fieldtype": "Section Break",
+   "label": "Clinical Details"
+  },
+  {
+   "fieldname": "indication",
+   "fieldtype": "Small Text",
+   "label": "Indication / Diagnosis",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hb_g_dl",
+   "fieldtype": "Float",
+   "label": "Latest Hb (g/dL)"
+  },
+  {
+   "fieldname": "platelet_count",
+   "fieldtype": "Float",
+   "label": "Latest Platelet Count"
+  },
+  {
+   "fieldname": "previous_transfusion",
+   "fieldtype": "Select",
+   "label": "Previous Transfusion",
+   "options": "\nNo\nYes"
+  },
+  {
+   "fieldname": "sb_items",
+   "fieldtype": "Section Break",
+   "label": "Blood Required"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Blood Request Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sb_rep",
+   "fieldtype": "Section Break",
+   "label": "Replacement Donors"
+  },
+  {
+   "fieldname": "replacement_donors_needed",
+   "fieldtype": "Int",
+   "label": "Replacement Donors Needed",
+   "description": "How many relatives must donate (0 = none)"
+  },
+  {
+   "fieldname": "cb4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "replacement_donations",
+   "fieldtype": "Int",
+   "label": "Replacement Donations",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "sb_bill",
+   "fieldtype": "Section Break",
+   "label": "Billing"
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "cb5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "invoice_status",
+   "fieldtype": "Data",
+   "label": "Invoice Status",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Blood Request",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Request",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Blood Bank Officer",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Blood Bank Technician",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Blood Bank Reception",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 0,
+   "amend": 0
+  },
+  {
+   "role": "Physician",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Nursing User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "report": 1,
+   "print": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "is_submittable": 1,
+ "autoname": "BR-.YYYY.-.#####",
+ "naming_rule": "Expression (old style)",
+ "title_field": "patient_name"
+}

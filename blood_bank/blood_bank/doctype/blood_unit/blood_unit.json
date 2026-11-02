@@ -1,0 +1,403 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "unit_number",
+  "status",
+  "test_status",
+  "cb1",
+  "component",
+  "blood_group",
+  "volume_ml",
+  "cb2",
+  "collection_datetime",
+  "expiry_datetime",
+  "storage",
+  "sb_src",
+  "source",
+  "blood_donation",
+  "parent_unit",
+  "component_preparation",
+  "cb3",
+  "blood_unit_receipt",
+  "supplier",
+  "external_unit_number",
+  "sb_donor",
+  "donor",
+  "donor_test",
+  "sb_alloc",
+  "reserved_for",
+  "reserved_patient_name",
+  "blood_request",
+  "crossmatch",
+  "reserved_until",
+  "cb4",
+  "blood_issue",
+  "issued_on",
+  "blood_transfusion",
+  "transfused_on",
+  "sb_rel",
+  "released_by",
+  "released_on",
+  "cb5",
+  "blood_unit_discard",
+  "discard_reason",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "unit_number",
+   "fieldtype": "Data",
+   "label": "Unit Number",
+   "reqd": 1,
+   "unique": 1,
+   "read_only": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Quarantine\nAvailable\nReserved\nIssued\nTransfused\nDiscarded\nExpired\nProcessed",
+   "default": "Quarantine",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "test_status",
+   "fieldtype": "Select",
+   "label": "Test Status",
+   "options": "Pending\nCleared\nReactive\nOn Hold\nNot Required",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "component",
+   "fieldtype": "Link",
+   "label": "Component",
+   "options": "Blood Component",
+   "reqd": 1,
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "blood_group",
+   "fieldtype": "Select",
+   "label": "Blood Group",
+   "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Empty only while a first-time donor's bag waits for grouping"
+  },
+  {
+   "fieldname": "volume_ml",
+   "fieldtype": "Int",
+   "label": "Volume (ml)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "collection_datetime",
+   "fieldtype": "Datetime",
+   "label": "Collection Datetime",
+   "read_only": 1
+  },
+  {
+   "fieldname": "expiry_datetime",
+   "fieldtype": "Datetime",
+   "label": "Expiry",
+   "reqd": 1,
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "storage",
+   "fieldtype": "Link",
+   "label": "Storage",
+   "options": "Blood Storage",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "sb_src",
+   "fieldtype": "Section Break",
+   "label": "Source"
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "Donation\nReceived\nPrepared",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "blood_donation",
+   "fieldtype": "Link",
+   "label": "Blood Donation",
+   "options": "Blood Donation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "parent_unit",
+   "fieldtype": "Link",
+   "label": "Parent Unit",
+   "options": "Blood Unit",
+   "read_only": 1
+  },
+  {
+   "fieldname": "component_preparation",
+   "fieldtype": "Link",
+   "label": "Component Preparation",
+   "options": "Blood Component Preparation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "blood_unit_receipt",
+   "fieldtype": "Link",
+   "label": "Blood Unit Receipt",
+   "options": "Blood Unit Receipt",
+   "read_only": 1
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Supplier",
+   "options": "Supplier",
+   "read_only": 1
+  },
+  {
+   "fieldname": "external_unit_number",
+   "fieldtype": "Data",
+   "label": "Supplier Unit No.",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_donor",
+   "fieldtype": "Section Break",
+   "label": "Donor (Blood Bank only)",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "donor",
+   "fieldtype": "Link",
+   "label": "Donor",
+   "options": "Blood Donor",
+   "read_only": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "donor_test",
+   "fieldtype": "Link",
+   "label": "Donor Test",
+   "options": "Blood Donor Test",
+   "read_only": 1,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "sb_alloc",
+   "fieldtype": "Section Break",
+   "label": "Allocation"
+  },
+  {
+   "fieldname": "reserved_for",
+   "fieldtype": "Link",
+   "label": "Reserved For (Patient)",
+   "options": "Patient",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reserved_patient_name",
+   "fieldtype": "Data",
+   "label": "Patient Name",
+   "read_only": 1,
+   "fetch_from": "reserved_for.patient_name"
+  },
+  {
+   "fieldname": "blood_request",
+   "fieldtype": "Link",
+   "label": "Blood Request",
+   "options": "Blood Request",
+   "read_only": 1
+  },
+  {
+   "fieldname": "crossmatch",
+   "fieldtype": "Link",
+   "label": "Crossmatch",
+   "options": "Blood Crossmatch",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reserved_until",
+   "fieldtype": "Datetime",
+   "label": "Reserved Until",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "blood_issue",
+   "fieldtype": "Link",
+   "label": "Blood Issue",
+   "options": "Blood Issue",
+   "read_only": 1
+  },
+  {
+   "fieldname": "issued_on",
+   "fieldtype": "Datetime",
+   "label": "Issued On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "blood_transfusion",
+   "fieldtype": "Link",
+   "label": "Blood Transfusion",
+   "options": "Blood Transfusion",
+   "read_only": 1
+  },
+  {
+   "fieldname": "transfused_on",
+   "fieldtype": "Datetime",
+   "label": "Transfused On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_rel",
+   "fieldtype": "Section Break",
+   "label": "Release and Disposal"
+  },
+  {
+   "fieldname": "released_by",
+   "fieldtype": "Link",
+   "label": "Released By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "released_on",
+   "fieldtype": "Datetime",
+   "label": "Released On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "blood_unit_discard",
+   "fieldtype": "Link",
+   "label": "Blood Unit Discard",
+   "options": "Blood Unit Discard",
+   "read_only": 1
+  },
+  {
+   "fieldname": "discard_reason",
+   "fieldtype": "Data",
+   "label": "Discard Reason",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Unit",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Blood Bank Officer",
+   "read": 1,
+   "write": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "share": 1
+  },
+  {
+   "role": "Blood Bank Officer",
+   "read": 1,
+   "write": 1,
+   "permlevel": 1
+  },
+  {
+   "role": "Blood Bank Technician",
+   "read": 1,
+   "write": 1,
+   "report": 1,
+   "print": 1
+  },
+  {
+   "role": "Blood Bank Technician",
+   "read": 1,
+   "permlevel": 1
+  },
+  {
+   "role": "Blood Bank Reception",
+   "read": 1,
+   "report": 1,
+   "print": 1
+  },
+  {
+   "role": "Physician",
+   "read": 1,
+   "report": 1,
+   "print": 1
+  },
+  {
+   "role": "Nursing User",
+   "read": 1,
+   "report": 1,
+   "print": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "permlevel": 1
+  }
+ ],
+ "sort_field": "expiry_datetime",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "field:unit_number",
+ "naming_rule": "By fieldname",
+ "title_field": "unit_number",
+ "search_fields": "component,blood_group,status",
+ "default_print_format": "Blood Unit Label"
+}

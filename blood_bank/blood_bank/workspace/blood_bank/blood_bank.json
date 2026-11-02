@@ -1,0 +1,478 @@
+{
+ "charts": [
+  {
+   "chart_name": "Blood Donations",
+   "label": "Blood Donations"
+  },
+  {
+   "chart_name": "Blood Units Issued",
+   "label": "Blood Units Issued"
+  }
+ ],
+ "content": "[{\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Blood Bank</b></span>\", \"col\": 12}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Available Blood Units\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Units Ready to Release\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Reserved Blood Units\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Open Blood Requests\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Donations This Month\", \"col\": 4}}, {\"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">Shortcuts</span>\", \"col\": 12}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Bank Dashboard\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Donor\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Request\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Unit\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Stock Summary\", \"col\": 3}}, {\"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"type\": \"chart\", \"data\": {\"chart_name\": \"Blood Donations\", \"col\": 6}}, {\"type\": \"chart\", \"data\": {\"chart_name\": \"Blood Units Issued\", \"col\": 6}}, {\"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">Blood Bank</span>\", \"col\": 12}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Donors\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Stock\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Transfusion\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Stock Reports\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Donor Reports\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Transfusion Reports\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Setup\", \"col\": 4}}]",
+ "creation": "2026-11-02 12:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "healthcare",
+ "idx": 0,
+ "label": "Blood Bank",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Donors",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Donor",
+   "link_count": 0,
+   "link_to": "Blood Donor",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Donor Screening",
+   "link_count": 0,
+   "link_to": "Blood Donor Screening",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Donor Test",
+   "link_count": 0,
+   "link_to": "Blood Donor Test",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Donation",
+   "link_count": 0,
+   "link_to": "Blood Donation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stock",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Unit",
+   "link_count": 0,
+   "link_to": "Blood Unit",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Component Preparation",
+   "link_count": 0,
+   "link_to": "Blood Component Preparation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Unit Receipt",
+   "link_count": 0,
+   "link_to": "Blood Unit Receipt",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Unit Discard",
+   "link_count": 0,
+   "link_to": "Blood Unit Discard",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Storage Temperature Log",
+   "link_count": 0,
+   "link_to": "Blood Storage Temperature Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Transfusion",
+   "link_count": 6,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Request",
+   "link_count": 0,
+   "link_to": "Blood Request",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Crossmatch",
+   "link_count": 0,
+   "link_to": "Blood Crossmatch",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Issue",
+   "link_count": 0,
+   "link_to": "Blood Issue",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Transfusion",
+   "link_count": 0,
+   "link_to": "Blood Transfusion",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Transfusion Reaction",
+   "link_count": 0,
+   "link_to": "Blood Transfusion Reaction",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Unit Return",
+   "link_count": 0,
+   "link_to": "Blood Unit Return",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stock Reports",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Blood Stock Summary",
+   "link_count": 0,
+   "link_to": "Blood Stock Summary",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Near Expiry Units",
+   "link_count": 0,
+   "link_to": "Near Expiry Units",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Blood Wastage Report",
+   "link_count": 0,
+   "link_to": "Blood Wastage Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Blood Unit Traceability",
+   "link_count": 0,
+   "link_to": "Blood Unit Traceability",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Donor Reports",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Blood Donation Register",
+   "link_count": 0,
+   "link_to": "Blood Donation Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Donor Deferral Analysis",
+   "link_count": 0,
+   "link_to": "Donor Deferral Analysis",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "TTI Screening Summary",
+   "link_count": 0,
+   "link_to": "TTI Screening Summary",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Transfusion Reports",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Blood Issue Register",
+   "link_count": 0,
+   "link_to": "Blood Issue Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Crossmatch Transfusion Ratio",
+   "link_count": 0,
+   "link_to": "Crossmatch Transfusion Ratio",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Transfusion Reaction Register",
+   "link_count": 0,
+   "link_to": "Transfusion Reaction Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Setup",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Bank Settings",
+   "link_count": 0,
+   "link_to": "Blood Bank Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Component",
+   "link_count": 0,
+   "link_to": "Blood Component",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Storage",
+   "link_count": 0,
+   "link_to": "Blood Storage",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Screening Test",
+   "link_count": 0,
+   "link_to": "Blood Screening Test",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Deferral Reason",
+   "link_count": 0,
+   "link_to": "Blood Deferral Reason",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Bank",
+ "number_cards": [
+  {
+   "label": "Available Blood Units",
+   "number_card_name": "Available Blood Units"
+  },
+  {
+   "label": "Units Ready to Release",
+   "number_card_name": "Units Ready to Release"
+  },
+  {
+   "label": "Reserved Blood Units",
+   "number_card_name": "Reserved Blood Units"
+  },
+  {
+   "label": "Open Blood Requests",
+   "number_card_name": "Open Blood Requests"
+  },
+  {
+   "label": "Donations This Month",
+   "number_card_name": "Donations This Month"
+  }
+ ],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 14.0,
+ "shortcuts": [
+  {
+   "color": "Red",
+   "label": "Blood Bank Dashboard",
+   "link_to": "blood-bank-dashboard",
+   "type": "Page"
+  },
+  {
+   "color": "Blue",
+   "label": "Blood Donor",
+   "link_to": "Blood Donor",
+   "type": "DocType"
+  },
+  {
+   "color": "Purple",
+   "format": "{} Open",
+   "label": "Blood Request",
+   "link_to": "Blood Request",
+   "stats_filter": "{\"docstatus\": 1, \"status\": [\"in\", [\"Requested\", \"Awaiting Donor\", \"Crossmatched\", \"Partially Issued\"]]}",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "format": "{} Available",
+   "label": "Blood Unit",
+   "link_to": "Blood Unit",
+   "stats_filter": "{\"status\": \"Available\"}",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "label": "Blood Stock Summary",
+   "link_to": "Blood Stock Summary",
+   "type": "Report"
+  }
+ ],
+ "title": "Blood Bank"
+}

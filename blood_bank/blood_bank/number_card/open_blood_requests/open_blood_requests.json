@@ -1,0 +1,21 @@
+{
+ "creation": "2026-11-02 12:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Number Card",
+ "document_type": "Blood Request",
+ "filters_json": "[[\"Blood Request\", \"docstatus\", \"=\", 1, false], [\"Blood Request\", \"status\", \"in\", [\"Requested\", \"Awaiting Donor\", \"Crossmatched\", \"Partially Issued\"], false]]",
+ "function": "Count",
+ "idx": 0,
+ "is_public": 1,
+ "is_standard": 1,
+ "label": "Open Blood Requests",
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Open Blood Requests",
+ "owner": "Administrator",
+ "show_percentage_stats": 0,
+ "stats_time_interval": "Daily",
+ "type": "Document Type",
+ "color": "Purple"
+}

@@ -1,0 +1,60 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "question",
+  "answer",
+  "defer_if_answer",
+  "deferral_reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "question",
+   "fieldtype": "Small Text",
+   "label": "Question",
+   "reqd": 1,
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "answer",
+   "fieldtype": "Select",
+   "label": "Answer",
+   "options": "\nYes\nNo",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "defer_if_answer",
+   "fieldtype": "Select",
+   "label": "Defer If Answer",
+   "options": "Yes\nNo",
+   "read_only": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "deferral_reason",
+   "fieldtype": "Link",
+   "label": "Deferral Reason",
+   "options": "Blood Deferral Reason",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Screening Answer",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0,
+ "istable": 1
+}

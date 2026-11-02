@@ -1,0 +1,70 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "component",
+  "units_required",
+  "units_reserved",
+  "units_issued",
+  "units_transfused"
+ ],
+ "fields": [
+  {
+   "fieldname": "component",
+   "fieldtype": "Link",
+   "label": "Component",
+   "options": "Blood Component",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "units_required",
+   "fieldtype": "Int",
+   "label": "Units Required",
+   "reqd": 1,
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "units_reserved",
+   "fieldtype": "Int",
+   "label": "Units Reserved",
+   "read_only": 1,
+   "in_list_view": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "units_issued",
+   "fieldtype": "Int",
+   "label": "Units Issued",
+   "read_only": 1,
+   "in_list_view": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "units_transfused",
+   "fieldtype": "Int",
+   "label": "Units Transfused",
+   "read_only": 1,
+   "in_list_view": 1,
+   "no_copy": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Request Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0,
+ "istable": 1
+}

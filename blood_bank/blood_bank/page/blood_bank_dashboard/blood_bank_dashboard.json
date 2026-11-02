@@ -1,0 +1,24 @@
+{
+ "content": null,
+ "creation": "2026-11-02 12:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "blood-bank-dashboard",
+ "owner": "Administrator",
+ "page_name": "blood-bank-dashboard",
+ "roles": [
+  {"role": "Blood Bank Officer"},
+  {"role": "Blood Bank Technician"},
+  {"role": "Blood Bank Reception"},
+  {"role": "System Manager"}
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Blood Bank Dashboard"
+}

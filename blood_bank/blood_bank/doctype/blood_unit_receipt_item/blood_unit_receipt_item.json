@@ -1,0 +1,89 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "external_unit_number",
+  "component",
+  "blood_group",
+  "volume_ml",
+  "collection_date",
+  "expiry_datetime",
+  "storage",
+  "blood_unit"
+ ],
+ "fields": [
+  {
+   "fieldname": "external_unit_number",
+   "fieldtype": "Data",
+   "label": "Supplier Unit No.",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "component",
+   "fieldtype": "Link",
+   "label": "Component",
+   "options": "Blood Component",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "blood_group",
+   "fieldtype": "Select",
+   "label": "Blood Group",
+   "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "volume_ml",
+   "fieldtype": "Int",
+   "label": "Volume (ml)"
+  },
+  {
+   "fieldname": "collection_date",
+   "fieldtype": "Date",
+   "label": "Collection Date"
+  },
+  {
+   "fieldname": "expiry_datetime",
+   "fieldtype": "Datetime",
+   "label": "Expiry",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "storage",
+   "fieldtype": "Link",
+   "label": "Storage",
+   "options": "Blood Storage",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "blood_unit",
+   "fieldtype": "Link",
+   "label": "Blood Unit",
+   "options": "Blood Unit",
+   "read_only": 1,
+   "in_list_view": 1,
+   "no_copy": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Unit Receipt Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0,
+ "istable": 1
+}

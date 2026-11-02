@@ -1,0 +1,314 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "blood_transfusion",
+  "patient",
+  "patient_name",
+  "blood_unit",
+  "cb1",
+  "onset_datetime",
+  "reaction_type",
+  "severity",
+  "sb_s",
+  "fever",
+  "chills_rigors",
+  "urticaria_rash",
+  "itching",
+  "cb2",
+  "breathlessness",
+  "hypotension",
+  "tachycardia",
+  "cb3",
+  "chest_back_pain",
+  "dark_urine",
+  "nausea_vomiting",
+  "other_symptoms",
+  "sb_a",
+  "actions_taken",
+  "outcome",
+  "reported_by",
+  "sb_i",
+  "investigation_findings",
+  "cb4",
+  "conclusion",
+  "investigated_by",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "blood_transfusion",
+   "fieldtype": "Link",
+   "label": "Blood Transfusion",
+   "options": "Blood Transfusion",
+   "reqd": 1
+  },
+  {
+   "fieldname": "patient",
+   "fieldtype": "Link",
+   "label": "Patient",
+   "options": "Patient",
+   "read_only": 1,
+   "fetch_from": "blood_transfusion.patient",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "patient_name",
+   "fieldtype": "Data",
+   "label": "Patient Name",
+   "read_only": 1,
+   "fetch_from": "blood_transfusion.patient_name"
+  },
+  {
+   "fieldname": "blood_unit",
+   "fieldtype": "Link",
+   "label": "Blood Unit",
+   "options": "Blood Unit",
+   "read_only": 1,
+   "fetch_from": "blood_transfusion.blood_unit",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "onset_datetime",
+   "fieldtype": "Datetime",
+   "label": "Onset",
+   "reqd": 1,
+   "default": "Now"
+  },
+  {
+   "fieldname": "reaction_type",
+   "fieldtype": "Select",
+   "label": "Reaction Type",
+   "options": "\nFebrile Non-Haemolytic\nAllergic (Mild)\nAnaphylactic\nAcute Haemolytic\nDelayed Haemolytic\nCirculatory Overload (TACO)\nLung Injury (TRALI)\nBacterial Contamination\nOther / Unknown",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "severity",
+   "fieldtype": "Select",
+   "label": "Severity",
+   "options": "\nMild\nModerate\nSevere\nLife-Threatening\nDeath",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "sb_s",
+   "fieldtype": "Section Break",
+   "label": "Signs and Symptoms"
+  },
+  {
+   "fieldname": "fever",
+   "fieldtype": "Check",
+   "label": "Fever"
+  },
+  {
+   "fieldname": "chills_rigors",
+   "fieldtype": "Check",
+   "label": "Chills / Rigors"
+  },
+  {
+   "fieldname": "urticaria_rash",
+   "fieldtype": "Check",
+   "label": "Rash / Urticaria"
+  },
+  {
+   "fieldname": "itching",
+   "fieldtype": "Check",
+   "label": "Itching"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "breathlessness",
+   "fieldtype": "Check",
+   "label": "Breathlessness"
+  },
+  {
+   "fieldname": "hypotension",
+   "fieldtype": "Check",
+   "label": "Hypotension"
+  },
+  {
+   "fieldname": "tachycardia",
+   "fieldtype": "Check",
+   "label": "Tachycardia"
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "chest_back_pain",
+   "fieldtype": "Check",
+   "label": "Chest / Back Pain"
+  },
+  {
+   "fieldname": "dark_urine",
+   "fieldtype": "Check",
+   "label": "Dark Urine"
+  },
+  {
+   "fieldname": "nausea_vomiting",
+   "fieldtype": "Check",
+   "label": "Nausea / Vomiting"
+  },
+  {
+   "fieldname": "other_symptoms",
+   "fieldtype": "Small Text",
+   "label": "Other Symptoms"
+  },
+  {
+   "fieldname": "sb_a",
+   "fieldtype": "Section Break",
+   "label": "Management"
+  },
+  {
+   "fieldname": "actions_taken",
+   "fieldtype": "Small Text",
+   "label": "Actions Taken",
+   "reqd": 1
+  },
+  {
+   "fieldname": "outcome",
+   "fieldtype": "Select",
+   "label": "Outcome",
+   "options": "\nRecovered\nRecovering\nLasting Harm\nDeath\nUnknown"
+  },
+  {
+   "fieldname": "reported_by",
+   "fieldtype": "Link",
+   "label": "Reported By",
+   "options": "User",
+   "default": "__user"
+  },
+  {
+   "fieldname": "sb_i",
+   "fieldtype": "Section Break",
+   "label": "Investigation (Blood Bank)"
+  },
+  {
+   "fieldname": "investigation_findings",
+   "fieldtype": "Text",
+   "label": "Investigation Findings"
+  },
+  {
+   "fieldname": "cb4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "conclusion",
+   "fieldtype": "Select",
+   "label": "Link to Transfusion",
+   "options": "\nConfirmed\nProbable\nPossible\nUnlikely\nExcluded"
+  },
+  {
+   "fieldname": "investigated_by",
+   "fieldtype": "Link",
+   "label": "Investigated By",
+   "options": "User"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Blood Transfusion Reaction",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Transfusion Reaction",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Blood Bank Officer",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Nursing User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 0,
+   "amend": 0
+  },
+  {
+   "role": "Physician",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Blood Bank Technician",
+   "read": 1,
+   "report": 1,
+   "print": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "is_submittable": 1,
+ "autoname": "BTRX-.YYYY.-.#####",
+ "naming_rule": "Expression (old style)",
+ "title_field": "patient_name"
+}

@@ -1,0 +1,424 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "blood_issue",
+  "blood_unit",
+  "component",
+  "unit_blood_group",
+  "cb1",
+  "patient",
+  "patient_name",
+  "patient_blood_group",
+  "blood_request",
+  "sb_chk",
+  "patient_identity_confirmed",
+  "unit_label_checked",
+  "unit_expiry_checked",
+  "cb2",
+  "first_checker",
+  "second_checker",
+  "sb_time",
+  "start_datetime",
+  "end_datetime",
+  "volume_transfused_ml",
+  "cb3",
+  "outcome",
+  "stop_reason",
+  "exceeded_time_limit",
+  "reaction_observed",
+  "sb_pre",
+  "pre_temperature",
+  "pre_pulse",
+  "cb_pre",
+  "pre_bp_systolic",
+  "pre_bp_diastolic",
+  "pre_time",
+  "sb_mid",
+  "mid_temperature",
+  "mid_pulse",
+  "cb_mid",
+  "mid_bp_systolic",
+  "mid_bp_diastolic",
+  "mid_time",
+  "sb_post",
+  "post_temperature",
+  "post_pulse",
+  "cb_post",
+  "post_bp_systolic",
+  "post_bp_diastolic",
+  "post_time",
+  "sb_n",
+  "notes",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "blood_issue",
+   "fieldtype": "Link",
+   "label": "Blood Issue",
+   "options": "Blood Issue",
+   "reqd": 1
+  },
+  {
+   "fieldname": "blood_unit",
+   "fieldtype": "Link",
+   "label": "Blood Unit",
+   "options": "Blood Unit",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "component",
+   "fieldtype": "Link",
+   "label": "Component",
+   "options": "Blood Component",
+   "read_only": 1,
+   "fetch_from": "blood_unit.component",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "unit_blood_group",
+   "fieldtype": "Data",
+   "label": "Unit Blood Group",
+   "read_only": 1,
+   "fetch_from": "blood_unit.blood_group"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "patient",
+   "fieldtype": "Link",
+   "label": "Patient",
+   "options": "Patient",
+   "read_only": 1,
+   "fetch_from": "blood_issue.patient",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "patient_name",
+   "fieldtype": "Data",
+   "label": "Patient Name",
+   "read_only": 1,
+   "fetch_from": "blood_issue.patient_name"
+  },
+  {
+   "fieldname": "patient_blood_group",
+   "fieldtype": "Data",
+   "label": "Patient Blood Group",
+   "read_only": 1,
+   "fetch_from": "blood_issue.patient_blood_group"
+  },
+  {
+   "fieldname": "blood_request",
+   "fieldtype": "Link",
+   "label": "Blood Request",
+   "options": "Blood Request",
+   "read_only": 1,
+   "fetch_from": "blood_issue.blood_request"
+  },
+  {
+   "fieldname": "sb_chk",
+   "fieldtype": "Section Break",
+   "label": "Bedside Check (two people)"
+  },
+  {
+   "fieldname": "patient_identity_confirmed",
+   "fieldtype": "Check",
+   "label": "Patient Identity Confirmed (wristband / name / ID)"
+  },
+  {
+   "fieldname": "unit_label_checked",
+   "fieldtype": "Check",
+   "label": "Unit Number and Group Match the Issue Slip"
+  },
+  {
+   "fieldname": "unit_expiry_checked",
+   "fieldtype": "Check",
+   "label": "Unit In Date and Bag Intact"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "first_checker",
+   "fieldtype": "Link",
+   "label": "First Checker",
+   "options": "User",
+   "default": "__user",
+   "reqd": 1
+  },
+  {
+   "fieldname": "second_checker",
+   "fieldtype": "Link",
+   "label": "Second Checker",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sb_time",
+   "fieldtype": "Section Break",
+   "label": "Transfusion"
+  },
+  {
+   "fieldname": "start_datetime",
+   "fieldtype": "Datetime",
+   "label": "Start",
+   "reqd": 1,
+   "default": "Now"
+  },
+  {
+   "fieldname": "end_datetime",
+   "fieldtype": "Datetime",
+   "label": "End"
+  },
+  {
+   "fieldname": "volume_transfused_ml",
+   "fieldtype": "Int",
+   "label": "Volume Transfused (ml)"
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "outcome",
+   "fieldtype": "Select",
+   "label": "Outcome",
+   "options": "In Progress\nCompleted\nStopped - Reaction\nStopped - Other",
+   "default": "In Progress",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "stop_reason",
+   "fieldtype": "Small Text",
+   "label": "Stop Reason",
+   "depends_on": "eval:doc.outcome && doc.outcome.indexOf('Stopped')===0"
+  },
+  {
+   "fieldname": "exceeded_time_limit",
+   "fieldtype": "Check",
+   "label": "Exceeded Time Limit",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "reaction_observed",
+   "fieldtype": "Check",
+   "label": "Reaction Observed"
+  },
+  {
+   "fieldname": "sb_pre",
+   "fieldtype": "Section Break",
+   "label": "Vitals Before"
+  },
+  {
+   "fieldname": "pre_temperature",
+   "fieldtype": "Float",
+   "label": "Temperature (°C)"
+  },
+  {
+   "fieldname": "pre_pulse",
+   "fieldtype": "Int",
+   "label": "Pulse"
+  },
+  {
+   "fieldname": "cb_pre",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pre_bp_systolic",
+   "fieldtype": "Int",
+   "label": "BP Systolic"
+  },
+  {
+   "fieldname": "pre_bp_diastolic",
+   "fieldtype": "Int",
+   "label": "BP Diastolic"
+  },
+  {
+   "fieldname": "pre_time",
+   "fieldtype": "Datetime",
+   "label": "Recorded At"
+  },
+  {
+   "fieldname": "sb_mid",
+   "fieldtype": "Section Break",
+   "label": "Vitals at 15 Minutes"
+  },
+  {
+   "fieldname": "mid_temperature",
+   "fieldtype": "Float",
+   "label": "Temperature (°C)"
+  },
+  {
+   "fieldname": "mid_pulse",
+   "fieldtype": "Int",
+   "label": "Pulse"
+  },
+  {
+   "fieldname": "cb_mid",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mid_bp_systolic",
+   "fieldtype": "Int",
+   "label": "BP Systolic"
+  },
+  {
+   "fieldname": "mid_bp_diastolic",
+   "fieldtype": "Int",
+   "label": "BP Diastolic"
+  },
+  {
+   "fieldname": "mid_time",
+   "fieldtype": "Datetime",
+   "label": "Recorded At"
+  },
+  {
+   "fieldname": "sb_post",
+   "fieldtype": "Section Break",
+   "label": "Vitals at End"
+  },
+  {
+   "fieldname": "post_temperature",
+   "fieldtype": "Float",
+   "label": "Temperature (°C)"
+  },
+  {
+   "fieldname": "post_pulse",
+   "fieldtype": "Int",
+   "label": "Pulse"
+  },
+  {
+   "fieldname": "cb_post",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "post_bp_systolic",
+   "fieldtype": "Int",
+   "label": "BP Systolic"
+  },
+  {
+   "fieldname": "post_bp_diastolic",
+   "fieldtype": "Int",
+   "label": "BP Diastolic"
+  },
+  {
+   "fieldname": "post_time",
+   "fieldtype": "Datetime",
+   "label": "Recorded At"
+  },
+  {
+   "fieldname": "sb_n",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Blood Transfusion",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Transfusion",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Blood Bank Officer",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Nursing User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 0
+  },
+  {
+   "role": "Physician",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Blood Bank Technician",
+   "read": 1,
+   "report": 1,
+   "print": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "is_submittable": 1,
+ "autoname": "BTR-.YYYY.-.#####",
+ "naming_rule": "Expression (old style)",
+ "title_field": "patient_name"
+}

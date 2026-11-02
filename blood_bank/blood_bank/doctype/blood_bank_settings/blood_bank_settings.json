@@ -1,0 +1,432 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sb_donor",
+  "min_donor_age",
+  "max_donor_age",
+  "min_weight_kg",
+  "cb_d1",
+  "min_hb_male",
+  "min_hb_female",
+  "cb_d2",
+  "donation_interval_male",
+  "donation_interval_female",
+  "sb_vitals",
+  "min_systolic",
+  "max_systolic",
+  "cb_v1",
+  "min_diastolic",
+  "max_diastolic",
+  "cb_v2",
+  "min_pulse",
+  "max_pulse",
+  "max_temperature",
+  "sb_q",
+  "screening_questions",
+  "sb_test",
+  "testing_mode",
+  "test_validity_hours",
+  "cb_t1",
+  "auto_release_cleared_units",
+  "received_units_status",
+  "max_hours_to_split",
+  "sb_lab",
+  "lab_doctype",
+  "lab_results_table",
+  "lab_test_name_field",
+  "lab_result_value_field",
+  "cb_l1",
+  "blood_group_labels",
+  "hb_labels",
+  "crossmatch_labels",
+  "sb_kw",
+  "non_reactive_keywords",
+  "reactive_keywords",
+  "cb_kw",
+  "compatible_keywords",
+  "incompatible_keywords",
+  "sb_issue",
+  "crossmatch_validity_hours",
+  "require_invoice_before_issue",
+  "require_paid_invoice",
+  "cb_i1",
+  "return_window_minutes",
+  "transfusion_max_hours",
+  "expiry_warning_days",
+  "sb_stock",
+  "stock_levels",
+  "sb_label",
+  "label_hospital_name"
+ ],
+ "fields": [
+  {
+   "fieldname": "sb_donor",
+   "fieldtype": "Section Break",
+   "label": "Donor Eligibility"
+  },
+  {
+   "fieldname": "min_donor_age",
+   "fieldtype": "Int",
+   "label": "Min Donor Age",
+   "default": "18"
+  },
+  {
+   "fieldname": "max_donor_age",
+   "fieldtype": "Int",
+   "label": "Max Donor Age",
+   "default": "65"
+  },
+  {
+   "fieldname": "min_weight_kg",
+   "fieldtype": "Float",
+   "label": "Minimum Weight (kg)",
+   "default": "45"
+  },
+  {
+   "fieldname": "cb_d1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "min_hb_male",
+   "fieldtype": "Float",
+   "label": "Minimum Hb Male (g/dL)",
+   "default": "13"
+  },
+  {
+   "fieldname": "min_hb_female",
+   "fieldtype": "Float",
+   "label": "Minimum Hb Female (g/dL)",
+   "default": "12.5"
+  },
+  {
+   "fieldname": "cb_d2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "donation_interval_male",
+   "fieldtype": "Int",
+   "label": "Days Between Donations (Male)",
+   "default": "84"
+  },
+  {
+   "fieldname": "donation_interval_female",
+   "fieldtype": "Int",
+   "label": "Days Between Donations (Female)",
+   "default": "112"
+  },
+  {
+   "fieldname": "sb_vitals",
+   "fieldtype": "Section Break",
+   "label": "Vital Sign Limits",
+   "description": "Set these from your national guideline. A value outside the range defers the donor."
+  },
+  {
+   "fieldname": "min_systolic",
+   "fieldtype": "Int",
+   "label": "Min Systolic",
+   "default": "90"
+  },
+  {
+   "fieldname": "max_systolic",
+   "fieldtype": "Int",
+   "label": "Max Systolic",
+   "default": "149"
+  },
+  {
+   "fieldname": "cb_v1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "min_diastolic",
+   "fieldtype": "Int",
+   "label": "Min Diastolic",
+   "default": "50"
+  },
+  {
+   "fieldname": "max_diastolic",
+   "fieldtype": "Int",
+   "label": "Max Diastolic",
+   "default": "99"
+  },
+  {
+   "fieldname": "cb_v2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "min_pulse",
+   "fieldtype": "Int",
+   "label": "Min Pulse",
+   "default": "50"
+  },
+  {
+   "fieldname": "max_pulse",
+   "fieldtype": "Int",
+   "label": "Max Pulse",
+   "default": "100"
+  },
+  {
+   "fieldname": "max_temperature",
+   "fieldtype": "Float",
+   "label": "Max Temperature (°C)",
+   "default": "37.5"
+  },
+  {
+   "fieldname": "sb_q",
+   "fieldtype": "Section Break",
+   "label": "Screening Questionnaire"
+  },
+  {
+   "fieldname": "screening_questions",
+   "fieldtype": "Table",
+   "label": "Screening Questions",
+   "options": "Blood Screening Question"
+  },
+  {
+   "fieldname": "sb_test",
+   "fieldtype": "Section Break",
+   "label": "Testing"
+  },
+  {
+   "fieldname": "testing_mode",
+   "fieldtype": "Select",
+   "label": "Testing Mode",
+   "options": "Test Donor First\nTest the Bag",
+   "default": "Test Donor First",
+   "description": "Test Donor First: results must be clear before the bag is collected. Test the Bag: bag is collected first and stays in Quarantine until results are clear."
+  },
+  {
+   "fieldname": "test_validity_hours",
+   "fieldtype": "Int",
+   "label": "Test Result Valid For (hours)",
+   "default": "72",
+   "description": "Test Donor First mode: a donor test older than this cannot be used for a donation."
+  },
+  {
+   "fieldname": "cb_t1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "auto_release_cleared_units",
+   "fieldtype": "Check",
+   "label": "Auto Release Cleared Units",
+   "description": "Off (recommended): the Blood Bank Officer releases each unit. On: units become Available as soon as tests are clear."
+  },
+  {
+   "fieldname": "received_units_status",
+   "fieldtype": "Select",
+   "label": "Status of Received Units",
+   "options": "Available\nQuarantine",
+   "default": "Available"
+  },
+  {
+   "fieldname": "max_hours_to_split",
+   "fieldtype": "Int",
+   "label": "Max Hours From Collection to Split",
+   "default": "0",
+   "description": "0 = no limit"
+  },
+  {
+   "fieldname": "sb_lab",
+   "fieldtype": "Section Break",
+   "label": "Lab Integration",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "lab_doctype",
+   "fieldtype": "Link",
+   "label": "Lab Doctype",
+   "options": "DocType",
+   "description": "Doctype that holds lab results (e.g. Lab Result or Lab Test). Leave empty to type results manually."
+  },
+  {
+   "fieldname": "lab_results_table",
+   "fieldtype": "Data",
+   "label": "Results Child Table Field",
+   "description": "Leave empty to detect automatically"
+  },
+  {
+   "fieldname": "lab_test_name_field",
+   "fieldtype": "Data",
+   "label": "Test Name Field (in child table)",
+   "description": "Leave empty to detect automatically"
+  },
+  {
+   "fieldname": "lab_result_value_field",
+   "fieldtype": "Data",
+   "label": "Result Value Field (in child table)",
+   "description": "Leave empty to detect automatically"
+  },
+  {
+   "fieldname": "cb_l1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "blood_group_labels",
+   "fieldtype": "Small Text",
+   "label": "Blood Group Test Names",
+   "default": "BLOOD GROUPING\nBlood group (recheck)",
+   "description": "One per line, as written in the lab template"
+  },
+  {
+   "fieldname": "hb_labels",
+   "fieldtype": "Small Text",
+   "label": "Hb Test Names",
+   "default": "HB\nHaemoglobin\nHemoglobin"
+  },
+  {
+   "fieldname": "crossmatch_labels",
+   "fieldtype": "Small Text",
+   "label": "Crossmatch Test Names",
+   "default": "Cross Matching"
+  },
+  {
+   "fieldname": "sb_kw",
+   "fieldtype": "Section Break",
+   "label": "Result Keywords",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "non_reactive_keywords",
+   "fieldtype": "Small Text",
+   "label": "Non Reactive Keywords",
+   "default": "non-reactive\nnon reactive\nnonreactive\nnegative\nneg\n-ve\nnot detected\nnil\nnr"
+  },
+  {
+   "fieldname": "reactive_keywords",
+   "fieldtype": "Small Text",
+   "label": "Reactive Keywords",
+   "default": "reactive\npositive\npos\n+ve\ndetected"
+  },
+  {
+   "fieldname": "cb_kw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "compatible_keywords",
+   "fieldtype": "Small Text",
+   "label": "Compatible Keywords",
+   "default": "compatible\nmatched\nno agglutination"
+  },
+  {
+   "fieldname": "incompatible_keywords",
+   "fieldtype": "Small Text",
+   "label": "Incompatible Keywords",
+   "default": "incompatible\nnot compatible\nagglutination"
+  },
+  {
+   "fieldname": "sb_issue",
+   "fieldtype": "Section Break",
+   "label": "Crossmatch, Issue and Transfusion"
+  },
+  {
+   "fieldname": "crossmatch_validity_hours",
+   "fieldtype": "Int",
+   "label": "Crossmatch Valid For (hours)",
+   "default": "72"
+  },
+  {
+   "fieldname": "require_invoice_before_issue",
+   "fieldtype": "Check",
+   "label": "Require Invoice Before Issue",
+   "default": "1",
+   "description": "Blood is issued only when the request has a submitted Sales Invoice (except Emergency)."
+  },
+  {
+   "fieldname": "require_paid_invoice",
+   "fieldtype": "Check",
+   "label": "Require Fully Paid Invoice"
+  },
+  {
+   "fieldname": "cb_i1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "return_window_minutes",
+   "fieldtype": "Int",
+   "label": "Return Window (minutes)",
+   "default": "30"
+  },
+  {
+   "fieldname": "transfusion_max_hours",
+   "fieldtype": "Int",
+   "label": "Transfusion Must Finish Within (hours of issue)",
+   "default": "4"
+  },
+  {
+   "fieldname": "expiry_warning_days",
+   "fieldtype": "Int",
+   "label": "Expiry Warning Days",
+   "default": "3"
+  },
+  {
+   "fieldname": "sb_stock",
+   "fieldtype": "Section Break",
+   "label": "Minimum Stock Levels"
+  },
+  {
+   "fieldname": "stock_levels",
+   "fieldtype": "Table",
+   "label": "Stock Levels",
+   "options": "Blood Stock Level"
+  },
+  {
+   "fieldname": "sb_label",
+   "fieldtype": "Section Break",
+   "label": "Labels"
+  },
+  {
+   "fieldname": "label_hospital_name",
+   "fieldtype": "Data",
+   "label": "Hospital Name on Labels"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Blood Bank",
+ "name": "Blood Bank Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Blood Bank Officer",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1
+  },
+  {
+   "role": "Blood Bank Technician",
+   "read": 1
+  },
+  {
+   "role": "Blood Bank Reception",
+   "read": 1
+  },
+  {
+   "role": "Physician",
+   "read": 1
+  },
+  {
+   "role": "Nursing User",
+   "read": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "issingle": 1
+}
