@@ -2,3 +2,4 @@
 
 [post_model_sync]
 blood_bank.patches.v0_1.settings_defaults
+blood_bank.patches.v0_1.donor_lab_tests

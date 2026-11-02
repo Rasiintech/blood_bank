@@ -43,16 +43,17 @@ frappe.ui.form.on("Blood Donor Screening", {
 					frm.add_custom_button(__("Open Donor Test"), () => frappe.set_route("Form", "Blood Donor Test", rows[0].name)).addClass("btn-primary");
 					return;
 				}
-				if (!frm.doc.sales_invoice) {
+				const ordered = frm.doc.sample_collection || frm.doc.sales_invoice;
+				if (!ordered) {
 					frm.add_custom_button(__("Next: Order Screening Tests"), () => {
 						frm.call("order_screening_tests").then(r => {
 							const doc = frappe.model.sync(r.message)[0];
 							frappe.set_route("Form", doc.doctype, doc.name);
 						});
 					}).addClass("btn-primary");
-					frm.dashboard.add_comment(__("Order the screening tests. When the lab submits the Lab Result, the Donor Test is created and filled automatically."), "blue", true);
+					frm.dashboard.add_comment(__("Order the screening tests (Sample Collection, or an invoice if donors are charged). When the lab submits the Lab Result, the Donor Test is created and filled automatically."), "blue", true);
 				} else {
-					frm.dashboard.add_comment(__("Tests ordered on {0}. Waiting for the lab to submit the Lab Result.", [frm.doc.sales_invoice]), "orange", true);
+					frm.dashboard.add_comment(__("Tests ordered on {0}. Waiting for the lab to submit the Lab Result.", [ordered]), "orange", true);
 				}
 				frm.add_custom_button(__("Enter Results Manually"), () => {
 					frappe.new_doc("Blood Donor Test", { donor: frm.doc.donor, donor_screening: frm.doc.name });

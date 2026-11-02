@@ -195,18 +195,31 @@ def fill_crossmatch(xm_doc):
 
 
 def screening_for_lab_document(doc):
-	"""The Blood Donor Screening whose tests this lab document holds, found through its Sales Invoice."""
+	"""The Blood Donor Screening whose tests this lab document holds: via its Sample Collection or Sales Invoice."""
+	sc = doc.get("sample_collection")
+	if sc and frappe.get_meta("Sample Collection").has_field("blood_donor_screening"):
+		name = frappe.db.get_value("Sample Collection", sc, "blood_donor_screening")
+		if name:
+			return name
+		name = frappe.db.get_value("Blood Donor Screening", {"sample_collection": sc}, "name")
+		if name:
+			return name
 	si = doc.get("sales_invoice")
-	if not si or not frappe.get_meta("Sales Invoice").has_field("blood_donor_screening"):
-		return None
-	return frappe.db.get_value("Sales Invoice", si, "blood_donor_screening")
+	if si and frappe.get_meta("Sales Invoice").has_field("blood_donor_screening"):
+		return frappe.db.get_value("Sales Invoice", si, "blood_donor_screening")
+	return None
 
 
 def lab_document_for_screening(lab_doctype, screening):
-	"""Exact match: the lab document made from the screening's invoice."""
-	si = frappe.db.get_value("Blood Donor Screening", screening, "sales_invoice")
-	if not (si and lab_doctype and frappe.get_meta(lab_doctype).has_field("sales_invoice")):
+	"""Exact match: the lab document made from the screening's Sample Collection or invoice."""
+	if not lab_doctype:
 		return None
-	rows = frappe.get_all(lab_doctype, filters={"sales_invoice": si, "docstatus": ["<", 2]},
-		fields=["name", "docstatus"], order_by="creation desc", limit=1)
-	return rows[0] if rows else None
+	meta = frappe.get_meta(lab_doctype)
+	sc, si = frappe.db.get_value("Blood Donor Screening", screening, ["sample_collection", "sales_invoice"])
+	for field, value in (("sample_collection", sc), ("sales_invoice", si)):
+		if value and meta.has_field(field):
+			rows = frappe.get_all(lab_doctype, filters={field: value, "docstatus": ["<", 2]},
+				fields=["name", "docstatus"], order_by="creation desc", limit=1)
+			if rows:
+				return rows[0]
+	return None

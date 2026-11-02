@@ -138,6 +138,8 @@ def setup_settings():
 				"applies_to": row[3] if len(row) > 3 else "All"})
 	if not s.stock_levels:
 		add_default_stock_levels(s)
+	if not s.donor_lab_tests:
+		add_default_lab_tests(s)
 	if not s.label_hospital_name:
 		s.label_hospital_name = frappe.db.get_single_value("Global Defaults", "default_company") or ""
 	s.flags.ignore_permissions = True
@@ -152,6 +154,30 @@ STOCK_LEVELS = {
 		"O Negative": 2, "A Negative": 1, "B Negative": 1, "AB Negative": 1},
 	"Fresh Frozen Plasma (FFP)": {"O Positive": 2, "A Positive": 2, "B Positive": 2, "AB Positive": 1},
 }
+
+
+# Existing Lab Test Templates to order for a donor, by name; the first match of each group is used
+DONOR_LAB_TESTS = [
+	["CBC", "Complete Blood Count", "CBC (Complete Blood Count)", "HB", "Haemoglobin", "Hemoglobin"],
+	["BLOOD GROUPING", "Blood Group", "Blood Grouping"],
+	["HBSAG SCREENING", "HBsAg"],
+	["ANTI-HCV SCREENING", "HCV"],
+	["HIV Screening", "HIV"],
+	["Syphilis", "VDRL"],
+	["Malaria", "Malaria RDT"],
+]
+
+
+def add_default_lab_tests(settings_doc):
+	if not frappe.db.exists("DocType", "Lab Test Template"):
+		return
+	for names in DONOR_LAB_TESTS:
+		for n in names:
+			found = frappe.db.get_value("Lab Test Template", {"name": n, "disabled": 0}) or frappe.db.get_value(
+				"Lab Test Template", {"lab_test_name": n, "disabled": 0})
+			if found:
+				settings_doc.append("donor_lab_tests", {"lab_test_template": found})
+				break
 
 
 def add_default_stock_levels(settings_doc):
@@ -174,6 +200,11 @@ def make_custom_fields():
 			"fieldname": "blood_donor_screening", "label": "Blood Donor Screening", "fieldtype": "Link",
 			"options": "Blood Donor Screening", "insert_after": "blood_request", "read_only": 1,
 			"no_copy": 1, "print_hide": 1,
+		}]
+	if frappe.db.exists("DocType", "Sample Collection"):
+		fields["Sample Collection"] = [{
+			"fieldname": "blood_donor_screening", "label": "Blood Donor Screening", "fieldtype": "Link",
+			"options": "Blood Donor Screening", "insert_after": "patient", "read_only": 1, "no_copy": 1,
 		}]
 	if frappe.db.exists("DocType", "Patient") and not frappe.get_meta("Patient").has_field("blood_group"):
 		fields["Patient"] = [{

@@ -37,6 +37,7 @@
   "deferred_until",
   "screened_by",
   "sales_invoice",
+  "sample_collection",
   "amended_from"
  ],
  "fields": [
@@ -233,6 +234,14 @@
    "fieldtype": "Link",
    "label": "Screening Tests Invoice",
    "options": "Sales Invoice",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "sample_collection",
+   "fieldtype": "Link",
+   "label": "Sample Collection",
+   "options": "Sample Collection",
    "read_only": 1,
    "no_copy": 1
   },

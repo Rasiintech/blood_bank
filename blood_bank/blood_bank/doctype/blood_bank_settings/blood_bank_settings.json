@@ -30,8 +30,7 @@
   "sb_q",
   "screening_questions",
   "sb_order",
-  "donor_screening_item",
-  "cb_o1",
+  "donor_lab_tests",
   "charge_voluntary_donors",
   "charge_replacement_donors",
   "sb_test",
@@ -203,24 +202,20 @@
    "fieldname": "sb_order",
    "fieldtype": "Section Break",
    "label": "Donor Screening Order",
-   "description": "Order Screening Tests on an accepted screening creates a Sales Invoice for the donor's Patient with this item. Your normal flow then makes the Sample Collection and Lab Result, and the Donor Test fills itself when the Lab Result is submitted."
+   "description": "Order Screening Tests on an accepted screening orders these lab tests for the donor's Patient. Free: a Sample Collection is created directly. Charged: a Sales Invoice is created and your normal lab flow follows. The Donor Test fills itself when the Lab Result is submitted."
   },
   {
-   "fieldname": "donor_screening_item",
-   "fieldtype": "Link",
-   "label": "Donor Screening Item",
-   "options": "Item",
-   "description": "Item of the Lab Test Template that holds the donor tests (HB, Blood Grouping, HBsAg, HCV, HIV, Syphilis, Malaria)"
-  },
-  {
-   "fieldname": "cb_o1",
-   "fieldtype": "Column Break"
+   "fieldname": "donor_lab_tests",
+   "fieldtype": "Table",
+   "label": "Lab Tests to Order",
+   "options": "Blood Donor Lab Test",
+   "description": "Your existing Lab Test Templates, e.g. CBC (for Hb), BLOOD GROUPING, HBSAG SCREENING, ANTI-HCV SCREENING, HIV Screening, Syphilis, Malaria"
   },
   {
    "fieldname": "charge_voluntary_donors",
    "fieldtype": "Check",
    "label": "Charge Voluntary Donors",
-   "description": "Off: the invoice is made at zero price"
+   "description": "Off: no invoice, the Sample Collection is created directly"
   },
   {
    "fieldname": "charge_replacement_donors",
@@ -318,7 +313,8 @@
    "fieldname": "hb_labels",
    "fieldtype": "Small Text",
    "label": "Hb Test Names",
-   "default": "HB\nHaemoglobin\nHemoglobin"
+   "default": "HB\nHGB\nHaemoglobin\nHemoglobin",
+   "description": "The Hb line of the CBC, as the lab writes it"
   },
   {
    "fieldname": "crossmatch_labels",

@@ -2,7 +2,7 @@
 and fill default minimum stock levels if none are set."""
 import frappe
 
-from blood_bank.install import add_default_stock_levels
+from blood_bank.install import add_default_lab_tests, add_default_stock_levels
 
 
 def execute():
@@ -18,5 +18,7 @@ def execute():
 			q.applies_to = "All"
 	if not s.stock_levels:
 		add_default_stock_levels(s)
+	if s.meta.has_field("donor_lab_tests") and not s.donor_lab_tests:
+		add_default_lab_tests(s)
 	s.flags.ignore_permissions = True
 	s.save()

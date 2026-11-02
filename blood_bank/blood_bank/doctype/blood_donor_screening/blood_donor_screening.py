@@ -158,37 +158,20 @@ class BloodDonorScreening(Document):
 
 	@frappe.whitelist()
 	def order_screening_tests(self):
-		"""Create the Sales Invoice for the donor's screening tests; the normal lab flow takes it from there."""
+		"""Order the donor's lab tests: a Sample Collection directly when free, a Sales Invoice when charged."""
 		if self.docstatus != 1 or self.result != "Accepted":
 			frappe.throw(_("Only an accepted, submitted screening can order tests"))
-		if self.sales_invoice and frappe.db.get_value("Sales Invoice", self.sales_invoice, "docstatus") != 2:
-			return frappe.get_doc("Sales Invoice", self.sales_invoice)
-		draft = frappe.db.get_value("Sales Invoice", {"blood_donor_screening": self.name, "docstatus": 0})
-		if draft:
-			return frappe.get_doc("Sales Invoice", draft)
-		item = get_settings().donor_screening_item
-		if not item:
-			frappe.throw(_("Set the Donor Screening Item in Blood Bank Settings first"))
+		for dt, field in (("Sample Collection", "sample_collection"), ("Sales Invoice", "sales_invoice")):
+			name = self.get(field)
+			if name and frappe.db.exists(dt, name) and frappe.db.get_value(dt, name, "docstatus") != 2:
+				return frappe.get_doc(dt, name)
+		templates = [r.lab_test_template for r in get_settings().donor_lab_tests]
+		if not templates:
+			frappe.throw(_("Add the Lab Tests to Order in Blood Bank Settings first"))
 		patient = frappe.db.get_value("Blood Donor", self.donor, "patient")
-		customer = frappe.db.get_value("Patient", patient, "customer")
-		if not customer:
-			frappe.throw(_("Patient {0} has no Customer. Open the Patient and create the Customer first.").format(patient))
 		charge = cint(setting("charge_replacement_donors" if self.donor_type == "Replacement" else "charge_voluntary_donors"))
-		si = frappe.new_doc("Sales Invoice")
-		si.customer = customer
-		if si.meta.has_field("patient"):
-			si.patient = patient
-		si.blood_donor_screening = self.name
-		si.append("items", {"item_code": item, "qty": 1})
-		si.set_missing_values()
-		if not charge:
-			for row in si.items:
-				row.rate = 0
-				row.price_list_rate = 0
-				row.discount_percentage = 0
-		si.calculate_taxes_and_totals()
-		return si
-
+		doc = make_screening_invoice(self, patient, templates) if charge else make_sample_collection(self, patient, templates)
+		return doc
 
 	def on_submit(self):
 		if self.result == "Deferred" and self.deferral_reason:
@@ -215,3 +198,63 @@ def get_limits(donor=None):
 		"pulse": [cint(setting("min_pulse")), cint(setting("max_pulse"))],
 		"temperature": flt(setting("max_temperature")),
 	}
+
+
+def _lab_test_table(meta):
+	"""The child table of a doctype whose rows link to Lab Test Template, and that link's fieldname."""
+	for tdf in meta.get_table_fields():
+		for df in frappe.get_meta(tdf.options).fields:
+			if df.fieldtype == "Link" and df.options == "Lab Test Template":
+				return tdf.fieldname, df.fieldname
+	return None, None
+
+
+def make_sample_collection(screening, patient, templates):
+	"""Free screening: straight to Sample Collection (like Hajj Screening), tagged with the screening."""
+	meta = frappe.get_meta("Sample Collection")
+	table, link = _lab_test_table(meta)
+	sc = frappe.new_doc("Sample Collection")
+	sc.patient = patient
+	if meta.has_field("company") and not sc.get("company"):
+		sc.company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
+	if meta.has_field("blood_donor_screening"):
+		sc.blood_donor_screening = screening.name
+	if meta.has_field("sample_qty") and not sc.get("sample_qty"):
+		sc.sample_qty = 1
+	if meta.has_field("sample") and not sc.get("sample"):
+		sample = next((frappe.db.get_value("Lab Test Template", t, "sample") for t in templates
+			if frappe.db.get_value("Lab Test Template", t, "sample")), None)
+		if not sample and frappe.db.exists("DocType", "Lab Test Sample"):
+			sample = frappe.db.get_value("Lab Test Sample", {"sample": "Blood"}) or frappe.db.get_value("Lab Test Sample", {})
+			if not sample:
+				sample = frappe.get_doc({"doctype": "Lab Test Sample", "sample": "Blood"}).insert(ignore_permissions=True).name
+		sc.sample = sample
+	if table:
+		for t in templates:
+			sc.append(table, {link: t})
+	elif meta.has_field("template"):
+		sc.template = templates[0]
+	sc.insert()
+	screening.db_set("sample_collection", sc.name)
+	return sc
+
+
+def make_screening_invoice(screening, patient, templates):
+	"""Charged screening: a Sales Invoice with each template's item; the normal lab flow follows."""
+	draft = frappe.db.get_value("Sales Invoice", {"blood_donor_screening": screening.name, "docstatus": 0})
+	if draft:
+		return frappe.get_doc("Sales Invoice", draft)
+	customer = frappe.db.get_value("Patient", patient, "customer")
+	if not customer:
+		frappe.throw(_("Patient {0} has no Customer. Open the Patient and create the Customer first.").format(patient))
+	si = frappe.new_doc("Sales Invoice")
+	si.customer = customer
+	if si.meta.has_field("patient"):
+		si.patient = patient
+	si.blood_donor_screening = screening.name
+	for t in templates:
+		item = frappe.db.get_value("Lab Test Template", t, "item") or t
+		si.append("items", {"item_code": item, "qty": 1})
+	si.set_missing_values()
+	si.calculate_taxes_and_totals()
+	return si
