@@ -36,6 +36,7 @@
   "deferral_reason",
   "deferred_until",
   "screened_by",
+  "sales_invoice",
   "amended_from"
  ],
  "fields": [
@@ -226,6 +227,14 @@
    "label": "Screened By",
    "options": "User",
    "default": "__user"
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Screening Tests Invoice",
+   "options": "Sales Invoice",
+   "read_only": 1,
+   "no_copy": 1
   },
   {
    "fieldname": "amended_from",

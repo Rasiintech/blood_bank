@@ -150,6 +150,21 @@ def on_lab_document_submit(doc, method=None):
 		return
 	if doc.doctype not in (lab_dt, "Lab Test"):
 		return
+	screening = screening_for_lab_document(doc)
+	if screening and not frappe.db.exists("Blood Donor Test", {"donor_screening": screening, "docstatus": ["<", 2]}):
+		try:
+			scr = frappe.db.get_value("Blood Donor Screening", screening, ["donor", "docstatus", "result"], as_dict=True)
+			if scr and scr.docstatus == 1 and scr.result == "Accepted":
+				test = frappe.new_doc("Blood Donor Test")
+				test.donor = scr.donor
+				test.donor_screening = screening
+				test.lab_doctype = doc.doctype
+				test.lab_reference = doc.name
+				test.load_tests()
+				test.flags.ignore_permissions = True
+				test.insert()
+		except Exception:
+			frappe.log_error(title=f"Blood Bank: could not create Donor Test from {doc.doctype} {doc.name}")
 	for name in frappe.get_all("Blood Donor Test", filters={"docstatus": 0, "lab_doctype": doc.doctype,
 			"lab_reference": doc.name}, pluck="name"):
 		test = frappe.get_doc("Blood Donor Test", name)
@@ -177,3 +192,21 @@ def fill_crossmatch(xm_doc):
 		empty[0].result = result
 		empty[0].remarks = f"From lab: {value}"[:140]
 	return result
+
+
+def screening_for_lab_document(doc):
+	"""The Blood Donor Screening whose tests this lab document holds, found through its Sales Invoice."""
+	si = doc.get("sales_invoice")
+	if not si or not frappe.get_meta("Sales Invoice").has_field("blood_donor_screening"):
+		return None
+	return frappe.db.get_value("Sales Invoice", si, "blood_donor_screening")
+
+
+def lab_document_for_screening(lab_doctype, screening):
+	"""Exact match: the lab document made from the screening's invoice."""
+	si = frappe.db.get_value("Blood Donor Screening", screening, "sales_invoice")
+	if not (si and lab_doctype and frappe.get_meta(lab_doctype).has_field("sales_invoice")):
+		return None
+	rows = frappe.get_all(lab_doctype, filters={"sales_invoice": si, "docstatus": ["<", 2]},
+		fields=["name", "docstatus"], order_by="creation desc", limit=1)
+	return rows[0] if rows else None

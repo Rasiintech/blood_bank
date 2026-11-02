@@ -34,20 +34,19 @@ class BloodDonorTest(Document):
 		if not self.lab_doctype:
 			self.lab_doctype = get_settings().lab_doctype
 		patients = self.lab_patients()
-		if self.lab_doctype and not self.lab_reference and patients:
-			meta = frappe.get_meta(self.lab_doctype)
-			if meta.has_field("patient"):
-				rows = frappe.get_all(self.lab_doctype, filters={"patient": ["in", patients], "docstatus": ["<", 2]},
-					fields=["name", "docstatus"], order_by="creation desc", limit=1)
-				if rows:
-					self.lab_reference = rows[0].name
-					if rows[0].docstatus == 1:
-						try:
-							fill_donor_test(self)
-						except Exception:
-							pass
+		if self.lab_doctype and not self.lab_reference and self.donor_screening:
+			from blood_bank.lab import lab_document_for_screening
+			match = lab_document_for_screening(self.lab_doctype, self.donor_screening)
+			if match:
+				self.lab_reference = match.name
+				if match.docstatus == 1:
+					try:
+						fill_donor_test(self)
+					except Exception:
+						pass
 		self.evaluate()
-		return {"patients": patients}
+		since = frappe.db.get_value("Blood Donor Screening", self.donor_screening, "screening_datetime") if self.donor_screening else None
+		return {"patients": patients, "since": str(frappe.utils.getdate(since)) if since else None}
 
 	def lab_patients(self):
 		"""The donor's own Patient, plus the patient a replacement donor gives for."""
@@ -78,7 +77,7 @@ class BloodDonorTest(Document):
 
 	def evaluate(self):
 		sex = frappe.db.get_value("Blood Donor", self.donor, "sex")
-		self.hb_ok = 1 if (not self.hb_g_dl or flt(self.hb_g_dl) >= min_hb(sex)) else 0
+		self.hb_ok = 1 if (flt(self.hb_g_dl) and flt(self.hb_g_dl) >= min_hb(sex)) else 0
 		results = [t.result for t in self.tests]
 		if "Reactive" in results:
 			self.overall_result = "Reactive"
@@ -100,6 +99,8 @@ class BloodDonorTest(Document):
 			frappe.throw(_("Some mandatory tests are still Pending"))
 		if not self.blood_group:
 			frappe.throw(_("Blood group is required"))
+		if not flt(self.hb_g_dl):
+			frappe.throw(_("Hb is required"))
 
 	def on_submit(self):
 		donor = frappe.get_doc("Blood Donor", self.donor)

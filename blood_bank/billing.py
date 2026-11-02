@@ -55,6 +55,14 @@ def refresh_request_invoice(request_name):
 
 
 def on_sales_invoice_change(doc, method=None):
+	screening = doc.get("blood_donor_screening")
+	if screening and frappe.db.exists("Blood Donor Screening", screening):
+		current = frappe.db.get_value("Blood Donor Screening", screening, "sales_invoice")
+		if doc.docstatus == 1:
+			frappe.db.set_value("Blood Donor Screening", screening, "sales_invoice", doc.name, update_modified=False)
+		elif doc.docstatus == 2 and current == doc.name:
+			frappe.db.set_value("Blood Donor Screening", screening, "sales_invoice", None, update_modified=False)
+
 	names = set(frappe.get_all("Blood Request", filters={"sales_invoice": doc.name, "docstatus": 1}, pluck="name"))
 	linked = doc.get("blood_request")
 	if linked and doc.docstatus == 1 and frappe.db.exists("Blood Request", {"name": linked, "docstatus": 1}):

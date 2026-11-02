@@ -170,6 +170,10 @@ def make_custom_fields():
 			"fieldname": "blood_request", "label": "Blood Request", "fieldtype": "Link",
 			"options": "Blood Request", "insert_after": "patient" if si_meta.has_field("patient") else "customer",
 			"no_copy": 1, "print_hide": 1,
+		}, {
+			"fieldname": "blood_donor_screening", "label": "Blood Donor Screening", "fieldtype": "Link",
+			"options": "Blood Donor Screening", "insert_after": "blood_request", "read_only": 1,
+			"no_copy": 1, "print_hide": 1,
 		}]
 	if frappe.db.exists("DocType", "Patient") and not frappe.get_meta("Patient").has_field("blood_group"):
 		fields["Patient"] = [{

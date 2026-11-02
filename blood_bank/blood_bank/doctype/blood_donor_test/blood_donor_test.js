@@ -6,8 +6,12 @@ frappe.ui.form.on("Blood Donor Test", {
 		frm.set_query("donor_screening", () => ({ filters: { donor: frm.doc.donor, docstatus: 1, result: "Accepted" } }));
 		frm.set_query("blood_donation", () => ({ filters: { donor: frm.doc.donor, docstatus: 1 } }));
 		frm.set_query("lab_reference", () => {
+			// Only this donor's (or the replacement patient's) lab documents made since the screening
 			const p = frm.__lab_patients || [];
-			return p.length ? { filters: { patient: ["in", p], docstatus: ["<", 2] } } : {};
+			const filters = { docstatus: ["<", 2] };
+			if (p.length) filters.patient = ["in", p];
+			if (frm.__since) filters.creation = [">=", frm.__since];
+			return { filters };
 		});
 	},
 	onload(frm) {
@@ -22,6 +26,7 @@ frappe.ui.form.on("Blood Donor Test", {
 	prepare(frm) {
 		frm.call("prepare").then(r => {
 			frm.__lab_patients = (r.message || {}).patients || [];
+			frm.__since = (r.message || {}).since;
 			frm.refresh_fields();
 		});
 	},
@@ -29,7 +34,7 @@ frappe.ui.form.on("Blood Donor Test", {
 		const colors = { "Non-Reactive": "green", "Reactive": "red", "Incomplete": "orange" };
 		if (frm.doc.overall_result) frm.page.set_indicator(__(frm.doc.overall_result), colors[frm.doc.overall_result]);
 		if (frm.doc.docstatus === 0 && !frm.doc.lab_reference) {
-			frm.set_intro(__("No Lab Result found yet for this donor. Pick it in Lab Reference when the lab has it, or type the results below."), "blue");
+			frm.set_intro(__("No Lab Result is linked to this screening's invoice yet. Save as draft and it fills itself when the lab submits, pick the Lab Result yourself, or type the results below."), "blue");
 		}
 		if (frm.doc.docstatus === 1 && frm.doc.overall_result === "Non-Reactive" && !frm.doc.blood_donation) {
 			frm.add_custom_button(__("Donation"), () => {

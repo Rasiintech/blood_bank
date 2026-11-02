@@ -151,6 +151,44 @@ class BloodDonorScreening(Document):
 	def before_submit(self):
 		if any(q.answer in (None, "") for q in self.questionnaire):
 			frappe.throw(_("Answer every screening question before submitting"))
+		missing = [self.meta.get_label(f) for f in ("weight_kg", "bp_systolic", "bp_diastolic", "pulse", "temperature")
+			if not flt(self.get(f))]
+		if missing:
+			frappe.throw(_("Enter the vital signs before submitting: {0}").format(", ".join(missing)), title=_("Vitals Missing"))
+
+	@frappe.whitelist()
+	def order_screening_tests(self):
+		"""Create the Sales Invoice for the donor's screening tests; the normal lab flow takes it from there."""
+		if self.docstatus != 1 or self.result != "Accepted":
+			frappe.throw(_("Only an accepted, submitted screening can order tests"))
+		if self.sales_invoice and frappe.db.get_value("Sales Invoice", self.sales_invoice, "docstatus") != 2:
+			return frappe.get_doc("Sales Invoice", self.sales_invoice)
+		draft = frappe.db.get_value("Sales Invoice", {"blood_donor_screening": self.name, "docstatus": 0})
+		if draft:
+			return frappe.get_doc("Sales Invoice", draft)
+		item = get_settings().donor_screening_item
+		if not item:
+			frappe.throw(_("Set the Donor Screening Item in Blood Bank Settings first"))
+		patient = frappe.db.get_value("Blood Donor", self.donor, "patient")
+		customer = frappe.db.get_value("Patient", patient, "customer")
+		if not customer:
+			frappe.throw(_("Patient {0} has no Customer. Open the Patient and create the Customer first.").format(patient))
+		charge = cint(setting("charge_replacement_donors" if self.donor_type == "Replacement" else "charge_voluntary_donors"))
+		si = frappe.new_doc("Sales Invoice")
+		si.customer = customer
+		if si.meta.has_field("patient"):
+			si.patient = patient
+		si.blood_donor_screening = self.name
+		si.append("items", {"item_code": item, "qty": 1})
+		si.set_missing_values()
+		if not charge:
+			for row in si.items:
+				row.rate = 0
+				row.price_list_rate = 0
+				row.discount_percentage = 0
+		si.calculate_taxes_and_totals()
+		return si
+
 
 	def on_submit(self):
 		if self.result == "Deferred" and self.deferral_reason:
@@ -163,3 +201,17 @@ class BloodDonorScreening(Document):
 def _number(value):
 	m = re.search(r"\d+(\.\d+)?", str(value or ""))
 	return flt(m.group(0)) if m else None
+
+
+@frappe.whitelist()
+def get_limits(donor=None):
+	"""Acceptance ranges shown under the vital-sign fields."""
+	sex = frappe.db.get_value("Blood Donor", donor, "sex") if donor else None
+	return {
+		"weight": flt(setting("min_weight_kg")),
+		"hb": min_hb(sex) if sex else None,
+		"systolic": [cint(setting("min_systolic")), cint(setting("max_systolic"))],
+		"diastolic": [cint(setting("min_diastolic")), cint(setting("max_diastolic"))],
+		"pulse": [cint(setting("min_pulse")), cint(setting("max_pulse"))],
+		"temperature": flt(setting("max_temperature")),
+	}

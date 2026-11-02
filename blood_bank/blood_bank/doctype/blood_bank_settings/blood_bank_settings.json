@@ -29,6 +29,11 @@
   "vital_signs_max_age_hours",
   "sb_q",
   "screening_questions",
+  "sb_order",
+  "donor_screening_item",
+  "cb_o1",
+  "charge_voluntary_donors",
+  "charge_replacement_donors",
   "sb_test",
   "testing_mode",
   "test_validity_hours",
@@ -193,6 +198,35 @@
    "fieldtype": "Table",
    "label": "Screening Questions",
    "options": "Blood Screening Question"
+  },
+  {
+   "fieldname": "sb_order",
+   "fieldtype": "Section Break",
+   "label": "Donor Screening Order",
+   "description": "Order Screening Tests on an accepted screening creates a Sales Invoice for the donor's Patient with this item. Your normal flow then makes the Sample Collection and Lab Result, and the Donor Test fills itself when the Lab Result is submitted."
+  },
+  {
+   "fieldname": "donor_screening_item",
+   "fieldtype": "Link",
+   "label": "Donor Screening Item",
+   "options": "Item",
+   "description": "Item of the Lab Test Template that holds the donor tests (HB, Blood Grouping, HBsAg, HCV, HIV, Syphilis, Malaria)"
+  },
+  {
+   "fieldname": "cb_o1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "charge_voluntary_donors",
+   "fieldtype": "Check",
+   "label": "Charge Voluntary Donors",
+   "description": "Off: the invoice is made at zero price"
+  },
+  {
+   "fieldname": "charge_replacement_donors",
+   "fieldtype": "Check",
+   "label": "Charge Replacement Donors",
+   "default": "1"
   },
   {
    "fieldname": "sb_test",
