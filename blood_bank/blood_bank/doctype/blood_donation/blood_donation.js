@@ -27,8 +27,11 @@ frappe.ui.form.on("Blood Donation", {
 		frm.add_custom_button(__("Split into Components"), () => {
 			frappe.new_doc("Blood Component Preparation", { source_unit: frm.doc.blood_unit });
 		}, __("Create"));
-		frm.add_custom_button(__("Donor Test for this Bag"), () => {
-			frappe.new_doc("Blood Donor Test", { donor: frm.doc.donor, donor_screening: frm.doc.donor_screening, blood_donation: frm.doc.name });
-		}, __("Create"));
+		frappe.db.get_single_value("Blood Bank Settings", "testing_mode").then(mode => {
+			if (mode !== "Test the Bag") return;
+			frm.add_custom_button(__("Donor Test for this Bag"), () => {
+				frappe.new_doc("Blood Donor Test", { donor: frm.doc.donor, donor_screening: frm.doc.donor_screening, blood_donation: frm.doc.name });
+			}, __("Create"));
+		});
 	},
 });

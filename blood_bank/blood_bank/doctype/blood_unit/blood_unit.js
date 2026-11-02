@@ -14,9 +14,21 @@ frappe.ui.form.on("Blood Unit", {
 		frm.add_custom_button(__("Print Label"), () => frappe.set_route("print", "Blood Unit", frm.doc.name));
 		if (frm.doc.status === "Quarantine" && frappe.user.has_role(["Blood Bank Officer", "System Manager"])) {
 			frm.add_custom_button(__("Release to Stock"), () => {
+				if (!confirm(__("Release {0} to stock? It becomes Available for crossmatch and issue.", [frm.doc.name]))) return;
 				frappe.call("blood_bank.blood_bank.doctype.blood_unit.blood_unit.release_units", { units: [frm.doc.name] })
 					.then(r => { show_release_result(r.message); frm.reload_doc(); });
 			}).addClass("btn-primary");
+		}
+		if (frm.doc.status === "Available" && frappe.user.has_role(["Blood Bank Officer", "System Manager"])) {
+			frm.add_custom_button(__("Hold (back to Quarantine)"), () => {
+				frappe.prompt({ fieldname: "reason", fieldtype: "Small Text", label: __("Reason"), reqd: 1 }, v => {
+					frappe.call("blood_bank.blood_bank.doctype.blood_unit.blood_unit.hold_unit", { unit: frm.doc.name, reason: v.reason })
+						.then(() => frm.reload_doc());
+				}, __("Put Unit on Hold"), __("Hold"));
+			}, __("Actions"));
+		}
+		if (frm.doc.status === "Quarantine" && frm.doc.test_status === "On Hold") {
+			frm.dashboard.set_headline_alert(__("On hold: see Remarks. Release to Stock when cleared."), "orange");
 		}
 		if (["Quarantine", "Available", "Reserved", "Expired"].includes(frm.doc.status)) {
 			frm.add_custom_button(__("Discard"), () => {

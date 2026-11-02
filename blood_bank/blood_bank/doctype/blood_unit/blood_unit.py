@@ -54,3 +54,19 @@ def release_units(units):
 def move_storage(unit, storage):
 	frappe.get_doc("Blood Unit", unit).check_permission("write")
 	frappe.db.set_value("Blood Unit", unit, "storage", storage)
+
+
+@frappe.whitelist()
+def hold_unit(unit, reason):
+	"""Blood Bank Officer takes an Available bag off the shelf back to Quarantine (undo a release)."""
+	if not has_role(OFFICER):
+		frappe.throw(_("Only a Blood Bank Officer can put a unit on hold"), frappe.PermissionError)
+	if not (reason or "").strip():
+		frappe.throw(_("Give the reason for the hold"))
+	u = frappe.get_doc("Blood Unit", unit)
+	if u.status != "Available":
+		frappe.throw(_("Only Available units can be put on hold (this one is {0})").format(u.status))
+	note = _("{0}: put on hold by {1}. Reason: {2}").format(frappe.format(now_datetime(), "Datetime"), frappe.session.user, reason.strip())
+	update_unit(u, status="Quarantine", test_status="On Hold", released_by=None, released_on=None,
+		remarks=((u.remarks or "") + "\n" + note).strip())
+	return u.name
