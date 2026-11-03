@@ -73,7 +73,15 @@ class BloodDonorTest(Document):
 				frappe.throw(_("Blood Donation {0} is not a submitted donation of this donor").format(self.blood_donation))
 		if self.verified_by and self.verified_by == self.tested_by:
 			frappe.throw(_("Verified By must be a different person from Tested By"))
+		self.read_typed_values()
 		self.evaluate()
+
+	def read_typed_values(self):
+		"""Manual entry: a typed Lab Value (Negative, Non-Reactive, Positive...) sets a Pending Result."""
+		from blood_bank.lab import classify_tti
+		for t in self.tests:
+			if t.result == "Pending" and t.lab_value:
+				t.result = classify_tti(t.lab_value) or "Pending"
 
 	def evaluate(self):
 		sex = frappe.db.get_value("Blood Donor", self.donor, "sex")
@@ -96,7 +104,10 @@ class BloodDonorTest(Document):
 
 	def before_submit(self):
 		if self.overall_result == "Incomplete":
-			frappe.throw(_("Some mandatory tests are still Pending"))
+			pending = [t.screening_test for t in self.tests if t.result == "Pending" and t.mandatory]
+			frappe.throw(_("No result for: {0}.<br><br>Set the Result column (Non-Reactive / Reactive), or type the Lab Value "
+				"in words the bank recognises (e.g. Negative, Non-Reactive, Positive).").format(", ".join(pending)),
+				title=_("Results Missing"))
 		if not self.blood_group:
 			frappe.throw(_("Blood group is required"))
 		if not flt(self.hb_g_dl):

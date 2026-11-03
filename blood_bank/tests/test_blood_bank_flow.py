@@ -102,6 +102,40 @@ class TestBloodBankFlow(FrappeTestCase):
 	def setUp(self):
 		settings(testing_mode="Test Donor First", require_invoice_before_issue=0, auto_release_cleared_units=0)
 
+	def test_manual_values_and_duplicate_donation(self):
+		from blood_bank.blood_bank.doctype.blood_donation.blood_donation import donation_status
+		donor = make_donor("Manual Donor")
+		sc = make_screening(donor)
+		sc.submit()
+		t = frappe.get_doc({"doctype": "Blood Donor Test", "donor": donor.name, "donor_screening": sc.name,
+			"blood_group": "O Positive", "hb_g_dl": 14}).insert()
+		for row in t.tests:
+			row.lab_value = "Negative"
+		t.save()
+		self.assertEqual(t.overall_result, "Non-Reactive")
+		t.submit()
+		self.assertEqual(donation_status(donor.name, sc.name, t.name), {})
+		don = frappe.get_doc({"doctype": "Blood Donation", "donor": donor.name, "donor_screening": sc.name,
+			"donor_test": t.name, "bag_type": "Triple", "volume_ml": 450}).insert()
+		don.submit()
+		self.assertEqual(donation_status(donor.name, sc.name, t.name)["existing"], don.name)
+		self.assertIn("blocked", donation_status(donor.name))
+
+	def test_cancel_test_order(self):
+		donor = make_donor("Order Donor")
+		sc = make_screening(donor)
+		sc.submit()
+		if not frappe.db.exists("Lab Test Sample", "Blood Test BB"):
+			frappe.get_doc({"doctype": "Lab Test Sample", "sample": "Blood Test BB"}).insert()
+		doc = frappe.get_doc({"doctype": "Sample Collection", "patient": donor.patient, "sample": "Blood Test BB", "sample_qty": 1,
+			"company": frappe.get_all("Company", pluck="name", limit=1)[0], "blood_donor_screening": sc.name}).insert()
+		sc.db_set("sample_collection", doc.name)
+		sc.reload()
+		self.assertIn("deleted", sc.cancel_test_order()[0])
+		sc.reload()
+		self.assertFalse(sc.sample_collection)
+		self.assertFalse(frappe.db.exists("Sample Collection", doc.name))
+
 	def test_bag_type_correction(self):
 		from blood_bank.blood_bank.doctype.blood_donation.blood_donation import correct_bag_type
 		donor = make_donor("Bag Donor")

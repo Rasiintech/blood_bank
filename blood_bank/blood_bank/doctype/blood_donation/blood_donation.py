@@ -125,3 +125,26 @@ def correct_bag_type(donation, bag_type, reason):
 		d.db_set("remarks", ((d.remarks or "") + "\n" + note).strip())
 	d.add_comment("Info", note)
 	return bag_type
+
+
+@frappe.whitelist()
+def donation_status(donor, donor_screening=None, donor_test=None):
+	"""For the 'Create Donation' buttons: an existing donation to open, or why the donor cannot donate now."""
+	or_filters = {}
+	if donor_screening:
+		or_filters["donor_screening"] = donor_screening
+	if donor_test:
+		or_filters["donor_test"] = donor_test
+	if or_filters:
+		existing = frappe.get_all("Blood Donation", filters={"docstatus": ["<", 2]}, or_filters=or_filters, pluck="name", limit=1)
+		if existing:
+			return {"existing": existing[0]}
+	d = frappe.db.get_value("Blood Donor", donor, ["status", "deferred_until", "next_eligible_date"], as_dict=True) or {}
+	today = getdate()
+	if d.get("status") == "Permanently Deferred":
+		return {"blocked": _("Donor is permanently deferred and cannot donate.")}
+	if d.get("status") == "Temporarily Deferred" and d.get("deferred_until") and getdate(d.deferred_until) >= today:
+		return {"blocked": _("Donor is deferred until {0}.").format(frappe.format(d.deferred_until, "Date"))}
+	if d.get("next_eligible_date") and getdate(d.next_eligible_date) > today:
+		return {"blocked": _("Donor is not eligible again until {0}.").format(frappe.format(d.next_eligible_date, "Date"))}
+	return {}

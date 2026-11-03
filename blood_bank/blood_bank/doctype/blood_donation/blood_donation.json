@@ -22,6 +22,7 @@
   "bag_type",
   "volume_ml",
   "cb2",
+  "bag_type_help",
   "start_time",
   "end_time",
   "storage",
@@ -135,10 +136,9 @@
    "fieldname": "bag_type",
    "fieldtype": "Select",
    "label": "Bag Type",
-   "options": "Single\nDouble\nTriple\nQuadruple",
-   "default": "Single",
+   "options": "\nSingle\nDouble\nTriple\nQuadruple",
    "reqd": 1,
-   "description": "The collection bag set used: number of attached pouches = how many components the bag can be split into. Single = keep as Whole Blood only. Double = Red Cells + Plasma/FFP. Triple = Red Cells + FFP + Platelets. Quadruple = Red Cells + FFP + Platelets + one more (e.g. Cryo). Pick the bag before collection; an officer can correct it later with Actions > Correct Bag Type while the bag is not split."
+   "description": "Choose from the bag set used for this donor. See the table on the right."
   },
   {
    "fieldname": "volume_ml",
@@ -150,6 +150,12 @@
   {
    "fieldname": "cb2",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bag_type_help",
+   "fieldtype": "HTML",
+   "label": "Bag Type Help",
+   "options": "<div class=\"small\" style=\"border:1px solid var(--border-color);border-radius:6px;padding:8px 10px;margin-bottom:10px\"><b>Which bag type?</b> Count the pouches joined together in the bag set opened for this donor. Each pouch holds one component after the bag is spun.<table class=\"table table-bordered table-sm\" style=\"margin:6px 0\"><tr><th>Bag Type</th><th>Pouches</th><th>Can be split into</th></tr><tr><td>Single</td><td>1</td><td>Nothing. Stays Whole Blood</td></tr><tr><td>Double</td><td>2</td><td>Red Cells + FFP (or Plasma)</td></tr><tr><td>Triple</td><td>3</td><td>Red Cells + FFP + Platelets (most common)</td></tr><tr><td>Quadruple</td><td>4</td><td>Red Cells + FFP + Platelets + one more</td></tr></table>FFP and Plasma come from the same plasma: choose one. Wrong type entered? Officer: Actions &gt; Correct Bag Type (before splitting).</div>"
   },
   {
    "fieldname": "start_time",

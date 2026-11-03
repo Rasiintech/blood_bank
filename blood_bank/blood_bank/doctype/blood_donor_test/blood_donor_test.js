@@ -34,12 +34,22 @@ frappe.ui.form.on("Blood Donor Test", {
 		const colors = { "Non-Reactive": "green", "Reactive": "red", "Incomplete": "orange" };
 		if (frm.doc.overall_result) frm.page.set_indicator(__(frm.doc.overall_result), colors[frm.doc.overall_result]);
 		if (frm.doc.docstatus === 0 && !frm.doc.lab_reference) {
-			frm.set_intro(__("No Lab Result is linked to this screening's invoice yet. Save as draft and it fills itself when the lab submits, pick the Lab Result yourself, or type the results below."), "blue");
+			frm.set_intro(__("No Lab Result is linked to this screening's invoice yet. Save as draft and it fills itself when the lab submits, pick the Lab Result yourself, or enter the results below: choose Non-Reactive / Reactive in the Result column (typing Negative / Positive in Lab Value also works)."), "blue");
 		}
-		if (frm.doc.docstatus === 1 && frm.doc.overall_result === "Non-Reactive" && !frm.doc.blood_donation) {
-			frm.add_custom_button(__("Donation"), () => {
-				frappe.new_doc("Blood Donation", { donor: frm.doc.donor, donor_screening: frm.doc.donor_screening, donor_test: frm.doc.name });
-			}, __("Create")).addClass("btn-primary");
+		if (frm.doc.docstatus === 1 && frm.doc.overall_result === "Non-Reactive" && !frm.doc.blood_donation && frm.doc.hb_ok) {
+			frappe.call("blood_bank.blood_bank.doctype.blood_donation.blood_donation.donation_status",
+				{ donor: frm.doc.donor, donor_screening: frm.doc.donor_screening, donor_test: frm.doc.name }).then(r => {
+				const st = r.message || {};
+				if (st.existing) {
+					frm.add_custom_button(__("Open Donation"), () => frappe.set_route("Form", "Blood Donation", st.existing)).addClass("btn-primary");
+				} else if (st.blocked) {
+					frm.dashboard.add_comment(st.blocked, "red", true);
+				} else {
+					frm.add_custom_button(__("Next: Donation"), () => {
+						frappe.new_doc("Blood Donation", { donor: frm.doc.donor, donor_screening: frm.doc.donor_screening, donor_test: frm.doc.name });
+					}).addClass("btn-primary");
+				}
+			});
 		}
 	},
 	fetch_lab_results(frm) {
@@ -57,5 +67,16 @@ frappe.ui.form.on("Blood Donor Test", {
 			}
 			frappe.msgprint({ title: __("Lab Results"), message: msg || __("Nothing matched. Check the test names in Blood Bank Settings."), indicator: (s.unread || []).length ? "orange" : "green" });
 		});
+	},
+});
+
+frappe.ui.form.on("Blood Donor Test Item", {
+	lab_value(frm, cdt, cdn) {
+		// typed "Negative" / "Positive" fills the Result straight away; the server uses the bank's keywords on save
+		const row = locals[cdt][cdn];
+		const v = (row.lab_value || "").toLowerCase();
+		if (row.result !== "Pending" || !v) return;
+		if (/non[\s-]?reactive|negative/.test(v)) frappe.model.set_value(cdt, cdn, "result", "Non-Reactive");
+		else if (/reactive|positive/.test(v)) frappe.model.set_value(cdt, cdn, "result", "Reactive");
 	},
 });

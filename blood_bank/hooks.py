@@ -25,11 +25,14 @@ doc_events = {
 		"on_submit": "blood_bank.billing.on_sales_invoice_change",
 		"on_cancel": "blood_bank.billing.on_sales_invoice_change",
 		"on_update_after_submit": "blood_bank.billing.on_sales_invoice_change",
+		"on_trash": "blood_bank.blood_bank.doctype.blood_donor_screening.blood_donor_screening.unlink_order",
 	},
 	"Sample Collection": {
 		# HIS bridge: lets free donor samples (no invoice) submit; HIS code is not changed
 		"before_submit": "blood_bank.integrations.his.apply",
 		"before_cancel": "blood_bank.integrations.his.apply",
+		"on_cancel": "blood_bank.blood_bank.doctype.blood_donor_screening.blood_donor_screening.unlink_order",
+		"on_trash": "blood_bank.blood_bank.doctype.blood_donor_screening.blood_donor_screening.unlink_order",
 	},
 	"Payment Entry": {
 		"on_submit": "blood_bank.billing.on_payment_change",

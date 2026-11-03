@@ -176,6 +176,36 @@ class BloodDonorScreening(Document):
 		doc = make_screening_invoice(self, patient, templates) if charge else make_sample_collection(self, patient, templates)
 		return doc
 
+	@frappe.whitelist()
+	def cancel_test_order(self):
+		"""Undo 'Order Screening Tests' clicked by mistake: remove the draft sample/invoice, or cancel a submitted sample."""
+		frappe.has_permission("Blood Donor Screening", "write", self.name, throw=True)
+		done = frappe.db.get_value("Blood Donor Test", {"donor_screening": self.name, "docstatus": 1})
+		if done:
+			frappe.throw(_("Donor Test {0} is already submitted for this screening. Cancel it first.").format(done))
+		for t in frappe.get_all("Blood Donor Test", filters={"donor_screening": self.name, "docstatus": 0}, pluck="name"):
+			frappe.delete_doc("Blood Donor Test", t, ignore_permissions=True)
+		out = []
+		for dt, field in (("Sample Collection", "sample_collection"), ("Sales Invoice", "sales_invoice")):
+			name = self.get(field)
+			if not name:
+				continue
+			self.db_set(field, None, update_modified=False)
+			if not frappe.db.exists(dt, name):
+				continue
+			status = frappe.db.get_value(dt, name, "docstatus")
+			if status == 0:
+				frappe.delete_doc(dt, name)
+				out.append(_("{0} {1} deleted").format(dt, name))
+			elif status == 1 and dt == "Sample Collection":
+				frappe.get_doc(dt, name).cancel()
+				out.append(_("{0} {1} cancelled with its Lab Results").format(dt, name))
+			elif status == 1:
+				if frappe.get_meta(dt).has_field("blood_donor_screening"):
+					frappe.db.set_value(dt, name, "blood_donor_screening", None, update_modified=False)
+				out.append(_("{0} {1} is submitted: cancel or return it through billing").format(dt, name))
+		return out
+
 	def on_submit(self):
 		if self.result == "Deferred" and self.deferral_reason:
 			defer_donor(self.donor, self.deferral_reason, self, until=self.deferred_until, notes=self.eligibility_notes)
@@ -267,3 +297,10 @@ def make_screening_invoice(screening, patient, templates):
 	si.set_missing_values()
 	si.calculate_taxes_and_totals()
 	return si
+
+
+def unlink_order(doc, method=None):
+	"""Sample Collection / Sales Invoice cancelled or deleted: free the screening so tests can be ordered again."""
+	field = "sample_collection" if doc.doctype == "Sample Collection" else "sales_invoice"
+	for name in frappe.get_all("Blood Donor Screening", filters={field: doc.name}, pluck="name"):
+		frappe.db.set_value("Blood Donor Screening", name, field, None, update_modified=False)

@@ -9,7 +9,7 @@
    "label": "Blood Units Issued"
   }
  ],
- "content": "[{\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Blood Bank</b></span>\", \"col\": 12}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Available Blood Units\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Units Ready to Release\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Reserved Blood Units\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Open Blood Requests\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Donations This Month\", \"col\": 4}}, {\"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">Shortcuts</span>\", \"col\": 12}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Bank Dashboard\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Donor\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Request\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Unit\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Stock Summary\", \"col\": 3}}, {\"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"type\": \"chart\", \"data\": {\"chart_name\": \"Blood Donations\", \"col\": 6}}, {\"type\": \"chart\", \"data\": {\"chart_name\": \"Blood Units Issued\", \"col\": 6}}, {\"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">Blood Bank</span>\", \"col\": 12}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Donors\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Stock\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Transfusion\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Stock Reports\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Donor Reports\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Transfusion Reports\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Setup\", \"col\": 4}}]",
+ "content": "[{\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Blood Bank</b></span>\", \"col\": 12}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Available Blood Units\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Units Ready to Release\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Reserved Blood Units\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Open Blood Requests\", \"col\": 4}}, {\"type\": \"number_card\", \"data\": {\"number_card_name\": \"Donations This Month\", \"col\": 4}}, {\"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">Shortcuts</span>\", \"col\": 12}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Bank Dashboard\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Donor\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Request\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Unit\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Blood Stock Summary\", \"col\": 3}}, {\"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"type\": \"chart\", \"data\": {\"chart_name\": \"Blood Donations\", \"col\": 6}}, {\"type\": \"chart\", \"data\": {\"chart_name\": \"Blood Units Issued\", \"col\": 6}}, {\"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">Blood Bank</span>\", \"col\": 12}}, {\"type\": \"card\", \"data\": {\"card_name\": \"1. Donor: Vein to Shelf\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"2. Patient: Shelf to Patient\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"3. Stock Care\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Stock Reports\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Donor Reports\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Transfusion Reports\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Setup\", \"col\": 4}}]",
  "creation": "2026-11-02 12:00:00.000000",
  "docstatus": 0,
  "doctype": "Workspace",
@@ -22,8 +22,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Donors",
-   "link_count": 4,
+   "label": "1. Donor: Vein to Shelf",
+   "link_count": 6,
    "onboard": 0,
    "type": "Card Break"
   },
@@ -72,14 +72,6 @@
    "type": "Link"
   },
   {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Stock",
-   "link_count": 5,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
    "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
@@ -102,42 +94,9 @@
    "type": "Link"
   },
   {
-   "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Blood Unit Receipt",
-   "link_count": 0,
-   "link_to": "Blood Unit Receipt",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Blood Unit Discard",
-   "link_count": 0,
-   "link_to": "Blood Unit Discard",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "dependencies": "",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Blood Storage Temperature Log",
-   "link_count": 0,
-   "link_to": "Blood Storage Temperature Log",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Transfusion",
+   "label": "2. Patient: Shelf to Patient",
    "link_count": 6,
    "onboard": 0,
    "type": "Card Break"
@@ -204,6 +163,47 @@
    "label": "Blood Unit Return",
    "link_count": 0,
    "link_to": "Blood Unit Return",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "3. Stock Care",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Unit Receipt",
+   "link_count": 0,
+   "link_to": "Blood Unit Receipt",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Unit Discard",
+   "link_count": 0,
+   "link_to": "Blood Unit Discard",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Blood Storage Temperature Log",
+   "link_count": 0,
+   "link_to": "Blood Storage Temperature Log",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
