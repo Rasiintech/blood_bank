@@ -36,6 +36,8 @@
   "blood_request",
   "crossmatch",
   "reserved_until",
+  "directed_request",
+  "directed_patient",
   "cb4",
   "blood_issue",
   "issued_on",
@@ -321,10 +323,27 @@
    "fieldname": "remarks",
    "fieldtype": "Small Text",
    "label": "Remarks"
+  },
+  {
+   "description": "A directed donation is held for this request until the officer releases it, or it is released automatically",
+   "fieldname": "directed_request",
+   "fieldtype": "Link",
+   "label": "Held For Request (Directed)",
+   "no_copy": 1,
+   "options": "Blood Request",
+   "read_only": 1
+  },
+  {
+   "fieldname": "directed_patient",
+   "fieldtype": "Link",
+   "label": "Held For Patient",
+   "no_copy": 1,
+   "options": "Patient",
+   "read_only": 1
   }
  ],
  "links": [],
- "modified": "2026-11-02 12:00:00.000000",
+ "modified": "2026-11-03 15:32:15.569529",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Unit",

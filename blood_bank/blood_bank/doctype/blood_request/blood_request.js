@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 
 const REQUEST_COLORS = { Draft: "red", Requested: "orange", "Awaiting Donor": "orange", Crossmatched: "blue",
-	"Partially Issued": "purple", Issued: "purple", Completed: "green", Cancelled: "gray" };
+	"Partially Issued": "purple", Issued: "purple", Completed: "green", Closed: "green", Cancelled: "gray" };
 
 frappe.ui.form.on("Blood Request", {
 	setup(frm) {
@@ -47,45 +47,75 @@ frappe.ui.form.on("Blood Request", {
 	},
 	refresh(frm) {
 		frm.page.set_indicator(__(frm.doc.status), REQUEST_COLORS[frm.doc.status] || "gray");
-		if (frm.doc.docstatus !== 1 || ["Completed", "Cancelled"].includes(frm.doc.status)) return;
-
-		const plan = frm.doc.__onload && frm.doc.__onload.billing || {};
-		if (plan.patient_to_bill > 0) {
-			frm.add_custom_button(__("Sales Invoice ({0} bag(s) for the patient)", [plan.patient_to_bill]), () => make(), __("Create"));
+		if (frm.doc.docstatus !== 1) return;
+		const info = frm.doc.__onload || {};
+		frm.trigger("billing_summary");
+		if (info.charges_pending || frappe.user.has_role(["Blood Bank Officer", "Accounts User", "System Manager"])) {
+			frm.add_custom_button(__("Update Charges"), () => {
+				frappe.call("blood_bank.billing.update_charges", { blood_request: frm.doc.name }).then(r => {
+					const s = r.message || {};
+					const lines = [].concat(s.charged || [], (s.credited || []).map(c => __("Credited") + ": " + c), s.problems || []);
+					frappe.msgprint(lines.map(frappe.utils.escape_html).join("<br>") || __("Charges are up to date"), __("Billing"));
+					frm.reload_doc();
+				});
+			}, __("Actions"));
 		}
-		const make = () => {
-			frappe.call("blood_bank.billing.make_sales_invoice", { blood_request: frm.doc.name }).then(r => {
-				const doc = frappe.model.sync(r.message)[0];
-				frappe.set_route("Form", doc.doctype, doc.name);
-			});
-		};
+		if (["Completed", "Closed", "Cancelled"].includes(frm.doc.status)) {
+			frm.trigger("nrf_button");
+			return;
+		}
 		const items = frm.doc.items || [];
-		const still_needed = items.some(r => (r.units_required || 0) > (r.units_reserved || 0) + (r.units_issued || 0));
+		const xm = info.xm_components || [];
+		const crossmatch_needed = items.some(r => xm.includes(r.component) && (r.units_required || 0) > (r.units_reserved || 0) + (r.units_issued || 0));
 		const reserved = items.some(r => (r.units_reserved || 0) > 0);
+		const group_only = items.some(r => !xm.includes(r.component) && (r.units_required || 0) > (r.units_issued || 0));
 		const not_all_issued = items.some(r => (r.units_required || 0) > (r.units_issued || 0));
-		if (still_needed) {
+		if (crossmatch_needed) {
 			frm.add_custom_button(__("Crossmatch"), () => {
 				frappe.new_doc("Blood Crossmatch", { blood_request: frm.doc.name, patient_blood_group: frm.doc.patient_blood_group });
 			}, __("Create"));
 		}
-		if (reserved || (frm.doc.urgency === "Emergency" && not_all_issued)) {
-			frm.add_custom_button(__("Issue Blood"), () => {
-				frappe.new_doc("Blood Issue", { blood_request: frm.doc.name });
+		if (reserved || group_only || (frm.doc.urgency === "Emergency" && not_all_issued)) {
+			frm.add_custom_button(__("Issue Blood"), () => frappe.new_doc("Blood Issue", { blood_request: frm.doc.name }), __("Create"));
+		}
+		if (!frm.doc.replacement_donors_needed || frm.doc.replacement_donors_needed > (frm.doc.replacement_donations || 0)) {
+			frm.add_custom_button(__("Replacement Donor Screening"), () => {
+				frappe.new_doc("Blood Donor Screening", { donor_type: "Replacement", replacement_for: frm.doc.patient, blood_request: frm.doc.name });
+			}, __("Create"));
+			frm.add_custom_button(__("Directed Donor Screening"), () => {
+				frappe.new_doc("Blood Donor Screening", { donor_type: "Directed", replacement_for: frm.doc.patient, blood_request: frm.doc.name });
 			}, __("Create"));
 		}
-		if (!frm.doc.replacement_donors_needed || frm.doc.replacement_donors_needed > (frm.doc.replacement_donations || 0)) frm.add_custom_button(__("Replacement Donor Screening"), () => {
-			frappe.new_doc("Blood Donor Screening", { donor_type: "Replacement", replacement_for: frm.doc.patient, blood_request: frm.doc.name });
-		}, __("Create"));
-
-		const billed = (frm.doc.items || []).reduce((n, r) => n + (r.units_billed || 0), 0);
-		const required = (frm.doc.items || []).reduce((n, r) => n + (r.units_required || 0), 0);
-		const parts = [__("Billed {0} of {1} bag(s)", [billed, required])];
-		if (plan.relative_invoices) parts.push(__("{0} on relatives' invoices", [plan.relative_invoices]));
-		if (plan.relatives_to_bill) parts.push(__("{0} still to come on relatives' invoices (Order Screening Tests on each relative)", [plan.relatives_to_bill]));
-		if (plan.patient_to_bill) parts.push(__("{0} to bill to the patient: Create > Sales Invoice", [plan.patient_to_bill]));
-		frm.dashboard.add_comment(parts.join(" · "), billed >= required ? "green" : "orange", true);
+		if (frappe.user.has_role(["Blood Bank Officer", "Physician", "System Manager"])) {
+			frm.add_custom_button(__("Close Request"), () => {
+				frappe.prompt({ fieldname: "reason", fieldtype: "Small Text", label: __("Why is blood no longer needed?"), reqd: 1,
+					description: __("Reserved bags go back to stock. Billing On Request: bags not used are credited.") }, v => {
+					frappe.call("blood_bank.billing.close_request", { blood_request: frm.doc.name, reason: v.reason }).then(() => frm.reload_doc());
+				}, __("Close Request"), __("Close"));
+			}, __("Actions"));
+		}
 		if (frm.doc.replacement_donors_needed) {
 			frm.dashboard.add_comment(__("Replacement donors: {0} of {1}", [frm.doc.replacement_donations || 0, frm.doc.replacement_donors_needed]), "blue", true);
+		}
+	},
+	billing_summary(frm) {
+		const parts = [__("Billing {0}", [__(frm.doc.billing_mode || "-")])];
+		const billed = (frm.doc.items || []).reduce((n, r) => n + (r.units_billed || 0), 0);
+		parts.push(__("{0} bag(s) charged", [billed]));
+		parts.push(__("total {0}", [format_currency(frm.doc.total_charged || 0)]));
+		if (frm.doc.invoice_status) parts.push(__(frm.doc.invoice_status));
+		const pending = (frm.doc.__onload || {}).charges_pending;
+		if (pending) parts.push(__("charges not up to date: use Actions > Update Charges"));
+		frm.dashboard.add_comment(parts.join(" · "), pending ? "orange" : "green", true);
+	},
+	nrf_button(frm) {
+		const missing = (frm.doc.replacement_donors_needed || 0) - (frm.doc.replacement_donations || 0);
+		if (missing > 0 && !frm.doc.nrf_waived && frappe.user.has_role(["Blood Bank Officer", "System Manager"])) {
+			frm.add_custom_button(__("Waive Non-Replacement Fee"), () => {
+				frappe.prompt({ fieldname: "reason", fieldtype: "Small Text", label: __("Reason"), reqd: 1 }, v => {
+					frappe.call("blood_bank.billing.waive_non_replacement_fee", { blood_request: frm.doc.name, reason: v.reason }).then(() => frm.reload_doc());
+				}, __("Waive Non-Replacement Fee"), __("Waive"));
+			}, __("Actions"));
 		}
 	},
 });

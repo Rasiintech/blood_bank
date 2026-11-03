@@ -11,6 +11,7 @@
   "is_whole_blood",
   "can_prepare_from_whole_blood",
   "compatibility_rule",
+  "requires_crossmatch",
   "cb1",
   "storage_type",
   "min_temp",
@@ -129,10 +130,16 @@
    "fieldname": "description",
    "fieldtype": "Small Text",
    "label": "Description"
+  },
+  {
+   "description": "Red-cell components (Whole Blood, Red Cells) are crossmatched with the patient before issue. Plasma and platelets are issued by compatible group only.",
+   "fieldname": "requires_crossmatch",
+   "fieldtype": "Check",
+   "label": "Requires Crossmatch"
   }
  ],
  "links": [],
- "modified": "2026-11-02 12:00:00.000000",
+ "modified": "2026-11-03 15:32:15.569529",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Component",

@@ -31,8 +31,9 @@ def execute(filters=None):
 		don = frappe.get_doc("Blood Donation", u.blood_donation)
 		if show_donor:
 			donor = frappe.db.get_value("Blood Donor", don.donor, ["donor_name", "mobile_no"], as_dict=True)
-			add(don.collection_datetime, _("Donor"), "Blood Donor", don.donor, f"{donor.donor_name} {donor.mobile_no or ''}")
-			add(don.collection_datetime, _("Screening"), "Blood Donor Screening", don.donor_screening, "")
+			screened = frappe.db.get_value("Blood Donor Screening", don.donor_screening, "screening_datetime") or don.collection_datetime
+			add(screened, _("Donor"), "Blood Donor", don.donor, f"{donor.donor_name} {donor.mobile_no or ''}")
+			add(screened, _("Screening"), "Blood Donor Screening", don.donor_screening, "")
 			for t in frappe.get_all("Blood Donor Test", filters={"docstatus": 1, "name": ["in", [don.donor_test or "", u.donor_test or ""]]},
 					fields=["name", "test_datetime", "overall_result", "blood_group"]):
 				add(t.test_datetime, _("Donor Test"), "Blood Donor Test", t.name, f"{t.overall_result}, {t.blood_group}")
@@ -65,7 +66,11 @@ def execute(filters=None):
 		dt = frappe.db.get_value("Blood Unit Discard", u.blood_unit_discard, "discard_datetime")
 		add(dt, _("Discarded"), "Blood Unit Discard", u.blood_unit_discard, u.discard_reason or "")
 
-	ev.sort(key=lambda e: str(e["datetime"] or ""))
+	# by time; events in the same minute keep the order they happen in the process
+	order = [_("Donor"), _("Screening"), _("Donor Test"), _("Collected"), _("Received"), _("Released to Stock"),
+		_("Prepared From"), _("Component Made"), _("Crossmatched"), _("Issued"), _("Returned"), _("Transfused"),
+		_("Reaction"), _("Discarded")]
+	ev.sort(key=lambda e: (str(e["datetime"] or "")[:16], order.index(e["event"]) if e["event"] in order else 99, str(e["datetime"] or "")))
 	msg = _("{0}: {1} {2}, status {3}, expiry {4}").format(u.name, u.component, u.blood_group or "", u.status,
 		frappe.format(u.expiry_datetime, "Datetime"))
 	return columns, ev, msg

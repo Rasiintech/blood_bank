@@ -48,3 +48,20 @@ def refresh_request(req_name):
 	if frappe.db.get_value("Blood Request", req_name, "docstatus") == 1:
 		doc = frappe.get_doc("Blood Request", req_name)
 		doc.update_counts_and_status()
+
+
+def release_directed_units():
+	"""Daily: a directed bag goes to general stock after the set days, once its request is closed or the patient left."""
+	from frappe.utils import add_days, cint, getdate
+	from blood_bank.utils import setting
+	days = cint(setting("directed_release_days")) or 3
+	for u in frappe.get_all("Blood Unit", filters={"directed_request": ["is", "set"], "status": ["in", ["Quarantine", "Available"]]},
+			fields=["name", "directed_request", "collection_datetime"]):
+		if getdate(add_days(u.collection_datetime, days)) > getdate(nowdate()):
+			continue
+		req = frappe.db.get_value("Blood Request", u.directed_request, ["status", "inpatient_record"], as_dict=True) or {}
+		discharged = req.get("inpatient_record") and frappe.db.get_value("Inpatient Record", req.inpatient_record, "status") == "Discharged"
+		if not req or req.get("status") in ("Completed", "Closed", "Cancelled") or discharged:
+			update_unit(u.name, directed_request=None, directed_patient=None,
+				remarks="Directed hold ended automatically: request {0} closed or patient discharged".format(u.directed_request))
+	frappe.db.commit()

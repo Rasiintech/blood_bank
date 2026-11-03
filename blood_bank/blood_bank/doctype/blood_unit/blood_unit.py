@@ -70,3 +70,20 @@ def hold_unit(unit, reason):
 	update_unit(u, status="Quarantine", test_status="On Hold", released_by=None, released_on=None,
 		remarks=((u.remarks or "") + "\n" + note).strip())
 	return u.name
+
+
+@frappe.whitelist()
+def release_directed(unit, reason):
+	"""Officer: end a directed hold so the bag can go to any compatible patient."""
+	from frappe.utils import format_datetime, now_datetime
+	if not has_role(OFFICER):
+		frappe.throw(_("Only a Blood Bank Officer can release a directed bag"), frappe.PermissionError)
+	if not (reason or "").strip():
+		frappe.throw(_("Give the reason"))
+	u = frappe.get_doc("Blood Unit", unit)
+	if not u.directed_request:
+		frappe.throw(_("Unit {0} is not held for anyone").format(unit))
+	note = _("{0}: directed hold for {1} released by {2}. Reason: {3}").format(
+		format_datetime(now_datetime()), u.directed_request, frappe.session.user, reason.strip())
+	update_unit(u, directed_request=None, directed_patient=None, remarks=((u.remarks or "") + "\n" + note).strip())
+	return u.name

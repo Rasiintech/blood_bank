@@ -10,9 +10,11 @@ from blood_bank.utils import OFFICER, update_unit
 
 class BloodTransfusionReaction(Document):
 	def validate(self):
-		t = frappe.db.get_value("Blood Transfusion", self.blood_transfusion, ["docstatus", "patient", "blood_unit"], as_dict=True)
+		t = frappe.db.get_value("Blood Transfusion", self.blood_transfusion, ["docstatus", "patient", "blood_unit", "start_datetime"], as_dict=True)
 		if not t or t.docstatus == 2:
 			frappe.throw(_("Transfusion {0} is cancelled").format(self.blood_transfusion))
+		from blood_bank.utils import check_time_order
+		check_time_order([(_("Transfusion Start"), t.start_datetime), (_("Onset"), self.onset_datetime)])
 		self.patient = t.patient
 		self.blood_unit = t.blood_unit
 

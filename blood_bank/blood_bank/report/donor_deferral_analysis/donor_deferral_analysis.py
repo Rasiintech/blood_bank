@@ -16,6 +16,12 @@ def execute(filters=None):
 		where s.docstatus=1 and s.result='Deferred' and s.screening_datetime between %(from)s and %(to)s
 		group by s.deferral_reason, r.deferral_type
 		union all
+		select 'Low Haemoglobin (donor test)' as reason, 'Temporary' as deferral_type, count(*) as qty
+		from `tabBlood Donor Test` t
+		where t.docstatus=1 and t.hb_ok=0 and t.overall_result='Non-Reactive' and ifnull(t.blood_donation, '')=''
+			and t.test_datetime between %(from)s and %(to)s
+		having count(*) > 0
+		union all
 		select concat('Reactive: ', i.screening_test) as reason, 'Permanent' as deferral_type, count(*) as qty
 		from `tabBlood Donor Test` t join `tabBlood Donor Test Item` i on i.parent = t.name
 		where t.docstatus=1 and i.result='Reactive' and t.test_datetime between %(from)s and %(to)s
@@ -31,5 +37,6 @@ def execute(filters=None):
 	]
 	chart = {"data": {"labels": [r.reason for r in rows], "datasets": [{"values": [r.qty for r in rows]}]}, "type": "pie"} if rows else None
 	summary = [{"label": _("Screenings"), "value": total, "indicator": "blue"},
-		{"label": _("Deferred"), "value": sum(r.qty for r in rows if not str(r.reason).startswith("Reactive")), "indicator": "orange"}]
+		{"label": _("Deferred (temporary)"), "value": sum(r.qty for r in rows if r.deferral_type == "Temporary"), "indicator": "orange"},
+		{"label": _("Deferred (permanent)"), "value": sum(r.qty for r in rows if r.deferral_type == "Permanent"), "indicator": "red"}]
 	return columns, rows, None, chart, summary

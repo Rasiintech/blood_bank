@@ -66,6 +66,19 @@ frappe.ui.form.on("Blood Unit", {
 				}, __("Move to"));
 			}, __("Actions"));
 		}
+		if (frm.doc.directed_request) {
+			frm.dashboard.set_headline_alert(__("Directed donation held for {0} ({1}). Offered only to this patient until released.",
+				[frm.doc.directed_patient, frm.doc.directed_request]), "blue");
+			if (frappe.user.has_role(["Blood Bank Officer", "System Manager"]) && ["Quarantine", "Available"].includes(frm.doc.status)) {
+				frm.add_custom_button(__("Release Directed Bag to Stock"), () => {
+					frappe.prompt({ fieldname: "reason", fieldtype: "Small Text", label: __("Reason"), reqd: 1,
+						description: __("e.g. patient discharged, no longer needs blood") }, v => {
+						frappe.call("blood_bank.blood_bank.doctype.blood_unit.blood_unit.release_directed", { unit: frm.doc.name, reason: v.reason })
+							.then(() => frm.reload_doc());
+					}, __("Release Directed Bag"), __("Release"));
+				}, __("Actions"));
+			}
+		}
 		frm.add_custom_button(__("Traceability"), () => {
 			frappe.set_route("query-report", "Blood Unit Traceability", { blood_unit: frm.doc.name });
 		}, __("View"));

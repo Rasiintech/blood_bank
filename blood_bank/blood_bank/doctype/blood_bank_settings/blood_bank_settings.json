@@ -65,6 +65,22 @@
   "transfusion_max_hours",
   "expiry_warning_days",
   "replacement_donors_per_unit",
+  "sb_billing",
+  "billing_help",
+  "inpatient_billing",
+  "outpatient_billing",
+  "submit_charge_invoices",
+  "cb_b1",
+  "crossmatch_charge",
+  "crossmatch_item",
+  "charge_blood_grouping",
+  "grouping_item",
+  "cb_b2",
+  "non_replacement_fee",
+  "non_replacement_item",
+  "non_replacement_grace_days",
+  "sb_directed",
+  "directed_release_days",
   "sb_stock",
   "stock_levels",
   "sb_label",
@@ -214,14 +230,14 @@
    "options": "Blood Donor Lab Test"
   },
   {
-   "description": "Off: no invoice, the Sample Collection is created directly",
+   "description": "Usually off: the donor's screening tests are part of the bag price the patient pays.",
    "fieldname": "charge_voluntary_donors",
    "fieldtype": "Check",
    "label": "Charge Voluntary Donors"
   },
   {
-   "default": "1",
-   "description": "Replacement donors without a Blood Request. A replacement donor linked to a Blood Request is always invoiced: that invoice is the patient's charge for the bag (screening + crossmatch), billed to the inpatient.",
+   "default": "0",
+   "description": "Usually off: the donor's screening tests are part of the bag price the patient pays.",
    "fieldname": "charge_replacement_donors",
    "fieldtype": "Check",
    "label": "Charge Replacement Donors"
@@ -386,15 +402,15 @@
   },
   {
    "default": "1",
-   "description": "Blood is issued only when the request has a submitted Sales Invoice (except Emergency).",
+   "description": "Billing mode On Request: blood is issued only when the request's invoice is submitted (except Emergency)",
    "fieldname": "require_invoice_before_issue",
    "fieldtype": "Check",
-   "label": "Require Invoice Before Issue"
+   "label": "On Request: Invoice Before Issue"
   },
   {
    "fieldname": "require_paid_invoice",
    "fieldtype": "Check",
-   "label": "Require Fully Paid Invoice"
+   "label": "On Request: Must Be Paid Before Issue"
   },
   {
    "fieldname": "cb_i1",
@@ -445,11 +461,116 @@
    "fieldname": "label_hospital_name",
    "fieldtype": "Data",
    "label": "Hospital Name on Labels"
+  },
+  {
+   "fieldname": "sb_billing",
+   "fieldtype": "Section Break",
+   "label": "Patient Billing"
+  },
+  {
+   "fieldname": "billing_help",
+   "fieldtype": "HTML",
+   "label": "Billing Help",
+   "options": "<div class=\"small\" style=\"border:1px solid var(--border-color);border-radius:6px;padding:8px 10px\"><b>How patients are charged.</b> Only the patient pays; donors are not charged. Each charge is posted automatically as an unpaid invoice to the patient (inpatients to their admission account) and listed on the Blood Request under Blood Bank Charges.<table class=\"table table-bordered table-sm\" style=\"margin:6px 0\"><tr><th>When</th><th>Charge</th><th>On Issue</th><th>On Request</th></tr><tr><td>Request submitted</td><td>Requested bags, grouping, crossmatches</td><td>nothing yet</td><td>charged now</td></tr><tr><td>Crossmatch submitted</td><td>Grouping (once) and each crossmatch done</td><td>charged</td><td>only crossmatches beyond the prepaid ones</td></tr><tr><td>Bag issued</td><td>The bag (component item)</td><td>charged</td><td>already paid</td></tr><tr><td>Bag returned in time</td><td>The bag</td><td>credited</td><td>credited when the request closes</td></tr><tr><td>Request closed</td><td>Unused prepaid bags and crossmatches</td><td>-</td><td>credited</td></tr><tr><td>Closed + grace days</td><td>Non-Replacement Fee per missing donor (if on)</td><td>charged</td><td>charged</td></tr></table>Bag items are set on each Blood Component (Billing Item). Install creates BB-WB, BB-RBC, BB-FFP, BB-PLS, BB-PLT, BB-GRP, BB-XM and BB-NRF; enter their prices in Item Price, or point to your own items.</div>"
+  },
+  {
+   "default": "On Issue",
+   "description": "On Issue: each bag is charged when it leaves the bank, and credited if it comes back unused in time.",
+   "fieldname": "inpatient_billing",
+   "fieldtype": "Select",
+   "label": "Inpatients",
+   "options": "On Issue\nOn Request"
+  },
+  {
+   "default": "On Request",
+   "description": "On Request: the requested bags are invoiced when the request is submitted; bags not used are credited when the request closes.",
+   "fieldname": "outpatient_billing",
+   "fieldtype": "Select",
+   "label": "Outpatients",
+   "options": "On Issue\nOn Request"
+  },
+  {
+   "default": "1",
+   "description": "Off: invoices are left as drafts for the cashier to check and submit",
+   "fieldname": "submit_charge_invoices",
+   "fieldtype": "Check",
+   "label": "Submit Charge Invoices Automatically"
+  },
+  {
+   "fieldname": "cb_b1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Separate per crossmatch",
+   "fieldname": "crossmatch_charge",
+   "fieldtype": "Select",
+   "label": "Crossmatch",
+   "options": "Separate per crossmatch\nIncluded in bag price"
+  },
+  {
+   "depends_on": "eval:doc.crossmatch_charge=='Separate per crossmatch'",
+   "fieldname": "crossmatch_item",
+   "fieldtype": "Link",
+   "label": "Crossmatch Item",
+   "options": "Item"
+  },
+  {
+   "default": "1",
+   "description": "Once per request",
+   "fieldname": "charge_blood_grouping",
+   "fieldtype": "Check",
+   "label": "Charge Patient Blood Grouping"
+  },
+  {
+   "depends_on": "charge_blood_grouping",
+   "fieldname": "grouping_item",
+   "fieldtype": "Link",
+   "label": "Blood Grouping Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "cb_b2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Off",
+   "description": "Charged when the family brings fewer replacement donors than asked",
+   "fieldname": "non_replacement_fee",
+   "fieldtype": "Select",
+   "label": "Non-Replacement Fee",
+   "options": "Off\nPer missing donor"
+  },
+  {
+   "depends_on": "eval:doc.non_replacement_fee!='Off'",
+   "fieldname": "non_replacement_item",
+   "fieldtype": "Link",
+   "label": "Non-Replacement Fee Item",
+   "options": "Item"
+  },
+  {
+   "default": "7",
+   "depends_on": "eval:doc.non_replacement_fee!='Off'",
+   "description": "Families often replace after the transfusion; the fee waits this many days after the request closes",
+   "fieldname": "non_replacement_grace_days",
+   "fieldtype": "Int",
+   "label": "Grace Days After Closing"
+  },
+  {
+   "fieldname": "sb_directed",
+   "fieldtype": "Section Break",
+   "label": "Directed Donations"
+  },
+  {
+   "default": "3",
+   "description": "A directed bag is released automatically after this many days, but only once its request is closed or the patient is discharged. The officer can release it any time.",
+   "fieldname": "directed_release_days",
+   "fieldtype": "Int",
+   "label": "Release To Stock After (days)"
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-11-02 12:00:00.000000",
+ "modified": "2026-11-03 15:32:15.569529",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Bank Settings",

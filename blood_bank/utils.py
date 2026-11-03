@@ -263,3 +263,23 @@ def refresh_donor_stats(donor):
 		d.next_eligible_date = None
 	d.flags.ignore_permissions = True
 	d.save()
+
+
+# ------------------------------------------------------------------ times
+def check_time_order(steps, future_minutes=10):
+	"""steps: [(label, datetime or None), ...] in the order they must happen. Refuses times out of order or in the
+	future (a few minutes allowed for clocks), so reports and turnaround times stay true."""
+	from frappe.utils import add_to_date, format_datetime
+
+	latest = add_to_date(now_datetime(), minutes=future_minutes)
+	prev = None
+	for label, value in steps:
+		if not value:
+			continue
+		value = get_datetime(value)
+		if value > latest:
+			frappe.throw(_("{0} ({1}) is in the future").format(label, format_datetime(value)), title=_("Check the Time"))
+		if prev and value < prev[1]:
+			frappe.throw(_("{0} ({1}) cannot be before {2} ({3})").format(label, format_datetime(value), prev[0],
+				format_datetime(prev[1])), title=_("Check the Time"))
+		prev = (label, value)

@@ -27,10 +27,8 @@ class BloodTransfusion(Document):
 			frappe.throw(_("Unit {0} already has transfusion record {1}").format(self.blood_unit, other))
 		if self.second_checker and self.second_checker == self.first_checker:
 			frappe.throw(_("The second checker must be a different person"))
-		if get_datetime(self.start_datetime) < get_datetime(issue.issue_datetime):
-			frappe.throw(_("Start time is before the unit was issued"))
-		if self.end_datetime and get_datetime(self.end_datetime) < get_datetime(self.start_datetime):
-			frappe.throw(_("End time is before start time"))
+		from blood_bank.utils import check_time_order
+		check_time_order([(_("Issue"), issue.issue_datetime), (_("Start"), self.start_datetime), (_("End"), self.end_datetime)])
 		limit = add_to_date(get_datetime(issue.issue_datetime), hours=cint(setting("transfusion_max_hours")) or 4)
 		finish = get_datetime(self.end_datetime) if self.end_datetime else now_datetime()
 		self.exceeded_time_limit = 1 if finish > limit else 0

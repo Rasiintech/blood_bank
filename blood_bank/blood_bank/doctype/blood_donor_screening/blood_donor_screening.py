@@ -76,6 +76,8 @@ class BloodDonorScreening(Document):
 			self.donor_type = donor.default_donor_type or "Voluntary"
 		if self.donor_type == "Replacement" and not (self.replacement_for or self.blood_request):
 			frappe.throw(_("Select the patient (or Blood Request) this replacement donor is donating for"))
+		if self.donor_type == "Directed" and not self.blood_request:
+			frappe.throw(_("A directed donation is for one patient's Blood Request: select the Blood Request"))
 		if self.blood_request and not self.replacement_for:
 			self.replacement_for = frappe.db.get_value("Blood Request", self.blood_request, "patient")
 		self.evaluate(donor)
@@ -169,17 +171,11 @@ class BloodDonorScreening(Document):
 					frappe.db.set_value(dt, name, "blood_donor_screening", self.name)
 				return frappe.get_doc(dt, name)
 		templates = [r.lab_test_template for r in get_settings().donor_lab_tests]
-		if not templates and not (self.donor_type == "Replacement" and self.blood_request):
+		if not templates:
 			frappe.throw(_("Add the Lab Tests to Order in Blood Bank Settings first"))
 		patient = frappe.db.get_value("Blood Donor", self.donor, "patient")
-		if self.donor_type == "Replacement" and self.blood_request:
-			# the relative's tests are the patient's charge for the bag: invoiced, billed to the patient
-			doc = make_replacement_invoice(self, patient)
-			if doc:
-				return doc
-			if not templates:
-				frappe.throw(_("All bags of {0} are already billed. Add the Lab Tests to Order in Blood Bank Settings to test extra relatives.").format(self.blood_request))
-		charge = cint(setting("charge_replacement_donors" if self.donor_type == "Replacement" else "charge_voluntary_donors"))
+		# donors are normally not charged: their tests are part of the bag price the patient pays
+		charge = cint(setting("charge_voluntary_donors" if self.donor_type == "Voluntary" else "charge_replacement_donors"))
 		doc = make_screening_invoice(self, patient, templates) if charge else make_sample_collection(self, patient, templates)
 		return doc
 
@@ -318,41 +314,6 @@ def make_screening_invoice(screening, patient, templates):
 	si.set_missing_values()
 	si.calculate_taxes_and_totals()
 	return si
-
-
-def make_replacement_invoice(screening, donor_patient):
-	"""Replacement donor for a Blood Request, the way the hospital bills it today: one unpaid invoice for the
-	donor (the lab sample is the donor's) with the bag's item, e.g. 'Blood Transfusion + Cross Matching Whole Blood'
-	(screening tests + crossmatch against the patient), billed to the inpatient who receives the blood.
-	Submitting it lets the normal lab flow make the Sample Collection and Lab Result."""
-	from blood_bank.billing import prepare_invoice, refresh_request_invoice, save_draft
-
-	draft = frappe.db.get_value("Sales Invoice", {"blood_donor_screening": screening.name, "docstatus": 0})
-	if draft:
-		return frappe.get_doc("Sales Invoice", draft)
-	req = frappe.get_doc("Blood Request", screening.blood_request)
-	refresh_request_invoice(req.name)
-	req.reload()
-	row = next((r for r in req.items if cint(r.units_required) > cint(r.units_billed)), None)
-	if not row:
-		return None  # every bag of the request is already billed: this relative is tested like a voluntary donor
-	item = frappe.db.get_value("Blood Component", row.component, "billing_item")
-	if not item:
-		frappe.throw(_("Set a Billing Item on Blood Component {0} first (e.g. 'Blood Transfusion + Cross Matching Whole Blood')")
-			.format(row.component if row else "-"))
-	customer = frappe.db.get_value("Patient", donor_patient, "customer")
-	if not customer:
-		frappe.throw(_("Patient {0} has no Customer. Open the Patient and create the Customer first.").format(donor_patient))
-	si = frappe.new_doc("Sales Invoice")
-	si.customer = customer
-	si.blood_donor_screening = screening.name
-	if si.meta.has_field("blood_request"):
-		si.blood_request = req.name
-	si.append("items", {"item_code": item, "qty": 1})
-	prepare_invoice(si, donor_patient, req.practitioner, bill_to_inpatient=req.patient)
-	si.set_missing_values()
-	si.calculate_taxes_and_totals()
-	return save_draft(si)
 
 
 def unlink_order(doc, method=None):

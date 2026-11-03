@@ -16,6 +16,8 @@ class BloodUnitReturn(Document):
 			frappe.throw(_("Blood Issue {0} is not submitted").format(issue.name))
 		self.patient = issue.patient
 		issued = [r.blood_unit for r in issue.items]
+		from blood_bank.utils import check_time_order
+		check_time_order([(_("Issue"), issue.issue_datetime), (_("Return"), self.return_datetime)])
 		window = cint(setting("return_window_minutes")) or 30
 		for row in self.items:
 			if row.blood_unit not in issued:
@@ -42,8 +44,10 @@ class BloodUnitReturn(Document):
 		if late:
 			from blood_bank.blood_bank.doctype.blood_unit_discard.blood_unit_discard import discard_units
 			discard_units(late, "Returned Late", self, remarks=_("Returned after the allowed time or seal broken"))
-		req = frappe.db.get_value("Blood Issue", self.blood_issue, "blood_request")
-		frappe.get_doc("Blood Request", req).update_counts_and_status()
+		req = frappe.get_doc("Blood Request", frappe.db.get_value("Blood Issue", self.blood_issue, "blood_request"))
+		req.update_counts_and_status()
+		from blood_bank.billing import reconcile
+		reconcile(req, reference=self)
 
 	def on_cancel(self):
 		frappe.throw(_("A return cannot be cancelled. Issue the unit again if needed."))

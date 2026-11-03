@@ -78,6 +78,8 @@ class BloodComponentPreparation(Document):
 				"component_preparation": self.name,
 				"donor": src.donor,
 				"donor_test": src.donor_test,
+				"directed_request": src.directed_request,
+				"directed_patient": src.directed_patient,
 				"released_by": src.released_by,
 				"released_on": src.released_on,
 			})

@@ -77,6 +77,9 @@ def next_action(donor):
 	"""Donor form: an unfinished screening to continue, or why a new one cannot start."""
 	from blood_bank.blood_bank.doctype.blood_donation.blood_donation import donation_status
 
+	blocked = donation_status(donor)
+	if blocked.get("blocked"):
+		return blocked  # deferred or too soon: no screening to continue
 	for s in frappe.get_all("Blood Donor Screening", filters={"donor": donor, "docstatus": ["<", 2]},
 			fields=["name", "docstatus", "result"], order_by="creation desc", limit=5):
 		if s.docstatus == 0:

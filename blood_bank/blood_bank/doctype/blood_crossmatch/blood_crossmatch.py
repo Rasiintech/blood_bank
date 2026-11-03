@@ -15,8 +15,8 @@ USABLE_TESTS = ("Cleared", "Not Required")
 
 class BloodCrossmatch(Document):
 	def validate(self):
-		req = frappe.db.get_value("Blood Request", self.blood_request, ["docstatus", "patient", "status"], as_dict=True)
-		if not req or req.docstatus != 1 or req.status in ("Cancelled", "Completed"):
+		req = frappe.db.get_value("Blood Request", self.blood_request, ["docstatus", "patient", "status", "request_datetime"], as_dict=True)
+		if not req or req.docstatus != 1 or req.status in ("Cancelled", "Completed", "Closed"):
 			frappe.throw(_("Blood Request {0} must be submitted and open").format(self.blood_request))
 		self.patient = req.patient
 		on_file = get_patient_blood_group(self.patient)
@@ -31,6 +31,9 @@ class BloodCrossmatch(Document):
 			u = frappe.get_doc("Blood Unit", row.blood_unit)
 			if self.docstatus == 0:
 				self.check_unit(row, u, components)
+		from blood_bank.utils import check_time_order
+		check_time_order([(_("Request"), req.request_datetime), (_("Patient Sample Taken"), self.sample_datetime),
+			(_("Crossmatch"), self.crossmatch_datetime)])
 		self.valid_until = add_to_date(get_datetime(self.crossmatch_datetime), hours=cint(setting("crossmatch_validity_hours")) or 72)
 
 	def check_unit(self, row, u, components):
@@ -40,6 +43,8 @@ class BloodCrossmatch(Document):
 			frappe.throw(_("Row {0}: unit {1} tests are {2}").format(row.idx, u.name, u.test_status))
 		if get_datetime(u.expiry_datetime) <= now_datetime():
 			frappe.throw(_("Row {0}: unit {1} has expired").format(row.idx, u.name))
+		if u.directed_request and u.directed_request != self.blood_request:
+			frappe.throw(_("Row {0}: unit {1} is a directed donation held for {2}").format(row.idx, u.name, u.directed_patient))
 		if u.component not in components:
 			frappe.throw(_("Row {0}: {1} was not requested").format(row.idx, u.component))
 		rule = frappe.db.get_value("Blood Component", u.component, "compatibility_rule")
@@ -72,12 +77,18 @@ class BloodCrossmatch(Document):
 				frappe.throw(_("Unit {0} was taken by another document ({1})").format(u.name, u.status))
 			update_unit(u, status="Reserved", reserved_for=self.patient, blood_request=self.blood_request,
 				crossmatch=self.name, reserved_until=self.valid_until)
-		frappe.get_doc("Blood Request", self.blood_request).update_counts_and_status()
+		req = frappe.get_doc("Blood Request", self.blood_request)
+		req.update_counts_and_status()
+		from blood_bank.billing import reconcile
+		reconcile(req, reference=self)
 
 	def on_cancel(self):
 		for name in frappe.get_all("Blood Unit", filters={"crossmatch": self.name, "status": "Reserved"}, pluck="name"):
 			update_unit(name, status="Available", reserved_for=None, blood_request=None, crossmatch=None, reserved_until=None)
-		frappe.get_doc("Blood Request", self.blood_request).update_counts_and_status()
+		req = frappe.get_doc("Blood Request", self.blood_request)
+		req.update_counts_and_status()
+		from blood_bank.billing import reconcile
+		reconcile(req, reference=self)
 
 
 @frappe.whitelist()
@@ -94,10 +105,12 @@ def get_compatible_units(blood_request, patient_blood_group=None, exclude=None):
 		needed = cint(row.units_required) - cint(row.units_reserved) - cint(row.units_issued)
 		if needed <= 0:
 			continue
+		if not cint(frappe.db.get_value("Blood Component", row.component, "requires_crossmatch")):
+			continue  # plasma / platelets: issued by group, no crossmatch
 		rule = frappe.db.get_value("Blood Component", row.component, "compatibility_rule")
 		candidates = frappe.get_all("Blood Unit", filters={"component": row.component, "status": "Available",
 			"test_status": ["in", USABLE_TESTS], "expiry_datetime": [">", now_datetime()]},
-			fields=["name", "component", "blood_group", "expiry_datetime", "donor_test"], order_by="expiry_datetime asc")
+			fields=["name", "component", "blood_group", "expiry_datetime", "donor_test", "directed_request"], order_by="expiry_datetime asc")
 		directed, exact, other = [], [], []
 		lab_xm = lab_crossmatches(req.patient)
 		for c in candidates:
@@ -106,15 +119,19 @@ def get_compatible_units(blood_request, patient_blood_group=None, exclude=None):
 			ok, msg = check_compatibility(rule, group, c.blood_group)
 			if not ok:
 				continue
+			if c.directed_request and c.directed_request != req.name:
+				continue  # held for another patient
 			xm = lab_xm.get(c.donor_test)
 			if xm and xm.crossmatch_result == "Incompatible":
 				continue
 			c.lab_xm = xm
-			(directed if xm else exact if c.blood_group == group else other).append(c)
+			(directed if (xm or c.directed_request == req.name) else exact if c.blood_group == group else other).append(c)
 		# the relatives' bags already crossmatched with this patient in the lab first, then same group, then compatible
 		for c in (directed + exact + other)[:needed]:
 			row = {"blood_unit": c.name, "component": c.component, "unit_blood_group": c.blood_group,
 				"expiry_datetime": c.expiry_datetime}
+			if c.directed_request == req.name and not c.lab_xm:
+				row["remarks"] = _("Directed donation for this patient")
 			if c.lab_xm:
 				row.update(result="Compatible", remarks=_("Lab crossmatch {0} ({1})").format(
 					c.lab_xm.crossmatch_lab_value or "Compatible", c.lab_xm.lab_reference or c.lab_xm.name)[:140])

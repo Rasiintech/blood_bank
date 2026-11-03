@@ -1,11 +1,34 @@
-"""Billing links between Blood Request and Sales Invoice."""
+"""Patient billing for the blood bank.
+
+One rule: the patient is charged for what the blood bank did for them, once.
+
+  Blood Unit       one per bag issued (the component's Billing Item)
+  Crossmatch       one per crossmatch done (setting: or included in the bag price)
+  Blood Grouping   once per request (setting)
+  Non-Replacement  per missing replacement donor, after the grace days (setting)
+
+Billing Mode, chosen when the request is submitted (inpatients and outpatients can differ):
+  On Issue    charges follow what happened: crossmatch, issue; a bag returned in time is credited
+  On Request  the requested bags (and their crossmatches) are invoiced up front; what was not used is credited
+              when the request closes
+
+How: `reconcile(request)` works out what should be charged now from the request's documents, compares it with
+the charges already posted (the request's Blood Bank Charges table) and posts only the difference: a new unpaid
+invoice for anything missing, a credit note for anything charged too much. Every event calls it, so a charge can
+never be posted twice and nothing is lost if one step fails; the officer can run it again with Update Charges.
+"""
 import frappe
 from frappe import _
-from frappe.utils import cint, flt
+from frappe.utils import add_days, cint, flt, get_datetime, getdate, now_datetime, nowdate
 
-from blood_bank.utils import setting
+from blood_bank.utils import OFFICER, has_role, setting
+
+CLOSED = ("Completed", "Closed", "Cancelled")
+UNIT, XM, GROUP, NRF = "Blood Unit", "Crossmatch", "Blood Grouping", "Non-Replacement Fee"
+TYPE_ORDER = {GROUP: 0, XM: 1, UNIT: 2, NRF: 3}
 
 
+# ------------------------------------------------------------------ site-specific invoice fields
 def si_fields():
 	"""Sales Invoice fields that differ between sites (Healthcare / HIS custom fields), found by type and label."""
 	meta = frappe.get_meta("Sales Invoice")
@@ -19,96 +42,284 @@ def si_fields():
 		and "inpatient" in (df.label or "").lower().replace(" ", "").replace("-", "")), None)
 	patients = [df for df in meta.fields if df.fieldtype == "Link" and df.options == "Patient" and df.fieldname != "patient"]
 	chk = out["inpatient_check"]
-	out["inpatient_patient"] = next((df.fieldname for df in patients if chk and chk in (df.depends_on or "")
-		or chk and chk in (df.mandatory_depends_on or "")), patients[0].fieldname if patients else None)
+	out["inpatient_patient"] = next((df.fieldname for df in patients if chk and (chk in (df.depends_on or "")
+		or chk in (df.mandatory_depends_on or ""))), patients[0].fieldname if patients else None)
 	return out
 
 
-def prepare_invoice(si, patient, practitioner=None, bill_to_inpatient=None):
-	"""Common settings for blood bank invoices: no POS payment (billed to the account), doctor, inpatient billing."""
+def is_inpatient(req):
+	if not req.get("inpatient_record"):
+		return False
+	status = frappe.db.get_value("Inpatient Record", req.inpatient_record, "status")
+	return status in ("Admitted", "Admission Scheduled", "Discharge Scheduled")
+
+
+def billing_mode_for(req):
+	return setting("inpatient_billing" if is_inpatient(req) else "outpatient_billing") or "On Issue"
+
+
+# ------------------------------------------------------------------ what should be charged
+def requires_crossmatch(component):
+	return cint(frappe.db.get_value("Blood Component", component, "requires_crossmatch"))
+
+
+def issued_units(req_name):
+	"""{component: count} of bags issued for the request and not returned to stock."""
+	returned = set()
+	for r in frappe.get_all("Blood Unit Return Item", filters={"parenttype": "Blood Unit Return", "outcome": "Returned to Stock"},
+			fields=["parent", "blood_unit"]):
+		if frappe.db.get_value("Blood Unit Return", r.parent, "docstatus") == 1:
+			issue = frappe.db.get_value("Blood Unit Return", r.parent, "blood_issue")
+			returned.add((issue, r.blood_unit))
+	out = {}
+	for issue in frappe.get_all("Blood Issue", filters={"blood_request": req_name, "docstatus": 1}, pluck="name"):
+		for row in frappe.get_all("Blood Issue Item", filters={"parent": issue, "parenttype": "Blood Issue"},
+				fields=["blood_unit", "component"]):
+			if (issue, row.blood_unit) in returned:
+				continue
+			comp = row.component or frappe.db.get_value("Blood Unit", row.blood_unit, "component")
+			out[comp] = out.get(comp, 0) + 1
+	return out
+
+
+def crossmatches_done(req_name):
+	"""{component: count} of crossmatches done (any result) on submitted crossmatches of the request."""
+	out = {}
+	for xm in frappe.get_all("Blood Crossmatch", filters={"blood_request": req_name, "docstatus": 1}, pluck="name"):
+		for row in frappe.get_all("Blood Crossmatch Item", filters={"parent": xm, "parenttype": "Blood Crossmatch"},
+				fields=["component", "result", "blood_unit"]):
+			if not row.result:
+				continue
+			comp = row.component or frappe.db.get_value("Blood Unit", row.blood_unit, "component")
+			out[comp] = out.get(comp, 0) + 1
+	return out
+
+
+def nrf_due(req):
+	"""Missing replacement donors to charge, once the grace days after closing have passed."""
+	if setting("non_replacement_fee") != "Per missing donor" or cint(req.nrf_waived) or req.docstatus != 1:
+		return 0
+	if req.status not in ("Completed", "Closed") or not req.closed_on:
+		return 0
+	grace = cint(setting("non_replacement_grace_days"))
+	if getdate(add_days(req.closed_on, grace)) > getdate(nowdate()):
+		return 0
+	donations = frappe.db.count("Blood Donation", {"blood_request": req.name, "docstatus": 1})
+	return max(cint(req.replacement_donors_needed) - donations, 0)
+
+
+def expected_charges(req):
+	"""{(charge_type, component): qty} the patient should be charged right now."""
+	out = {}
+	if req.docstatus != 1 or req.status == "Cancelled":
+		return out
+	mode = req.billing_mode or billing_mode_for(req)
+	closed = req.status in CLOSED
+	issued = issued_units(req.name)
+	done = crossmatches_done(req.name)
+	separate_xm = setting("crossmatch_charge") != "Included in bag price"
+
+	for row in req.items:
+		comp = row.component
+		units = issued.get(comp, 0)
+		if mode == "On Request" and not closed:
+			units = max(units, cint(row.units_required))
+		if units:
+			out[(UNIT, comp)] = units
+		if separate_xm and requires_crossmatch(comp):
+			xms = done.get(comp, 0)
+			if mode == "On Request" and not closed:
+				xms = max(xms, cint(row.units_required))
+			if xms:
+				out[(XM, comp)] = xms
+	if cint(setting("charge_blood_grouping")):
+		started = any(done.values()) or any(issued.values())
+		if (mode == "On Request" and not closed) or started:
+			out[(GROUP, None)] = 1
+	missing = nrf_due(req)
+	if missing:
+		out[(NRF, None)] = missing
+	return out
+
+
+def charged_so_far(req):
+	out = {}
+	for c in req.get("charges") or []:
+		key = (c.charge_type, c.component or None)
+		out[key] = out.get(key, 0) + flt(c.qty)
+	return out
+
+
+DEFAULT_ITEMS = {XM: "BB-XM", GROUP: "BB-GRP", NRF: "BB-NRF"}
+SETTING_ITEMS = {XM: "crossmatch_item", GROUP: "grouping_item", NRF: "non_replacement_item"}
+
+
+def item_for(charge_type, component):
+	if charge_type == UNIT:
+		return frappe.db.get_value("Blood Component", component, "billing_item")
+	item = setting(SETTING_ITEMS[charge_type]) or DEFAULT_ITEMS[charge_type]
+	return item if frappe.db.exists("Item", item) else None
+
+
+# ------------------------------------------------------------------ posting
+@frappe.whitelist()
+def update_charges(blood_request):
+	"""Update Charges button on the request (officer / billing): post whatever is missing."""
+	req = frappe.get_doc("Blood Request", blood_request)
+	req.check_permission("read")
+	return reconcile(req, reference=req, quiet=False)
+
+
+def reconcile(req, reference=None, quiet=True):
+	"""Post the difference between what should be charged and what was charged. Returns a summary."""
+	if isinstance(req, str):
+		req = frappe.get_doc("Blood Request", req)
+	if req.docstatus == 0:
+		return {}
+	want = expected_charges(req)
+	have = charged_so_far(req)
+	add, remove = [], []
+	for key in sorted(set(want) | set(have), key=lambda k: (TYPE_ORDER.get(k[0], 9), k[1] or "")):
+		diff = flt(want.get(key, 0)) - flt(have.get(key, 0))
+		if diff > 0:
+			add.append((key[0], key[1], diff))
+		elif diff < 0:
+			remove.append((key[0], key[1], -diff))
+	summary = {"charged": [], "credited": [], "problems": []}
+	reference = reference or req
+	if add:
+		try:
+			si = post_invoice(req, add, reference)
+			summary["charged"] = [f"{t}{' ' + c if c else ''} x {q:g}" for t, c, q in add] + [si.name]
+		except Exception as e:
+			frappe.log_error(title=f"Blood Bank: could not charge {req.name}")
+			summary["problems"].append(_("Charges not posted: {0}").format(frappe.utils.strip_html(str(e))[:300]))
+	if remove:
+		try:
+			summary["credited"] = credit(req, remove, reference)
+		except Exception as e:
+			frappe.log_error(title=f"Blood Bank: could not credit {req.name}")
+			summary["problems"].append(_("Credit not posted: {0}").format(frappe.utils.strip_html(str(e))[:300]))
+	refresh_request_invoice(req.name)
+	if summary["problems"] and not quiet:
+		frappe.msgprint("<br>".join(summary["problems"]), title=_("Billing"), indicator="orange")
+	elif summary["problems"]:
+		frappe.msgprint("<br>".join(summary["problems"]) + "<br>" + _("Fix it, then use Update Charges on the request."),
+			title=_("Billing"), indicator="orange")
+	return summary
+
+
+def new_invoice(req):
+	customer = frappe.db.get_value("Patient", req.patient, "customer")
+	if not customer:
+		frappe.throw(_("Patient {0} has no Customer. Open the Patient and create the Customer first.").format(req.patient))
+	si = frappe.new_doc("Sales Invoice")
+	si.customer = customer
 	f = si_fields()
 	if si.meta.has_field("patient"):
-		si.patient = patient
-	if practitioner and f["referring"]:
-		si.set(f["referring"], practitioner)
-	if bill_to_inpatient and f["inpatient_check"]:
+		si.patient = req.patient
+	if si.meta.has_field("blood_request"):
+		si.blood_request = req.name
+	if req.practitioner and f["referring"]:
+		si.set(f["referring"], req.practitioner)
+	if is_inpatient(req) and f["inpatient_check"]:
 		si.set(f["inpatient_check"], 1)
 		if f["inpatient_patient"]:
-			si.set(f["inpatient_patient"], bill_to_inpatient)
+			si.set(f["inpatient_patient"], req.patient)
 	if si.meta.has_field("is_pos"):
 		si.is_pos = 0
 	si.set("payments", [])
-
-
-def save_draft(si):
-	"""Save the invoice as a draft so the HIS form scripts for new invoices do not change it; if a site-specific
-	mandatory field is missing, return it unsaved so staff can complete it."""
-	try:
-		si.insert()
-	except frappe.MandatoryError:
-		frappe.clear_last_message()
 	return si
 
 
-def billing_plan(req):
-	"""Who pays for which bag. Each relative's invoice bills one bag (on the relative's sample, billed to the
-	inpatient); the patient's own invoice bills the bags no relative is expected to cover. Rows are filled in order,
-	so relatives cover the first component (e.g. Whole Blood / Red Cells) first."""
-	relative_invoices = frappe.db.count("Sales Invoice", {"blood_request": req.name, "docstatus": 1,
-		"blood_donor_screening": ["is", "set"]}) if frappe.get_meta("Sales Invoice").has_field("blood_donor_screening") else 0
-	expected = max(cint(req.replacement_donors_needed) - relative_invoices, 0)
-	rows, patient_total, relatives_total = [], 0, 0
-	for row in req.items:
-		unbilled = max(cint(row.units_required) - cint(row.units_billed), 0)
-		by_relatives = min(unbilled, expected)
-		expected -= by_relatives
-		rows.append({"component": row.component, "billed": cint(row.units_billed), "by_relatives": by_relatives,
-			"by_patient": unbilled - by_relatives})
-		patient_total += unbilled - by_relatives
-		relatives_total += by_relatives
-	return {"rows": rows, "patient_to_bill": patient_total, "relatives_to_bill": relatives_total,
-		"relative_invoices": relative_invoices}
-
-
-@frappe.whitelist()
-def make_sales_invoice(blood_request):
-	"""The patient's invoice for the bags not already billed on replacement donors' invoices."""
-	req = frappe.get_doc("Blood Request", blood_request)
-	req.check_permission("read")
-	if req.docstatus != 1:
-		frappe.throw(_("Submit the Blood Request first"))
-	customer = frappe.db.get_value("Patient", req.patient, "customer")
-	if not customer:
-		frappe.throw(_("Patient {0} has no Customer linked. Open the Patient and create the Customer first.").format(req.patient))
-	refresh_request_invoice(req.name)
-	req.reload()
-
-	si = frappe.new_doc("Sales Invoice")
-	si.customer = customer
-	if si.meta.has_field("blood_request"):
-		si.blood_request = req.name
+def post_invoice(req, lines, reference):
+	si = new_invoice(req)
 	missing = []
-	plan = {r["component"]: r["by_patient"] for r in billing_plan(req)["rows"]}
-	for row in req.items:
-		qty = plan.get(row.component, 0)
-		if qty <= 0:
-			continue
-		item = frappe.db.get_value("Blood Component", row.component, "billing_item")
+	for charge_type, component, qty in lines:
+		item = item_for(charge_type, component)
 		if not item:
-			missing.append(row.component)
+			missing.append(component or charge_type)
 			continue
 		si.append("items", {"item_code": item, "qty": qty})
 	if missing:
-		frappe.throw(_("Set a Billing Item on these Blood Components first: {0}").format(", ".join(missing)))
-	if not si.items:
-		frappe.throw(_("Nothing to bill to the patient: the bags are billed, or will be billed on the replacement donors' "
-			"invoices. If a relative will not come, lower Replacement Donors Needed and bill again."), title=_("Nothing to Bill"))
-	prepare_invoice(si, req.patient, req.practitioner, bill_to_inpatient=req.patient if req.inpatient_record else None)
+		frappe.throw(_("No billing item for: {0}. Set it on the Blood Component or in Blood Bank Settings > Patient Billing.")
+			.format(", ".join(missing)))
+	si.remarks = _("Blood bank charges for {0} ({1} {2})").format(req.name, reference.doctype, reference.name)
 	si.set_missing_values()
 	si.calculate_taxes_and_totals()
-	return save_draft(si)
+	si.flags.ignore_permissions = True
+	si.insert()
+	if cint(setting("submit_charge_invoices")):
+		si.submit()
+	for (charge_type, component, qty), item in zip(lines, si.items):
+		add_charge_row(req, charge_type, component, qty, item.item_code, item.rate, item.amount, si.name, reference)
+	if not req.sales_invoice:
+		req.db_set("sales_invoice", si.name, update_modified=False)
+	return si
 
 
+def add_charge_row(req, charge_type, component, qty, item, rate, amount, invoice, reference):
+	row = req.append("charges", {"charge_datetime": now_datetime(), "charge_type": charge_type, "component": component,
+		"qty": qty, "item_code": item, "rate": rate, "amount": amount, "sales_invoice": invoice,
+		"reference_doctype": reference.doctype, "reference_name": reference.name})
+	row.parent, row.parenttype, row.parentfield = req.name, "Blood Request", "charges"
+	row.idx = len(req.charges)
+	row.db_insert()
+
+
+def credit(req, lines, reference):
+	"""Credit back over-charged quantities against the invoices that charged them (newest first)."""
+	from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+	done = []
+	for charge_type, component, qty in lines:
+		left = qty
+		rows = [c for c in req.charges if c.charge_type == charge_type and (c.component or None) == component]
+		# what is still creditable per invoice
+		per_invoice = {}
+		for c in rows:
+			per_invoice[c.sales_invoice] = per_invoice.get(c.sales_invoice, 0) + flt(c.qty)
+		for invoice in sorted(per_invoice, key=lambda n: n or "", reverse=True):
+			avail = per_invoice[invoice]
+			if left <= 0 or avail <= 0:
+				continue
+			take = min(avail, left)
+			item = next(c.item_code for c in rows if c.sales_invoice == invoice)
+			status = frappe.db.get_value("Sales Invoice", invoice, "docstatus")
+			if status == 0:
+				# still a draft: simply lower the quantity on it
+				si = frappe.get_doc("Sales Invoice", invoice)
+				for it in si.items:
+					if it.item_code == item and take > 0:
+						cut = min(flt(it.qty), take)
+						it.qty = flt(it.qty) - cut
+				si.items = [it for it in si.items if flt(it.qty) > 0]
+				if si.items:
+					si.calculate_taxes_and_totals(); si.flags.ignore_permissions = True; si.save()
+				else:
+					frappe.delete_doc("Sales Invoice", invoice, ignore_permissions=True)
+				rate = next((c.rate for c in rows if c.sales_invoice == invoice), 0)
+				add_charge_row(req, charge_type, component, -take, item, rate, -take * flt(rate), invoice, reference)
+				done.append(f"{charge_type} x {take:g} ({invoice})")
+			elif status == 1:
+				ret = make_return_doc("Sales Invoice", invoice)
+				ret.items = [it for it in ret.items if it.item_code == item][:1]
+				if not ret.items:
+					continue
+				ret.items[0].qty = -take
+				ret.remarks = _("Blood bank credit for {0} ({1} {2})").format(req.name, reference.doctype, reference.name)
+				ret.calculate_taxes_and_totals()
+				ret.flags.ignore_permissions = True
+				ret.insert()
+				if cint(setting("submit_charge_invoices")):
+					ret.submit()
+				add_charge_row(req, charge_type, component, -take, item, ret.items[0].rate, ret.items[0].amount, ret.name, reference)
+				done.append(f"{charge_type} x {take:g} ({ret.name})")
+			left -= take
+	return done
+
+
+# ------------------------------------------------------------------ status shown on the request
 def invoice_status(si_name):
 	if not si_name:
 		return None
@@ -123,37 +334,37 @@ def invoice_status(si_name):
 
 
 def request_invoices(request_name):
-	return frappe.get_all("Sales Invoice", filters={"blood_request": request_name, "docstatus": 1},
-		fields=["name", "outstanding_amount"]) if frappe.get_meta("Sales Invoice").has_field("blood_request") else []
+	names = frappe.get_all("Blood Request Charge", filters={"parent": request_name, "parenttype": "Blood Request"},
+		pluck="sales_invoice")
+	return frappe.get_all("Sales Invoice", filters={"name": ["in", list(set(n for n in names if n))] or [""]},
+		fields=["name", "docstatus", "outstanding_amount", "grand_total", "is_return"])
 
 
 def refresh_request_invoice(request_name):
-	"""Units billed per component from every submitted invoice of the request (patient's and replacement donors')."""
+	"""Units Billed per row, Total Charged and Billing Status from the charges table."""
+	rows = frappe.get_all("Blood Request Charge", filters={"parent": request_name, "parenttype": "Blood Request"},
+		fields=["charge_type", "component", "qty", "amount"])
+	by_comp = {}
+	for r in rows:
+		if r.charge_type == UNIT:
+			by_comp[r.component] = by_comp.get(r.component, 0) + flt(r.qty)
+	for item in frappe.get_all("Blood Request Item", filters={"parent": request_name, "parenttype": "Blood Request"},
+			fields=["name", "component"]):
+		frappe.db.set_value("Blood Request Item", item.name, "units_billed", cint(by_comp.get(item.component, 0)), update_modified=False)
+	total = sum(flt(r.amount) for r in rows)
 	invoices = request_invoices(request_name)
-	names = [i.name for i in invoices]
-	qty_by_item = {}
-	if names:
-		for r in frappe.get_all("Sales Invoice Item", filters={"parent": ["in", names], "parenttype": "Sales Invoice"},
-				fields=["item_code", "qty"]):
-			qty_by_item[r.item_code] = qty_by_item.get(r.item_code, 0) + flt(r.qty)
-	req = frappe.get_doc("Blood Request", request_name)
-	required = billed_total = 0
-	for row in req.items:
-		item = frappe.db.get_value("Blood Component", row.component, "billing_item")
-		billed = min(cint(qty_by_item.get(item, 0)), cint(row.units_required)) if item else 0
-		qty_by_item[item] = qty_by_item.get(item, 0) - billed if item else 0
-		row.db_set("units_billed", billed, update_modified=False)
-		required += cint(row.units_required)
-		billed_total += billed
-	if not billed_total:
-		status = invoice_status(req.sales_invoice) if req.sales_invoice else None
+	if not rows:
+		status = None
+	elif any(i.docstatus == 0 for i in invoices):
+		status = "Draft invoice"
 	else:
-		paid = all(flt(i.outstanding_amount) <= 0 for i in invoices)
-		status = "{0} {1}/{2}, {3}".format(_("Billed"), billed_total, required, _("Paid") if paid else _("Unpaid"))
-	req.db_set("invoice_status", status, update_modified=False)
+		due = sum(flt(i.outstanding_amount) for i in invoices if i.docstatus == 1)
+		status = "Unpaid" if due > 0.005 else "Refund due" if due < -0.005 else "Paid"
+	frappe.db.set_value("Blood Request", request_name, {"total_charged": total, "invoice_status": status}, update_modified=False)
 
 
 def on_sales_invoice_change(doc, method=None):
+	"""An invoice of a request changed (paid, cancelled): refresh the request's billing status."""
 	screening = doc.get("blood_donor_screening")
 	if screening and frappe.db.exists("Blood Donor Screening", screening):
 		current = frappe.db.get_value("Blood Donor Screening", screening, "sales_invoice")
@@ -161,16 +372,13 @@ def on_sales_invoice_change(doc, method=None):
 			frappe.db.set_value("Blood Donor Screening", screening, "sales_invoice", doc.name, update_modified=False)
 		elif doc.docstatus == 2 and current == doc.name:
 			frappe.db.set_value("Blood Donor Screening", screening, "sales_invoice", None, update_modified=False)
-
-	names = set(frappe.get_all("Blood Request", filters={"sales_invoice": doc.name, "docstatus": 1}, pluck="name"))
-	linked = doc.get("blood_request")
-	if linked and frappe.db.exists("Blood Request", {"name": linked, "docstatus": 1}):
-		names.add(linked)
-	# the patient's own invoice becomes the request's Sales Invoice; donors' invoices only count as billed units
-	if linked and doc.docstatus == 1 and not screening and frappe.db.exists("Blood Request", {"name": linked, "docstatus": 1}):
-		if not frappe.db.get_value("Blood Request", linked, "sales_invoice"):
-			frappe.db.set_value("Blood Request", linked, "sales_invoice", doc.name, update_modified=False)
-		names.add(linked)
+	names = set(frappe.get_all("Blood Request Charge", filters={"sales_invoice": doc.name, "parenttype": "Blood Request"}, pluck="parent"))
+	if doc.get("return_against"):
+		names |= set(frappe.get_all("Blood Request Charge", filters={"sales_invoice": doc.return_against, "parenttype": "Blood Request"}, pluck="parent"))
+	if doc.docstatus == 2:
+		# a cancelled invoice no longer charges anything: drop its rows so Update Charges posts them again
+		for name in names:
+			frappe.db.delete("Blood Request Charge", {"parent": name, "sales_invoice": doc.name})
 	for name in names:
 		refresh_request_invoice(name)
 
@@ -178,36 +386,88 @@ def on_sales_invoice_change(doc, method=None):
 def on_payment_change(doc, method=None):
 	for ref in doc.get("references") or []:
 		if ref.reference_doctype == "Sales Invoice":
-			names = set(frappe.get_all("Blood Request", filters={"sales_invoice": ref.reference_name, "docstatus": 1}, pluck="name"))
-			if frappe.get_meta("Sales Invoice").has_field("blood_request"):
-				linked = frappe.db.get_value("Sales Invoice", ref.reference_name, "blood_request")
-				if linked:
-					names.add(linked)
-			for name in names:
+			for name in set(frappe.get_all("Blood Request Charge", filters={"sales_invoice": ref.reference_name,
+					"parenttype": "Blood Request"}, pluck="parent")):
 				refresh_request_invoice(name)
 
 
+# ------------------------------------------------------------------ issue gate (On Request)
 def validate_payment_for_issue(req, emergency, units=None):
-	"""Each bag must be billed before it leaves the bank (unless emergency): billed units per component
-	(patient's invoice + replacement donors' invoices) must cover everything issued so far plus this issue."""
-	if emergency or not cint(setting("require_invoice_before_issue")):
+	"""On Request: the bags must be on a submitted (and, if set, paid) invoice before they leave the bank."""
+	if emergency or (req.billing_mode or billing_mode_for(req)) != "On Request":
 		return
-	refresh_request_invoice(req.name)
-	req.reload()
+	if not cint(setting("require_invoice_before_issue")):
+		return
+	issued = issued_units(req.name)
 	issuing = {}
 	for u in units or []:
 		comp = frappe.db.get_value("Blood Unit", u, "component")
 		issuing[comp] = issuing.get(comp, 0) + 1
-	short = []
-	for row in req.items:
-		need = cint(row.units_issued) + issuing.get(row.component, 0)
-		if need > cint(row.units_billed):
-			short.append(_("{0}: {1} billed, {2} needed").format(row.component, cint(row.units_billed), need))
+	paid_for = {}
+	for c in req.get("charges") or []:
+		if c.charge_type == UNIT and frappe.db.get_value("Sales Invoice", c.sales_invoice, "docstatus") == 1:
+			paid_for[c.component] = paid_for.get(c.component, 0) + flt(c.qty)
+	short = [_("{0}: {1} invoiced, {2} needed").format(comp, cint(paid_for.get(comp, 0)), issued.get(comp, 0) + n)
+		for comp, n in issuing.items() if issued.get(comp, 0) + n > paid_for.get(comp, 0)]
 	if short:
-		frappe.throw(_("Not billed yet for Blood Request {0}:<br>{1}<br><br>Create the Sales Invoice from the request "
-			"(it bills only what is missing), or submit the replacement donors' invoices.").format(req.name, "<br>".join(short)),
-			title=_("Not Billed"))
+		frappe.throw(_("Billing mode On Request: these bags are not on a submitted invoice yet:<br>{0}<br><br>"
+			"Submit the request's invoice (or use Update Charges), then issue.").format("<br>".join(short)), title=_("Not Billed"))
 	if cint(setting("require_paid_invoice")):
-		unpaid = [i.name for i in request_invoices(req.name) if flt(i.outstanding_amount) > 0]
+		unpaid = [i.name for i in request_invoices(req.name) if i.docstatus == 1 and not i.is_return and flt(i.outstanding_amount) > 0]
 		if unpaid:
-			frappe.throw(_("Not fully paid: {0}").format(", ".join(unpaid)), title=_("Not Paid"))
+			frappe.throw(_("Not paid yet: {0}").format(", ".join(unpaid)), title=_("Not Paid"))
+
+
+# ------------------------------------------------------------------ closing a request
+@frappe.whitelist()
+def close_request(blood_request, reason):
+	"""The patient no longer needs blood: no more crossmatch or issue; On Request credits what was not used."""
+	req = frappe.get_doc("Blood Request", blood_request)
+	if not (has_role(OFFICER) or "Physician" in frappe.get_roles()):
+		frappe.throw(_("Only a Blood Bank Officer or doctor can close a request"), frappe.PermissionError)
+	if req.docstatus != 1 or req.status in CLOSED:
+		frappe.throw(_("Request {0} is {1}").format(req.name, req.status))
+	if not (reason or "").strip():
+		frappe.throw(_("Give the reason (e.g. surgery done, patient discharged)"))
+	from blood_bank.utils import update_unit
+	for name in frappe.get_all("Blood Unit", filters={"blood_request": req.name, "status": "Reserved"}, pluck="name"):
+		update_unit(name, status="Available", reserved_for=None, blood_request=None, crossmatch=None, reserved_until=None)
+	req.db_set({"status": "Closed", "closed_on": now_datetime(), "close_reason": reason.strip()}, update_modified=False)
+	req.reload()
+	reconcile(req, reference=req)
+	return req.status
+
+
+@frappe.whitelist()
+def waive_non_replacement_fee(blood_request, reason):
+	if not has_role(OFFICER):
+		frappe.throw(_("Only a Blood Bank Officer can waive the fee"), frappe.PermissionError)
+	if not (reason or "").strip():
+		frappe.throw(_("Give the reason"))
+	req = frappe.get_doc("Blood Request", blood_request)
+	req.db_set({"nrf_waived": 1, "nrf_waive_reason": reason.strip()}, update_modified=False)
+	req.reload()
+	reconcile(req, reference=req)
+
+
+def daily_billing():
+	"""Daily: close requests of discharged patients and charge Non-Replacement Fees whose grace days ended."""
+	for r in frappe.get_all("Blood Request", filters={"docstatus": 1, "status": ["not in", CLOSED], "inpatient_record": ["is", "set"]},
+			fields=["name", "inpatient_record"]):
+		if frappe.db.get_value("Inpatient Record", r.inpatient_record, "status") == "Discharged":
+			try:
+				req = frappe.get_doc("Blood Request", r.name)
+				from blood_bank.utils import update_unit
+				for name in frappe.get_all("Blood Unit", filters={"blood_request": r.name, "status": "Reserved"}, pluck="name"):
+					update_unit(name, status="Available", reserved_for=None, blood_request=None, crossmatch=None, reserved_until=None)
+				req.db_set({"status": "Closed", "closed_on": now_datetime(), "close_reason": "Patient discharged"}, update_modified=False)
+				reconcile(frappe.get_doc("Blood Request", r.name))
+			except Exception:
+				frappe.log_error(title=f"Blood Bank: could not close {r.name}")
+	if setting("non_replacement_fee") == "Per missing donor":
+		for name in frappe.get_all("Blood Request", filters={"docstatus": 1, "status": ["in", ["Completed", "Closed"]],
+				"nrf_waived": 0, "closed_on": ["is", "set"]}, pluck="name"):
+			req = frappe.get_doc("Blood Request", name)
+			if nrf_due(req) > flt(charged_so_far(req).get((NRF, None), 0)):
+				reconcile(req)
+	frappe.db.commit()

@@ -65,11 +65,8 @@ def before_install():
 def after_install():
 	create_roles()
 	create_masters()
-	try:
-		ensure_component_lab_templates()
-	except Exception:
-		frappe.log_error(title="Blood Bank: could not create component lab test templates")
 	setup_settings()
+	create_billing_items_safely()
 	make_custom_fields()
 	from blood_bank.home_tiles import create_home_tiles
 	create_home_tiles()
@@ -79,6 +76,7 @@ def after_install():
 def after_migrate():
 	create_roles()
 	make_custom_fields()
+	create_billing_items_safely()
 	from blood_bank.home_tiles import create_home_tiles
 	create_home_tiles()
 
@@ -108,7 +106,7 @@ def create_masters():
 			"doctype": "Blood Component", "component_name": name, "abbreviation": abbr,
 			"is_whole_blood": whole, "can_prepare_from_whole_blood": from_wb, "compatibility_rule": rule,
 			"storage_type": storage, "min_temp": tmin, "max_temp": tmax, "shelf_life_days": days,
-			"billing_item": _find_item(items),
+			"billing_item": _find_item(items), "requires_crossmatch": 1 if abbr in CROSSMATCHED else 0,
 		}).insert(ignore_permissions=True)
 
 	for reason, dtype, days in DEFERRAL_REASONS:
@@ -178,6 +176,58 @@ def ensure_component_lab_templates():
 		if existing:
 			frappe.db.set_value("Blood Component", comp.name, "billing_item", existing)
 	return created
+
+
+# Service items the patient is charged with (prices go in Item Price). (code, name, component abbreviation or setting)
+BILLING_ITEMS = [
+	("BB-WB", "Whole Blood Unit", "WB"), ("BB-RBC", "Red Cell Concentrate Unit", "RBC"),
+	("BB-FFP", "Fresh Frozen Plasma Unit", "FFP"), ("BB-PLS", "Plasma Unit", "PL"),
+	("BB-PLT", "Platelet Concentrate Unit", "PLT"), ("BB-CRYO", "Cryoprecipitate Unit", "CRYO"),
+	("BB-GRP", "Blood Grouping (ABO/RhD)", "grouping_item"), ("BB-XM", "Crossmatch (per unit)", "crossmatch_item"),
+	("BB-NRF", "Non-Replacement Fee", "non_replacement_item"),
+]
+CROSSMATCHED = ("WB", "RBC")
+
+
+def create_billing_items_safely(*args, **kwargs):
+	"""Install, migrate and setup-wizard hook: items need a unit of measure, which a brand-new site gets from the
+	setup wizard, so try again later instead of failing the install."""
+	if not frappe.db.get_value("UOM", {}):
+		return
+	try:
+		create_billing_items()
+	except Exception:
+		frappe.log_error(title="Blood Bank: could not create billing items")
+
+
+def create_billing_items(switch_components=False):
+	"""Create the BB- service items (never changes existing ones) and use them where nothing better is set.
+	switch_components: also move components still billed with an old lab test template item to the BB- item."""
+	if not frappe.db.exists("Item Group", "Blood Bank Services"):
+		frappe.get_doc({"doctype": "Item Group", "item_group_name": "Blood Bank Services", "is_group": 0,
+			"parent_item_group": frappe.db.get_value("Item Group", {"is_group": 1, "parent_item_group": ["in", ["", None]]}) or "All Item Groups"}).insert(ignore_permissions=True)
+	uom = "Nos" if frappe.db.exists("UOM", "Nos") else frappe.db.get_value("UOM", {})
+	changes = []
+	for code, name, target in BILLING_ITEMS:
+		if not frappe.db.exists("Item", code):
+			frappe.get_doc({"doctype": "Item", "item_code": code, "item_name": name, "item_group": "Blood Bank Services",
+				"stock_uom": uom, "is_stock_item": 0, "is_sales_item": 1, "include_item_in_manufacturing": 0,
+				"description": name}).insert(ignore_permissions=True)
+		if target.endswith("_item"):
+			if not frappe.db.get_single_value("Blood Bank Settings", target):
+				frappe.db.set_single_value("Blood Bank Settings", target, code)
+			continue
+		comp = frappe.db.get_value("Blood Component", {"abbreviation": target}, ["name", "billing_item"], as_dict=True)
+		if not comp:
+			continue
+		old = comp.billing_item
+		is_lab_template = old and frappe.db.exists("DocType", "Lab Test Template") and frappe.db.exists("Lab Test Template", {"item": old})
+		if not old or (switch_components and is_lab_template):
+			frappe.db.set_value("Blood Component", comp.name, "billing_item", code)
+			changes.append((comp.name, old, code))
+	for abbr in CROSSMATCHED:
+		frappe.db.set_value("Blood Component", {"abbreviation": abbr}, "requires_crossmatch", 1)
+	return changes
 
 
 def setup_settings():

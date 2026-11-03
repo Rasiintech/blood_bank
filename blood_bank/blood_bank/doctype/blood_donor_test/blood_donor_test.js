@@ -32,7 +32,9 @@ frappe.ui.form.on("Blood Donor Test", {
 	},
 	refresh(frm) {
 		const colors = { "Non-Reactive": "green", "Reactive": "red", "Incomplete": "orange" };
-		if (frm.doc.overall_result) frm.page.set_indicator(__(frm.doc.overall_result), colors[frm.doc.overall_result]);
+		if (frm.doc.docstatus === 1 && frm.doc.overall_result === "Non-Reactive" && !frm.doc.hb_ok && !frm.doc.blood_donation) {
+			frm.page.set_indicator(__("Low Hb: Deferred"), "orange");
+		} else if (frm.doc.overall_result) frm.page.set_indicator(__(frm.doc.overall_result), colors[frm.doc.overall_result]);
 		if (frm.doc.docstatus === 0 && !frm.doc.lab_reference) {
 			frm.set_intro(__("No Lab Result is linked to this screening's invoice yet. Save as draft and it fills itself when the lab submits, pick the Lab Result yourself, or enter the results below: choose Non-Reactive / Reactive in the Result column (typing Negative / Positive in Lab Value also works)."), "blue");
 		}

@@ -31,21 +31,18 @@ class BloodRequest(Document):
 	def on_submit(self):
 		if self.patient_blood_group:
 			set_patient_blood_group(self.patient, self.patient_blood_group)
+		from blood_bank.billing import billing_mode_for, reconcile
+		self.db_set("billing_mode", billing_mode_for(self), update_modified=False)
 		self.update_counts_and_status()
+		reconcile(self, reference=self)
 
 	def onload(self):
-		# billing changes on invoices, so recount whenever the form opens
-		if self.docstatus == 1:
-			from blood_bank.billing import billing_plan, refresh_request_invoice
-			refresh_request_invoice(self.name)
-			for row in self.items:
-				row.units_billed = frappe.db.get_value("Blood Request Item", row.name, "units_billed")
-			self.invoice_status = frappe.db.get_value("Blood Request", self.name, "invoice_status")
-			self.set_onload("billing", billing_plan(self))
-
-	def on_update_after_submit(self):
-		from blood_bank.billing import refresh_request_invoice
-		refresh_request_invoice(self.name)
+		if self.docstatus == 1 and self.status != "Cancelled":
+			from blood_bank.billing import expected_charges, charged_so_far
+			want, have = expected_charges(self), charged_so_far(self)
+			self.set_onload("charges_pending", any(abs(want.get(k, 0) - have.get(k, 0)) > 0 for k in set(want) | set(have)))
+		self.set_onload("xm_components", [r.component for r in self.items
+			if cint(frappe.db.get_value("Blood Component", r.component, "requires_crossmatch"))])
 
 	@frappe.whitelist()
 	def get_lab_values(self):
@@ -69,6 +66,9 @@ class BloodRequest(Document):
 		for name in frappe.get_all("Blood Unit", filters={"blood_request": self.name, "status": "Reserved"}, pluck="name"):
 			update_unit(name, status="Available", reserved_for=None, blood_request=None, crossmatch=None, reserved_until=None)
 		self.db_set("status", "Cancelled")
+		from blood_bank.billing import reconcile
+		self.reload()
+		reconcile(self, reference=self)
 
 	def update_counts_and_status(self):
 		units = frappe.get_all("Blood Unit", filters={"blood_request": self.name}, fields=["component", "status"])
@@ -86,6 +86,8 @@ class BloodRequest(Document):
 		donations = frappe.db.count("Blood Donation", {"blood_request": self.name, "docstatus": 1})
 		if self.docstatus == 2:
 			status = "Cancelled"
+		elif self.status == "Closed" or frappe.db.get_value("Blood Request", self.name, "status") == "Closed":
+			status = "Closed"
 		elif total["req"] and total["tr"] >= total["req"]:
 			status = "Completed"
 		elif total["req"] and total["iss"] >= total["req"]:
@@ -98,8 +100,17 @@ class BloodRequest(Document):
 			status = "Awaiting Donor"
 		else:
 			status = "Requested"
-		self.db_set({"status": status, "replacement_donations": donations}, update_modified=False)
+		was = frappe.db.get_value("Blood Request", self.name, "status")
+		values = {"status": status, "replacement_donations": donations}
+		if status == "Completed" and not self.closed_on:
+			values["closed_on"] = frappe.utils.now_datetime()
+			values["close_reason"] = "All units transfused"
+		self.db_set(values, update_modified=False)
 		self.status = status
+		if status == "Completed" and was != "Completed":
+			# On Request: credit what was prepaid but not used
+			from blood_bank.billing import reconcile
+			reconcile(frappe.get_doc("Blood Request", self.name))
 
 
 def suggested_donors(items):

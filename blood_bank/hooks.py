@@ -12,6 +12,7 @@ required_apps = ["erpnext", "healthcare"]
 before_install = "blood_bank.install.before_install"
 after_install = "blood_bank.install.after_install"
 after_migrate = "blood_bank.install.after_migrate"
+setup_wizard_complete = "blood_bank.install.create_billing_items_safely"
 
 # Client scripts on core doctypes
 doctype_js = {
@@ -52,6 +53,8 @@ scheduler_events = {
 	],
 	"daily": [
 		"blood_bank.tasks.end_expired_deferrals",
+		"blood_bank.tasks.release_directed_units",
+		"blood_bank.billing.daily_billing",
 	],
 }
 

@@ -84,23 +84,24 @@
    "reqd": 1
   },
   {
+   "description": "Replacement: a relative refills the stock for a patient. Directed: a relative gives for this patient; the bag is held for them if compatible.",
    "fieldname": "donor_type",
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Donor Type",
-   "options": "Voluntary\nReplacement",
+   "options": "Voluntary\nReplacement\nDirected",
    "reqd": 1
   },
   {
-   "depends_on": "eval:doc.donor_type=='Replacement'",
+   "depends_on": "eval:['Replacement','Directed'].includes(doc.donor_type)",
    "fieldname": "replacement_for",
    "fieldtype": "Link",
-   "label": "Replacement For (Patient)",
+   "label": "For Patient",
    "options": "Patient"
   },
   {
-   "depends_on": "eval:doc.donor_type=='Replacement'",
+   "depends_on": "eval:['Replacement','Directed'].includes(doc.donor_type)",
    "fetch_from": "replacement_for.patient_name",
    "fieldname": "replacement_patient_name",
    "fieldtype": "Data",
@@ -108,7 +109,7 @@
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.donor_type=='Replacement'",
+   "depends_on": "eval:['Replacement','Directed'].includes(doc.donor_type)",
    "fieldname": "blood_request",
    "fieldtype": "Link",
    "label": "Blood Request",
@@ -257,7 +258,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-03 07:36:15.533415",
+ "modified": "2026-11-03 15:32:15.569529",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Donor Screening",

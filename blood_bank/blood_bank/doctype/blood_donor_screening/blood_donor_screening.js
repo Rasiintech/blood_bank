@@ -121,7 +121,8 @@ frappe.ui.form.on("Blood Donor Screening", {
 		});
 	},
 	donor_type(frm) {
-		frm.toggle_reqd("replacement_for", frm.doc.donor_type === "Replacement");
+		frm.toggle_reqd("replacement_for", ["Replacement", "Directed"].includes(frm.doc.donor_type));
+		frm.toggle_reqd("blood_request", frm.doc.donor_type === "Directed");
 	},
 	blood_request(frm) {
 		if (frm.doc.blood_request) {

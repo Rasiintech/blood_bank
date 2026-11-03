@@ -31,6 +31,8 @@ class BloodDonation(Document):
 			frappe.throw(_("Donor Screening {0} must be a submitted, Accepted screening of this donor").format(scr.name))
 		if frappe.db.exists("Blood Donation", {"donor_screening": scr.name, "docstatus": ["<", 2], "name": ["!=", self.name]}):
 			frappe.throw(_("Donor Screening {0} is already used by another donation").format(scr.name))
+		from blood_bank.utils import check_time_order
+		check_time_order([(_("Screening"), scr.screening_datetime), (_("Collection"), self.collection_datetime)])
 		hours = cint(setting("test_validity_hours")) or 72
 		if get_datetime(self.collection_datetime) > add_to_date(get_datetime(scr.screening_datetime), hours=hours):
 			frappe.throw(_("Screening {0} is older than {1} hours; screen the donor again").format(scr.name, hours))
@@ -79,6 +81,9 @@ class BloodDonation(Document):
 			"released_by": frappe.session.user if status == "Available" else None,
 			"released_on": now_datetime() if status == "Available" else None,
 		})
+		directed = self.directed_hold()
+		if directed:
+			unit.directed_request, unit.directed_patient = directed
 		unit.flags.from_blood_bank = True
 		unit.insert(ignore_permissions=True)
 		self.db_set("blood_unit", unit.name)
@@ -87,6 +92,26 @@ class BloodDonation(Document):
 			req = frappe.get_doc("Blood Request", self.blood_request)
 			if req.docstatus == 1:
 				req.update_counts_and_status()
+
+	def directed_hold(self):
+		"""Directed donation: hold the bag for the patient if their groups are compatible, else it goes to stock."""
+		if self.donor_type != "Directed" or not self.blood_request:
+			return None
+		req = frappe.db.get_value("Blood Request", self.blood_request, ["name", "patient", "patient_blood_group", "docstatus", "status"], as_dict=True)
+		if not req or req.docstatus != 1 or req.status in ("Completed", "Closed", "Cancelled"):
+			frappe.msgprint(_("Blood Request {0} is not open: the bag goes to general stock.").format(self.blood_request), indicator="orange")
+			return None
+		if not (self.blood_group and req.patient_blood_group):
+			frappe.msgprint(_("Blood group of donor or patient unknown: the bag goes to general stock."), indicator="orange")
+			return None
+		from blood_bank.utils import check_compatibility
+		ok, msg = check_compatibility("Red Cell", req.patient_blood_group, self.blood_group)
+		if not ok:
+			frappe.msgprint(_("{0} blood cannot be given to a {1} patient, so this bag goes to general stock and counts as a replacement.")
+				.format(self.blood_group, req.patient_blood_group), title=_("Not Compatible for Directed"), indicator="orange")
+			return None
+		frappe.msgprint(_("Bag held for {0} ({1}). It is offered first at their crossmatch.").format(req.patient, req.name), indicator="green", alert=True)
+		return req.name, req.patient
 
 	def on_cancel(self):
 		units = frappe.get_all("Blood Unit", filters={"blood_donation": self.name}, fields=["name", "status", "parent_unit"])

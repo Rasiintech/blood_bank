@@ -42,6 +42,16 @@
   "sales_invoice",
   "cb5",
   "invoice_status",
+  "billing_mode",
+  "total_charged",
+  "sb_charges",
+  "charges",
+  "sb_close",
+  "closed_on",
+  "close_reason",
+  "cb_close",
+  "nrf_waived",
+  "nrf_waive_reason",
   "amended_from"
  ],
  "fields": [
@@ -110,7 +120,7 @@
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
-   "options": "Draft\nRequested\nAwaiting Donor\nCrossmatched\nPartially Issued\nIssued\nCompleted\nCancelled",
+   "options": "Draft\nRequested\nAwaiting Donor\nCrossmatched\nPartially Issued\nIssued\nCompleted\nClosed\nCancelled",
    "read_only": 1
   },
   {
@@ -252,12 +262,13 @@
   },
   {
    "allow_on_submit": 1,
-   "description": "The patient's own invoice. Bags given by replacement donors are billed on the donors' invoices and counted in Units Billed. Use Create > Sales Invoice for the rest.",
+   "description": "The first invoice posted for this request. Every charge and credit is listed in Blood Bank Charges below.",
    "fieldname": "sales_invoice",
    "fieldtype": "Link",
-   "label": "Sales Invoice",
+   "label": "First Invoice",
    "no_copy": 1,
-   "options": "Sales Invoice"
+   "options": "Sales Invoice",
+   "read_only": 1
   },
   {
    "fieldname": "cb5",
@@ -266,7 +277,7 @@
   {
    "fieldname": "invoice_status",
    "fieldtype": "Data",
-   "label": "Invoice Status",
+   "label": "Billing Status",
    "no_copy": 1,
    "read_only": 1
   },
@@ -278,11 +289,87 @@
    "options": "Blood Request",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Set on Submit from Blood Bank Settings: inpatients and outpatients can be billed differently",
+   "fieldname": "billing_mode",
+   "fieldtype": "Select",
+   "label": "Billing Mode",
+   "no_copy": 1,
+   "options": "\nOn Issue\nOn Request",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "total_charged",
+   "fieldtype": "Currency",
+   "label": "Total Charged",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.docstatus==1",
+   "fieldname": "sb_charges",
+   "fieldtype": "Section Break",
+   "label": "Blood Bank Charges"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "charges",
+   "fieldtype": "Table",
+   "label": "Charges",
+   "no_copy": 1,
+   "options": "Blood Request Charge",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.docstatus==1",
+   "fieldname": "sb_close",
+   "fieldtype": "Section Break",
+   "label": "Closing"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "closed_on",
+   "fieldtype": "Datetime",
+   "label": "Closed On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "close_reason",
+   "fieldtype": "Small Text",
+   "label": "Close Reason",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_close",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "nrf_waived",
+   "fieldtype": "Check",
+   "label": "Non-Replacement Fee Waived",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "nrf_waive_reason",
+   "fieldtype": "Small Text",
+   "label": "Waive Reason",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-02 12:00:00.000000",
+ "modified": "2026-11-03 15:32:15.569529",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Request",

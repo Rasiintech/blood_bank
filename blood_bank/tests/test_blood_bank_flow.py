@@ -100,7 +100,8 @@ class TestScreening(FrappeTestCase):
 
 class TestBloodBankFlow(FrappeTestCase):
 	def setUp(self):
-		settings(testing_mode="Test Donor First", require_invoice_before_issue=0, auto_release_cleared_units=0)
+		settings(testing_mode="Test Donor First", require_invoice_before_issue=0, auto_release_cleared_units=0,
+			outpatient_billing="On Issue", inpatient_billing="On Issue", non_replacement_fee="Off")
 
 	def test_manual_values_and_duplicate_donation(self):
 		from blood_bank.blood_bank.doctype.blood_donation.blood_donation import donation_status
@@ -160,59 +161,163 @@ class TestBloodBankFlow(FrappeTestCase):
 		from blood_bank.lab import latest_patient_values
 		self.assertIsNone(latest_patient_values(make_patient("NoLab").name)["hb"])
 
-	def test_replacement_billing(self):
-		"""Relative's invoice bills one bag; the patient's invoice bills only the rest; issue needs every bag billed."""
-		from blood_bank.billing import make_sales_invoice, refresh_request_invoice
+	# ------------------------------------------------------------------ billing
+	def billing_setup(self, **values):
+		from blood_bank.install import create_billing_items
+		create_billing_items()
+		for code, rate in (("BB-RBC", 25), ("BB-XM", 5), ("BB-GRP", 3), ("BB-NRF", 10), ("BB-FFP", 20)):
+			if not frappe.db.exists("Item Price", {"item_code": code, "price_list": "Standard Selling"}):
+				frappe.get_doc({"doctype": "Item Price", "item_code": code, "price_list": "Standard Selling", "price_list_rate": rate}).insert()
+		frappe.db.set_value("Blood Component", "Red Cells (RBC)", "billing_item", "BB-RBC")
+		frappe.db.set_value("Blood Component", "Fresh Frozen Plasma (FFP)", "billing_item", "BB-FFP")
+		settings(**dict({"crossmatch_charge": "Separate per crossmatch", "charge_blood_grouping": 1, "submit_charge_invoices": 1,
+			"non_replacement_fee": "Off", "require_invoice_before_issue": 1}, **values))
+
+	def stock(self, group, n, component="Red Cells (RBC)"):
+		rec = frappe.get_doc({"doctype": "Blood Unit Receipt", "source_name": "NBS", "items": [
+			{"external_unit_number": f"T-{random.randint(1, 10**8)}", "component": component, "blood_group": group,
+			 "expiry_datetime": add_days(now_datetime(), 10)} for _ in range(n)]}).insert()
+		rec.submit()
+		return [r.blood_unit for r in rec.items]
+
+	def billed_patient(self, first):
+		p = make_patient(first)
+		if not frappe.db.get_value("Patient", p.name, "customer"):
+			c = frappe.get_doc({"doctype": "Customer", "customer_name": p.patient_name,
+				"customer_group": frappe.db.get_value("Customer Group", {"is_group": 0}) or "All Customer Groups",
+				"territory": frappe.db.get_value("Territory", {"is_group": 0}) or "All Territories"}).insert()
+			frappe.db.set_value("Patient", p.name, "customer", c.name)
+		return p
+
+	def request(self, patient, group, units=2, **kw):
+		req = frappe.get_doc(dict({"doctype": "Blood Request", "patient": patient.name, "external_practitioner": "Dr B",
+			"indication": "Surgery", "patient_blood_group": group,
+			"items": [{"component": "Red Cells (RBC)", "units_required": units}]}, **kw)).insert()
+		req.submit()
+		return frappe.get_doc("Blood Request", req.name)
+
+	def totals(self, req):
+		from blood_bank.billing import charged_so_far
+		req.reload()
+		return {k[0]: v for k, v in charged_so_far(req).items() if v}, req.total_charged
+
+	def test_bill_on_issue(self):
+		"""Charges follow what happened: grouping + each crossmatch, each bag issued; a returned bag is credited."""
 		if not frappe.db.get_value("Company", {}, "name"):
 			return
-		if not frappe.db.exists("Item", "BB-TEST-WB"):
-			frappe.get_doc({"doctype": "Item", "item_code": "BB-TEST-WB", "item_name": "Blood Transfusion + Cross Matching Whole Blood",
-				"item_group": frappe.db.get_value("Item Group", {"is_group": 0}) or "All Item Groups", "stock_uom": "Nos",
-				"is_stock_item": 0}).insert()
-		frappe.db.set_value("Blood Component", "Whole Blood", "billing_item", "BB-TEST-WB")
-		patient = make_patient("Replace")
-		req = frappe.get_doc({"doctype": "Blood Request", "patient": patient.name, "external_practitioner": "Dr R",
-			"indication": "Surgery", "patient_blood_group": "O Positive", "replacement_donors_needed": 2,
-			"items": [{"component": "Whole Blood", "units_required": 2}]}).insert()
-		req.submit()
-		donor = make_donor("Relative")
-		sc = make_screening(donor, donor_type="Replacement", replacement_for=patient.name, blood_request=req.name)
-		sc.submit()
-		for p in (patient.name, donor.patient):
-			if not frappe.db.get_value("Patient", p, "customer"):
-				c = frappe.get_doc({"doctype": "Customer", "customer_name": p, "customer_group": frappe.db.get_value("Customer Group", {"is_group": 0}) or "All Customer Groups",
-					"territory": frappe.db.get_value("Territory", {"is_group": 0}) or "All Territories"}).insert()
-				frappe.db.set_value("Patient", p, "customer", c.name)
-		try:
-			si = sc.order_screening_tests()
-		except Exception:
-			return  # site without accounting setup
-		self.assertEqual(si.doctype, "Sales Invoice")
-		self.assertEqual([(i.item_code, i.qty) for i in si.items], [("BB-TEST-WB", 1)])
-		self.assertEqual(si.blood_request, req.name)
-		if si.is_new():
-			return
-		si.submit()
-		req.reload()
-		self.assertEqual(req.items[0].units_billed, 1)
-		from blood_bank.billing import billing_plan
-		req.reload()
-		plan = billing_plan(req)
-		self.assertEqual((plan["relative_invoices"], plan["relatives_to_bill"], plan["patient_to_bill"]), (1, 1, 0))
-		with self.assertRaises(frappe.ValidationError):
-			make_sales_invoice(req.name)  # the second bag waits for the second relative
-		req.db_set("replacement_donors_needed", 1)  # the second relative will not come
-		req.reload()
-		rest = make_sales_invoice(req.name)
-		self.assertEqual([i.qty for i in rest.items], [1])
+		self.billing_setup(outpatient_billing="On Issue")
+		units = self.stock("A Positive", 2)
+		req = self.request(self.billed_patient("OnIssue"), "A Positive")
+		self.assertEqual(req.billing_mode, "On Issue")
+		self.assertEqual(self.totals(req)[0], {})
+		xm = frappe.get_doc({"doctype": "Blood Crossmatch", "blood_request": req.name, "patient_blood_group": "A Positive",
+			"items": [{"blood_unit": u, "result": "Compatible"} for u in units]}).insert()
+		xm.submit()
+		self.assertEqual(self.totals(req), ({"Blood Grouping": 1, "Crossmatch": 2}, 13))
+		iss = frappe.get_doc({"doctype": "Blood Issue", "blood_request": req.name, "received_by": "Nurse",
+			"items": [{"blood_unit": u} for u in units]}).insert()
+		iss.submit()
+		self.assertEqual(self.totals(req), ({"Blood Grouping": 1, "Crossmatch": 2, "Blood Unit": 2}, 63))
+		ret = frappe.get_doc({"doctype": "Blood Unit Return", "blood_issue": iss.name, "return_datetime": now_datetime(),
+			"items": [{"blood_unit": units[1], "seal_intact": 1}]}).insert()
+		ret.submit()
+		self.assertEqual(self.totals(req), ({"Blood Grouping": 1, "Crossmatch": 2, "Blood Unit": 1}, 38))
+		from blood_bank.billing import reconcile
+		self.assertEqual(reconcile(frappe.get_doc("Blood Request", req.name)), {"charged": [], "credited": [], "problems": []})
+		returns = [c.sales_invoice for c in frappe.get_doc("Blood Request", req.name).charges if c.qty < 0]
+		self.assertTrue(returns and frappe.db.get_value("Sales Invoice", returns[0], "is_return"))
 
-	def test_component_lab_templates(self):
-		from blood_bank.install import ensure_component_lab_templates
-		frappe.db.set_value("Blood Component", "Platelets (PLT)", "billing_item", None)
-		ensure_component_lab_templates()
-		item = frappe.db.get_value("Blood Component", "Platelets (PLT)", "billing_item")
-		if item:
-			self.assertTrue(frappe.db.exists("Lab Test Template", {"item": item}))
+	def test_bill_on_request(self):
+		"""Requested bags and crossmatches invoiced up front; issue needs the invoice; closing credits what was not used."""
+		if not frappe.db.get_value("Company", {}, "name"):
+			return
+		self.billing_setup(outpatient_billing="On Request")
+		units = self.stock("O Positive", 2)
+		req = self.request(self.billed_patient("OnRequest"), "O Positive")
+		self.assertEqual(req.billing_mode, "On Request")
+		self.assertEqual(self.totals(req), ({"Blood Unit": 2, "Crossmatch": 2, "Blood Grouping": 1}, 63))
+		xm = frappe.get_doc({"doctype": "Blood Crossmatch", "blood_request": req.name, "patient_blood_group": "O Positive",
+			"items": [{"blood_unit": u, "result": "Compatible"} for u in units]}).insert()
+		xm.submit()
+		self.assertEqual(self.totals(req)[1], 63)
+		iss = frappe.get_doc({"doctype": "Blood Issue", "blood_request": req.name, "received_by": "Nurse",
+			"items": [{"blood_unit": units[0]}]}).insert()
+		iss.submit()
+		from blood_bank.billing import close_request
+		close_request(req.name, "Surgery done, second bag not needed")
+		self.assertEqual(self.totals(req), ({"Blood Unit": 1, "Crossmatch": 2, "Blood Grouping": 1}, 38))
+		self.assertEqual(frappe.db.get_value("Blood Unit", units[1], "status"), "Available")
+
+	def test_non_replacement_fee(self):
+		if not frappe.db.get_value("Company", {}, "name"):
+			return
+		self.billing_setup(outpatient_billing="On Issue", non_replacement_fee="Per missing donor", non_replacement_grace_days=0,
+			charge_blood_grouping=0)
+		req = self.request(self.billed_patient("NoFamily"), "B Positive", units=1, replacement_donors_needed=2)
+		from blood_bank.billing import close_request, waive_non_replacement_fee
+		close_request(req.name, "Not needed")
+		self.assertEqual(self.totals(req), ({"Non-Replacement Fee": 2}, 20))
+		waive_non_replacement_fee(req.name, "Family cannot donate")
+		self.assertEqual(self.totals(req), ({}, 0))
+		settings(non_replacement_fee="Off")
+
+	def test_plasma_needs_no_crossmatch(self):
+		if not frappe.db.get_value("Company", {}, "name"):
+			return
+		self.billing_setup(outpatient_billing="On Issue")
+		ffp = self.stock("AB Positive", 1, "Fresh Frozen Plasma (FFP)")[0]
+		p = self.billed_patient("Plasma")
+		req = frappe.get_doc({"doctype": "Blood Request", "patient": p.name, "external_practitioner": "Dr P", "indication": "DIC",
+			"patient_blood_group": "A Positive", "items": [{"component": "Fresh Frozen Plasma (FFP)", "units_required": 1}]}).insert()
+		req.submit()
+		from blood_bank.blood_bank.doctype.blood_issue.blood_issue import get_reserved_units
+		offered = get_reserved_units(req.name)  # plasma comes straight from stock: earliest expiry, compatible group
+		self.assertEqual([u["component"] for u in offered], ["Fresh Frozen Plasma (FFP)"])
+		self.assertTrue(ffp)
+		frappe.get_doc({"doctype": "Blood Issue", "blood_request": req.name, "received_by": "Nurse",
+			"items": [{"blood_unit": offered[0]["blood_unit"]}]}).insert().submit()
+		self.assertEqual(self.totals(req)[0], {"Blood Grouping": 1, "Blood Unit": 1})
+
+	def test_directed_donation(self):
+		from blood_bank.blood_bank.doctype.blood_unit.blood_unit import release_directed
+		patient = make_patient("Directed")
+		req = frappe.get_doc({"doctype": "Blood Request", "patient": patient.name, "external_practitioner": "Dr D",
+			"indication": "Surgery", "patient_blood_group": "A Positive",
+			"items": [{"component": "Red Cells (RBC)", "units_required": 1}]}).insert()
+		req.submit()
+		def give(name, group):
+			donor = make_donor(name)
+			sc = make_screening(donor, donor_type="Directed", blood_request=req.name)
+			sc.submit()
+			t = make_test(donor, sc, group)
+			d = frappe.get_doc({"doctype": "Blood Donation", "donor": donor.name, "donor_screening": sc.name,
+				"donor_test": t.name, "bag_type": "Single", "volume_ml": 450}).insert()
+			d.submit()
+			return frappe.get_doc("Blood Unit", d.blood_unit)
+		b_pos = give("Dir B", "B Positive")
+		self.assertFalse(b_pos.directed_request)  # B+ cannot go to an A+ patient: general stock
+		o_pos = give("Dir O", "O Positive")
+		self.assertEqual(o_pos.directed_request, req.name)
+		release_units([o_pos.name])
+		other = frappe.get_doc({"doctype": "Blood Request", "patient": make_patient("Other").name, "external_practitioner": "Dr X",
+			"indication": "Anaemia", "patient_blood_group": "O Positive",
+			"items": [{"component": "Whole Blood", "units_required": 1}]}).insert()
+		other.submit()
+		self.assertNotIn(o_pos.name, [u["blood_unit"] for u in get_compatible_units(other.name)])
+		self.assertEqual(frappe.db.get_value("Blood Request", req.name, "replacement_donations"), 2)
+		release_directed(o_pos.name, "Patient discharged")
+		self.assertIn(o_pos.name, [u["blood_unit"] for u in get_compatible_units(other.name)])
+
+	def test_times_must_follow_each_other(self):
+		patient = make_patient("Times")
+		req = frappe.get_doc({"doctype": "Blood Request", "patient": patient.name, "external_practitioner": "Dr T",
+			"indication": "Anaemia", "patient_blood_group": "A Positive",
+			"items": [{"component": "Red Cells (RBC)", "units_required": 1}]}).insert()
+		req.submit()
+		unit = self.stock("A Positive", 1)[0]
+		xm = frappe.get_doc({"doctype": "Blood Crossmatch", "blood_request": req.name, "patient_blood_group": "A Positive",
+			"crossmatch_datetime": add_to_date(now_datetime(), hours=-3), "items": [{"blood_unit": unit, "result": "Compatible"}]})
+		self.assertRaises(frappe.ValidationError, xm.insert)
 
 	def test_bag_type_correction(self):
 		from blood_bank.blood_bank.doctype.blood_donation.blood_donation import correct_bag_type
@@ -274,7 +379,7 @@ class TestBloodBankFlow(FrappeTestCase):
 		tr = frappe.get_doc({"doctype": "Blood Transfusion", "blood_issue": iss.name, "blood_unit": rbc,
 			"first_checker": "Administrator", "second_checker": "bb-checker@test.local", "patient_identity_confirmed": 1,
 			"unit_label_checked": 1, "unit_expiry_checked": 1, "start_datetime": add_to_date(now_datetime(), minutes=1),
-			"end_datetime": add_to_date(now_datetime(), hours=2), "outcome": "Completed"}).insert()
+			"end_datetime": add_to_date(now_datetime(), minutes=5), "outcome": "Completed"}).insert()
 		tr.submit()
 		self.assertEqual(frappe.db.get_value("Blood Unit", rbc, "status"), "Transfused")
 		self.assertEqual(frappe.db.get_value("Blood Request", req.name, "status"), "Completed")
