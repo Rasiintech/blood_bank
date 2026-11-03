@@ -74,6 +74,7 @@ class BloodComponentPreparation(Document):
 			unit.insert(ignore_permissions=True)
 			row.db_set("blood_unit", unit.name)
 		update_unit(src, status="Processed", remarks=_("Split by {0}").format(self.name))
+		self.db_set("source_status", "Processed")
 
 	def on_cancel(self):
 		for row in self.items:
@@ -87,3 +88,4 @@ class BloodComponentPreparation(Document):
 				frappe.delete_doc("Blood Unit", row.blood_unit, ignore_permissions=True, force=True)
 				row.db_set("blood_unit", None)
 		update_unit(self.source_unit, status=self.source_status_before or "Quarantine")
+		self.db_set("source_status", self.source_status_before or "Quarantine")

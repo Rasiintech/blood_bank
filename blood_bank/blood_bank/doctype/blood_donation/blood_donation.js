@@ -21,9 +21,24 @@ frappe.ui.form.on("Blood Donation", {
 	},
 	refresh(frm) {
 		if (frm.doc.docstatus !== 1 || !frm.doc.blood_unit) return;
-		frm.add_custom_button(__("Print Bag Label"), () => {
-			frappe.set_route("print", "Blood Unit", frm.doc.blood_unit);
+		frappe.db.get_value("Blood Unit", frm.doc.blood_unit, "status").then(r => {
+			const status = (r.message || {}).status;
+			if (status === "Processed") {
+				// split already: the whole blood bag no longer exists, its components do
+				frm.dashboard.add_comment(__("This bag was split into components. Print and manage the component units."), "blue", true);
+				frm.add_custom_button(__("Component Units (Print Labels)"), () =>
+					frappe.set_route("List", "Blood Unit", { parent_unit: frm.doc.blood_unit })).addClass("btn-primary");
+				return;
+			}
+			if (["Quarantine", "Available", "Reserved", "Issued"].includes(status)) {
+				frm.add_custom_button(__("Print Bag Label"), () => frappe.set_route("print", "Blood Unit", frm.doc.blood_unit));
+			}
+			frm.add_custom_button(__("Whole Blood Unit"), () => frappe.set_route("Form", "Blood Unit", frm.doc.blood_unit), __("View"));
+			if (!["Quarantine", "Available"].includes(status)) return;
+			frm.trigger("unsplit_actions");
 		});
+	},
+	unsplit_actions(frm) {
 		if (frappe.user.has_role("Blood Bank Officer")) {
 			frm.add_custom_button(__("Correct Bag Type"), () => {
 				frappe.prompt([
@@ -37,11 +52,13 @@ frappe.ui.form.on("Blood Donation", {
 				}, __("Correct Bag Type"), __("Save"));
 			}, __("Actions"));
 		}
-		frm.add_custom_button(__("Split into Components"), () => {
-			frappe.new_doc("Blood Component Preparation", { source_unit: frm.doc.blood_unit });
-		}, __("Create"));
+		if (frm.doc.bag_type && frm.doc.bag_type !== "Single") {
+			frm.add_custom_button(__("Split into Components"), () => {
+				frappe.new_doc("Blood Component Preparation", { source_unit: frm.doc.blood_unit });
+			}, __("Create"));
+		}
 		frappe.db.get_single_value("Blood Bank Settings", "testing_mode").then(mode => {
-			if (mode !== "Test the Bag") return;
+			if (mode !== "Test the Bag" || frm.doc.donor_test) return;
 			frm.add_custom_button(__("Donor Test for this Bag"), () => {
 				frappe.new_doc("Blood Donor Test", { donor: frm.doc.donor, donor_screening: frm.doc.donor_screening, blood_donation: frm.doc.name });
 			}, __("Create"));

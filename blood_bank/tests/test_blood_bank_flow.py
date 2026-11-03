@@ -120,6 +120,14 @@ class TestBloodBankFlow(FrappeTestCase):
 		don.submit()
 		self.assertEqual(donation_status(donor.name, sc.name, t.name)["existing"], don.name)
 		self.assertIn("blocked", donation_status(donor.name))
+		from blood_bank.blood_bank.doctype.blood_donor.blood_donor import next_action
+		self.assertIn("blocked", next_action(donor.name))
+		unit = frappe.get_doc("Blood Unit", don.blood_unit)
+		release_units([unit.name])
+		prep = frappe.get_doc({"doctype": "Blood Component Preparation", "source_unit": unit.name,
+			"items": [{"component": "Red Cells (RBC)"}, {"component": "Fresh Frozen Plasma (FFP)"}]}).insert()
+		prep.submit()
+		self.assertEqual(frappe.db.get_value("Blood Component Preparation", prep.name, "source_status"), "Processed")
 
 	def test_cancel_test_order(self):
 		donor = make_donor("Order Donor")

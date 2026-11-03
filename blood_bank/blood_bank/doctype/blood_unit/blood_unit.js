@@ -11,7 +11,15 @@ frappe.ui.form.on("Blood Unit", {
 			const hours = frappe.datetime.get_hour_diff(frm.doc.expiry_datetime, frappe.datetime.now_datetime());
 			if (hours < 72) frm.dashboard.set_headline_alert(__("Expires in {0} hours", [Math.max(hours, 0)]), "red");
 		}
-		frm.add_custom_button(__("Print Label"), () => frappe.set_route("print", "Blood Unit", frm.doc.name));
+		const live = ["Quarantine", "Available", "Reserved", "Issued"].includes(frm.doc.status);
+		if (live) frm.add_custom_button(__("Print Label"), () => frappe.set_route("print", "Blood Unit", frm.doc.name));
+		if (frm.doc.status === "Processed") {
+			frm.dashboard.set_headline_alert(__("Split into components. This bag is no longer in stock."), "blue");
+			frm.add_custom_button(__("Component Units"), () => frappe.set_route("List", "Blood Unit", { parent_unit: frm.doc.name })).addClass("btn-primary");
+		}
+		if (frm.doc.parent_unit) {
+			frm.add_custom_button(__("Whole Blood Unit"), () => frappe.set_route("Form", "Blood Unit", frm.doc.parent_unit), __("View"));
+		}
 		if (frm.doc.status === "Quarantine" && frappe.user.has_role(["Blood Bank Officer", "System Manager"])) {
 			frm.add_custom_button(__("Release to Stock"), () => {
 				if (!confirm(__("Release {0} to stock? It becomes Available for crossmatch and issue.", [frm.doc.name]))) return;
@@ -41,11 +49,13 @@ frappe.ui.form.on("Blood Unit", {
 		}
 		if (frm.doc.source === "Donation" && frm.doc.component && ["Quarantine", "Available"].includes(frm.doc.status)) {
 			frappe.db.get_value("Blood Component", frm.doc.component, "is_whole_blood").then(r => {
-				if (r.message && r.message.is_whole_blood) {
+				if (!(r.message && r.message.is_whole_blood) || !frm.doc.blood_donation) return;
+				frappe.db.get_value("Blood Donation", frm.doc.blood_donation, "bag_type").then(b => {
+					if ((b.message || {}).bag_type === "Single") return;
 					frm.add_custom_button(__("Split into Components"), () => {
 						frappe.new_doc("Blood Component Preparation", { source_unit: frm.doc.name });
 					}, __("Actions"));
-				}
+				});
 			});
 		}
 		if (["Quarantine", "Available", "Reserved"].includes(frm.doc.status)) {

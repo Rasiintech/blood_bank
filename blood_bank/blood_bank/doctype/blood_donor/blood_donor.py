@@ -70,3 +70,27 @@ def correct_blood_group(donor, blood_group, reason):
 	d.flags.ignore_permissions = True
 	d.save()
 	return d.blood_group
+
+
+@frappe.whitelist()
+def next_action(donor):
+	"""Donor form: an unfinished screening to continue, or why a new one cannot start."""
+	from blood_bank.blood_bank.doctype.blood_donation.blood_donation import donation_status
+
+	for s in frappe.get_all("Blood Donor Screening", filters={"donor": donor, "docstatus": ["<", 2]},
+			fields=["name", "docstatus", "result"], order_by="creation desc", limit=5):
+		if s.docstatus == 0:
+			return {"open_screening": s.name}
+		if s.result == "Accepted" and not frappe.db.exists("Blood Donation", {"donor_screening": s.name, "docstatus": ["<", 2]}) \
+				and not frappe.db.exists("Blood Donor Test", {"donor_screening": s.name, "docstatus": 1, "overall_result": ["!=", "Non-Reactive"]}) \
+				and not _screening_expired(s.name):
+			return {"open_screening": s.name}
+	return donation_status(donor)
+
+
+def _screening_expired(name):
+	from frappe.utils import add_to_date, cint, get_datetime, now_datetime
+	from blood_bank.utils import setting
+	when = frappe.db.get_value("Blood Donor Screening", name, "screening_datetime")
+	hours = cint(setting("test_validity_hours")) or 72
+	return not when or add_to_date(get_datetime(when), hours=hours) < now_datetime()

@@ -31,13 +31,21 @@ frappe.ui.form.on("Blood Request", {
 				});
 			}, __("Create"));
 		}
-		frm.add_custom_button(__("Crossmatch"), () => {
-			frappe.new_doc("Blood Crossmatch", { blood_request: frm.doc.name, patient_blood_group: frm.doc.patient_blood_group });
-		}, __("Create"));
-		frm.add_custom_button(__("Issue Blood"), () => {
-			frappe.new_doc("Blood Issue", { blood_request: frm.doc.name });
-		}, __("Create"));
-		frm.add_custom_button(__("Replacement Donor Screening"), () => {
+		const items = frm.doc.items || [];
+		const still_needed = items.some(r => (r.units_required || 0) > (r.units_reserved || 0) + (r.units_issued || 0));
+		const reserved = items.some(r => (r.units_reserved || 0) > 0);
+		const not_all_issued = items.some(r => (r.units_required || 0) > (r.units_issued || 0));
+		if (still_needed) {
+			frm.add_custom_button(__("Crossmatch"), () => {
+				frappe.new_doc("Blood Crossmatch", { blood_request: frm.doc.name, patient_blood_group: frm.doc.patient_blood_group });
+			}, __("Create"));
+		}
+		if (reserved || (frm.doc.urgency === "Emergency" && not_all_issued)) {
+			frm.add_custom_button(__("Issue Blood"), () => {
+				frappe.new_doc("Blood Issue", { blood_request: frm.doc.name });
+			}, __("Create"));
+		}
+		if (!frm.doc.replacement_donors_needed || frm.doc.replacement_donors_needed > (frm.doc.replacement_donations || 0)) frm.add_custom_button(__("Replacement Donor Screening"), () => {
 			frappe.new_doc("Blood Donor Screening", { donor_type: "Replacement", replacement_for: frm.doc.patient, blood_request: frm.doc.name });
 		}, __("Create"));
 

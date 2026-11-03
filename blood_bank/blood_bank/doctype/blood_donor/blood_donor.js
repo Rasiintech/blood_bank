@@ -12,11 +12,18 @@ frappe.ui.form.on("Blood Donor", {
 		}
 		const colors = { "Active": "green", "Temporarily Deferred": "orange", "Permanently Deferred": "red" };
 		frm.page.set_indicator(__(frm.doc.status), colors[frm.doc.status] || "gray");
-		if (frm.doc.status !== "Permanently Deferred") {
-			frm.add_custom_button(__("New Screening"), () => {
-				frappe.new_doc("Blood Donor Screening", { donor: frm.doc.name, donor_type: frm.doc.default_donor_type });
-			}).addClass("btn-primary");
-		}
+		frappe.call("blood_bank.blood_bank.doctype.blood_donor.blood_donor.next_action", { donor: frm.doc.name }).then(r => {
+			const st = r.message || {};
+			if (st.open_screening) {
+				frm.add_custom_button(__("Open Screening"), () => frappe.set_route("Form", "Blood Donor Screening", st.open_screening)).addClass("btn-primary");
+			} else if (st.blocked) {
+				frm.dashboard.add_comment(st.blocked, "red", true);
+			} else {
+				frm.add_custom_button(__("New Screening"), () => {
+					frappe.new_doc("Blood Donor Screening", { donor: frm.doc.name, donor_type: frm.doc.default_donor_type });
+				}).addClass("btn-primary");
+			}
+		});
 		frm.add_custom_button(__("Patient"), () => frappe.set_route("Form", "Patient", frm.doc.patient), __("View"));
 		if (frappe.user.has_role(["Blood Bank Officer", "System Manager"])) {
 			frm.add_custom_button(__("Correct Blood Group"), () => {

@@ -122,7 +122,8 @@
    "label": "Expiry",
    "reqd": 1,
    "read_only": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "description": "Collection time + the component's shelf life (see Blood Component)"
   },
   {
    "fieldname": "storage",

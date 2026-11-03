@@ -14,7 +14,9 @@
   "max_temp",
   "in_range",
   "recorded_by",
-  "remarks"
+  "remarks",
+  "sb_help",
+  "temp_help"
  ],
  "fields": [
   {
@@ -78,6 +80,18 @@
    "fieldname": "remarks",
    "fieldtype": "Small Text",
    "label": "Remarks"
+  },
+  {
+   "fieldname": "sb_help",
+   "fieldtype": "Section Break",
+   "label": "How to Record",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "temp_help",
+   "fieldtype": "HTML",
+   "label": "Temperature Help",
+   "options": "<div class=\"small\" style=\"border:1px solid var(--border-color);border-radius:6px;padding:8px 10px\"><b>How temperature recording works.</b> The system does not read the fridge by itself. Staff read the fridge&#39;s own thermometer or display and enter it here.<table class=\"table table-bordered table-sm\" style=\"margin:6px 0\"><tr><th>Storage</th><th>Keep between</th><th>Record</th></tr><tr><td>Blood fridge (Whole Blood, Red Cells)</td><td>2 and 6 °C</td><td>At least twice a day (morning and evening shift), or every 4 hours if the fridge has no alarm</td></tr><tr><td>Plasma freezer (FFP, Plasma)</td><td>-18 °C or colder</td><td>At least twice a day</td></tr><tr><td>Platelet agitator</td><td>20 and 24 °C</td><td>At least twice a day, and check it is shaking</td></tr></table>Out of range: the Blood Bank Officer is notified straight away and decides whether the bags in that storage are kept or discarded. The reading history is the proof for audits. Fridges with a Wi-Fi logger can be connected later, so readings come in automatically.</div>"
   }
  ],
  "index_web_pages_for_search": 0,

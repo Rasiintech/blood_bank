@@ -33,7 +33,10 @@ frappe.ui.form.on("Blood Crossmatch", {
 			frm.add_custom_button(__("Fetch Result From Lab"), () => frm.call("fetch_from_lab").then(() => { frm.refresh_fields(); frm.dirty(); }));
 		}
 		if (frm.doc.docstatus === 1) {
-			frm.add_custom_button(__("Issue Blood"), () => frappe.new_doc("Blood Issue", { blood_request: frm.doc.blood_request }), __("Create"));
+			const units = (frm.doc.items || []).filter(r => r.result === "Compatible").map(r => r.blood_unit);
+			if (units.length) frappe.db.get_list("Blood Unit", { filters: { name: ["in", units], status: "Reserved" }, fields: ["name"] }).then(rows => {
+				if (rows.length) frm.add_custom_button(__("Issue Blood"), () => frappe.new_doc("Blood Issue", { blood_request: frm.doc.blood_request }), __("Create"));
+			});
 		}
 	},
 });

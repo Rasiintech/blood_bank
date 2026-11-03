@@ -8,7 +8,8 @@ frappe.ui.form.on("Blood Component Preparation", {
 	},
 	refresh(frm) {
 		if (frm.doc.docstatus === 1) {
-			frm.add_custom_button(__("Units"), () => frappe.set_route("List", "Blood Unit", { component_preparation: frm.doc.name }), __("View"));
+			frm.add_custom_button(__("Component Units (Print Labels)"), () =>
+				frappe.set_route("List", "Blood Unit", { component_preparation: frm.doc.name })).addClass("btn-primary");
 		}
 	},
 });

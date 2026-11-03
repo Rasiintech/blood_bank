@@ -23,13 +23,24 @@ frappe.ui.form.on("Blood Issue", {
 	refresh(frm) {
 		if (frm.doc.emergency_release) frm.dashboard.set_headline_alert(__("EMERGENCY RELEASE: uncrossmatched blood"), "red");
 		if (frm.doc.docstatus === 1) {
-			frm.add_custom_button(__("Transfusion Record"), () => {
-				const units = (frm.doc.items || []).map(r => r.blood_unit);
-				const make = unit => frappe.new_doc("Blood Transfusion", { blood_issue: frm.doc.name, blood_unit: unit });
-				if (units.length === 1) return make(units[0]);
-				frappe.prompt({ fieldname: "unit", fieldtype: "Select", options: units, label: __("Unit"), reqd: 1 }, v => make(v.unit));
-			}, __("Create"));
-			frm.add_custom_button(__("Return Unused Units"), () => frappe.new_doc("Blood Unit Return", { blood_issue: frm.doc.name }), __("Create"));
+			const all = (frm.doc.items || []).map(r => r.blood_unit);
+			Promise.all([
+				frappe.db.get_list("Blood Unit", { filters: { name: ["in", all], status: "Issued" }, fields: ["name"] }),
+				frappe.db.get_list("Blood Transfusion", { filters: { blood_issue: frm.doc.name, docstatus: ["<", 2] }, fields: ["blood_unit"] }),
+			]).then(([out, done]) => {
+				const recorded = done.map(d => d.blood_unit);
+				const units = out.map(u => u.name).filter(u => !recorded.includes(u));
+				if (units.length) {
+					frm.add_custom_button(__("Transfusion Record"), () => {
+						const make = unit => frappe.new_doc("Blood Transfusion", { blood_issue: frm.doc.name, blood_unit: unit });
+						if (units.length === 1) return make(units[0]);
+						frappe.prompt({ fieldname: "unit", fieldtype: "Select", options: units, label: __("Unit"), reqd: 1 }, v => make(v.unit));
+					}, __("Create"));
+				}
+				if (out.length) {
+					frm.add_custom_button(__("Return Unused Units"), () => frappe.new_doc("Blood Unit Return", { blood_issue: frm.doc.name }), __("Create"));
+				}
+			});
 		}
 	},
 });
