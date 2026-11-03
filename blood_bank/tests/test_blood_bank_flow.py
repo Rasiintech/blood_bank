@@ -124,6 +124,11 @@ class TestBloodBankFlow(FrappeTestCase):
 		self.assertIn("blocked", next_action(donor.name))
 		unit = frappe.get_doc("Blood Unit", don.blood_unit)
 		release_units([unit.name])
+		from blood_bank.blood_bank.doctype.blood_component_preparation.blood_component_preparation import get_split_plan
+		plan = get_split_plan(unit.name)
+		self.assertEqual((plan["bag_type"], plan["max_components"]), ("Triple", 3))
+		self.assertEqual([r["abbr"] for r in plan["rows"]], ["RBC", "FFP", "PLT"])
+		self.assertEqual(sum(r["volume_ml"] for r in plan["rows"]), 450)
 		prep = frappe.get_doc({"doctype": "Blood Component Preparation", "source_unit": unit.name,
 			"items": [{"component": "Red Cells (RBC)"}, {"component": "Fresh Frozen Plasma (FFP)"}]}).insert()
 		prep.submit()
@@ -139,6 +144,7 @@ class TestBloodBankFlow(FrappeTestCase):
 			"company": frappe.get_all("Company", pluck="name", limit=1)[0], "blood_donor_screening": sc.name}).insert()
 		sc.db_set("sample_collection", doc.name)
 		sc.reload()
+		self.assertEqual(sc.sync_donor_test()["donor_test"], None)
 		self.assertIn("deleted", sc.cancel_test_order()[0])
 		sc.reload()
 		self.assertFalse(sc.sample_collection)

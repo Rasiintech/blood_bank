@@ -177,6 +177,20 @@ class BloodDonorScreening(Document):
 		return doc
 
 	@frappe.whitelist()
+	def sync_donor_test(self):
+		"""Screening form: find the lab results of the ordered tests; make the Donor Test if one is submitted.
+		Covers lab results submitted in a way that skipped the on_submit hook, or before the app was updated."""
+		from blood_bank.lab import lab_documents_status, upsert_donor_test
+
+		lab_dt = get_settings().lab_doctype
+		docs = lab_documents_status(lab_dt, self.name)
+		test = frappe.db.get_value("Blood Donor Test", {"donor_screening": self.name, "docstatus": ["<", 2]})
+		submitted = [d for d in docs if d.docstatus == 1]
+		if submitted and self.docstatus == 1 and self.result == "Accepted":
+			test = upsert_donor_test(self.name, frappe.get_doc(lab_dt, submitted[-1].name))
+		return {"donor_test": test, "lab_documents": docs, "lab_doctype": lab_dt}
+
+	@frappe.whitelist()
 	def cancel_test_order(self):
 		"""Undo 'Order Screening Tests' clicked by mistake: remove the draft sample/invoice, or cancel a submitted sample."""
 		frappe.has_permission("Blood Donor Screening", "write", self.name, throw=True)

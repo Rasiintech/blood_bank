@@ -47,17 +47,24 @@ frappe.ui.form.on("Blood Donor Screening", {
 				});
 				return;
 			}
-			frappe.db.get_list("Blood Donor Test", { filters: { donor_screening: frm.doc.name, docstatus: ["<", 2] },
-				fields: ["name", "docstatus"], order_by: "docstatus desc", limit: 1 }).then(rows => {
-				if (rows.length && rows[0].docstatus === 1) {
-					frm.add_custom_button(__("Open Donor Test"), () => frappe.set_route("Form", "Blood Donor Test", rows[0].name)).addClass("btn-primary");
+			frm.call("sync_donor_test").then(r => {
+				const st = r.message || {};
+				const docs = st.lab_documents || [];
+				const ordered = frm.doc.sample_collection || frm.doc.sales_invoice;
+				const lab_line = docs.map(d => `${d.name}: ${d.docstatus === 1 ? __("Submitted") : __("Not submitted yet")}`).join(", ");
+				if (st.donor_test) {
+					frappe.db.get_value("Blood Donor Test", st.donor_test, "docstatus").then(t => {
+						const done = (t.message || {}).docstatus === 1;
+						frm.add_custom_button(__("Open Donor Test"), () => frappe.set_route("Form", "Blood Donor Test", st.donor_test)).addClass("btn-primary");
+						frm.dashboard.add_comment(done
+							? __("Donor Test {0} is submitted.", [st.donor_test])
+							: __("Lab results are in Donor Test {0}. Open it, check and Submit.", [st.donor_test]) + (lab_line ? " (" + lab_line + ")" : ""),
+							done ? "green" : "blue", true);
+						if (!done) frm.trigger("cancel_order_button");
+					});
 					return;
 				}
-				if (rows.length) {
-					frm.add_custom_button(__("Open Donor Test"), () => frappe.set_route("Form", "Blood Donor Test", rows[0].name)).addClass("btn-primary");
-				}
-				const ordered = frm.doc.sample_collection || frm.doc.sales_invoice;
-				if (!ordered && !rows.length) {
+				if (!ordered) {
 					frm.add_custom_button(__("Next: Order Screening Tests"), () => {
 						frm.call("order_screening_tests").then(r => {
 							const doc = frappe.model.sync(r.message)[0];
@@ -65,24 +72,29 @@ frappe.ui.form.on("Blood Donor Screening", {
 						});
 					}).addClass("btn-primary");
 					frm.dashboard.add_comment(__("Order the screening tests (Sample Collection, or an invoice if donors are charged). When the lab submits the Lab Result, the Donor Test is created and filled automatically."), "blue", true);
+				} else if (!docs.length) {
+					frm.dashboard.add_comment(__("Tests ordered on {0}. No Lab Result made from it yet: submit the Sample Collection so the lab can enter results.", [ordered]), "orange", true);
 				} else {
-					frm.dashboard.add_comment(__("Tests ordered on {0}. Waiting for the lab to submit the Lab Result.", [ordered]), "orange", true);
+					frm.dashboard.add_comment(__("Tests ordered on {0}. Waiting for the lab to submit: {1}", [ordered, lab_line]), "orange", true);
 				}
-				if (ordered) {
-					frm.add_custom_button(__("Cancel Test Order"), () => {
-						frappe.confirm(__("Undo the test order {0}? A draft is deleted; a submitted Sample Collection is cancelled with its Lab Results. You can order again afterwards.", [ordered]), () => {
-							frm.call("cancel_test_order").then(r => {
-								frappe.msgprint((r.message || []).map(frappe.utils.escape_html).join("<br>") || __("Nothing to undo"));
-								frm.reload_doc();
-							});
-						});
-					}, __("Actions"));
-				}
-				if (!rows.length) frm.add_custom_button(__("Enter Results Manually"), () => {
+				if (ordered) frm.trigger("cancel_order_button");
+				frm.add_custom_button(__("Enter Results Manually"), () => {
 					frappe.new_doc("Blood Donor Test", { donor: frm.doc.donor, donor_screening: frm.doc.name });
 				}, __("Create"));
 			});
 		});
+	},
+	cancel_order_button(frm) {
+		const ordered = frm.doc.sample_collection || frm.doc.sales_invoice;
+		if (!ordered) return;
+		frm.add_custom_button(__("Cancel Test Order"), () => {
+			frappe.confirm(__("Undo the test order {0}? A draft is deleted; a submitted Sample Collection is cancelled with its Lab Results. You can order again afterwards.", [ordered]), () => {
+				frm.call("cancel_test_order").then(r => {
+					frappe.msgprint((r.message || []).map(frappe.utils.escape_html).join("<br>") || __("Nothing to undo"));
+					frm.reload_doc();
+				});
+			});
+		}, __("Actions"));
 	},
 	donor(frm) {
 		if (!frm.doc.donor || frm.doc.docstatus !== 0) return;

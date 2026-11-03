@@ -166,25 +166,7 @@ def on_lab_document_submit(doc, method=None):
 	screening = screening_for_lab_document(doc)
 	if screening:
 		try:
-			scr = frappe.db.get_value("Blood Donor Screening", screening, ["donor", "docstatus", "result"], as_dict=True)
-			existing = frappe.db.get_value("Blood Donor Test", {"donor_screening": screening, "docstatus": ["<", 2]}, ["name", "docstatus"], as_dict=True)
-			if existing and existing.docstatus == 0:
-				test = frappe.get_doc("Blood Donor Test", existing.name)
-				test.lab_doctype = test.lab_doctype or doc.doctype
-				test.lab_reference = test.lab_reference or doc.name
-				fill_donor_test(test)
-				test.flags.ignore_permissions = True
-				test.save()
-			elif not existing and scr and scr.docstatus == 1 and scr.result == "Accepted":
-				test = frappe.new_doc("Blood Donor Test")
-				test.donor = scr.donor
-				test.donor_screening = screening
-				test.lab_doctype = doc.doctype
-				test.lab_reference = doc.name
-				test.load_tests()
-				fill_donor_test(test)
-				test.flags.ignore_permissions = True
-				test.insert()
+			upsert_donor_test(screening, doc)
 		except Exception:
 			frappe.log_error(title=f"Blood Bank: could not fill Donor Test from {doc.doctype} {doc.name}")
 	for name in frappe.get_all("Blood Donor Test", filters={"docstatus": 0, "lab_doctype": doc.doctype,
@@ -218,6 +200,52 @@ def fill_crossmatch(xm_doc):
 
 SAMPLE_FIELDS = ["sample_collection", "reff_collection"]
 INVOICE_FIELDS = ["sales_invoice", "invoice_no", "reff_invoice"]
+
+
+def upsert_donor_test(screening, doc):
+	"""Create the screening's draft Donor Test from a submitted lab document, or refill the existing draft."""
+	scr = frappe.db.get_value("Blood Donor Screening", screening, ["donor", "docstatus", "result"], as_dict=True)
+	existing = frappe.db.get_value("Blood Donor Test", {"donor_screening": screening, "docstatus": ["<", 2]}, ["name", "docstatus"], as_dict=True)
+	if existing and existing.docstatus == 0:
+		test = frappe.get_doc("Blood Donor Test", existing.name)
+		test.lab_doctype = test.lab_doctype or doc.doctype
+		test.lab_reference = test.lab_reference or doc.name
+		fill_donor_test(test)
+		test.flags.ignore_permissions = True
+		test.save()
+		return test.name
+	if existing:
+		return existing.name
+	if scr and scr.docstatus == 1 and scr.result == "Accepted":
+		test = frappe.new_doc("Blood Donor Test")
+		test.donor = scr.donor
+		test.donor_screening = screening
+		test.lab_doctype = doc.doctype
+		test.lab_reference = doc.name
+		test.load_tests()
+		fill_donor_test(test)
+		test.flags.ignore_permissions = True
+		test.insert()
+		return test.name
+
+
+def lab_documents_status(lab_doctype, screening):
+	"""All lab documents of the screening's sample / invoice, with their docstatus."""
+	if not lab_doctype or not frappe.db.exists("DocType", lab_doctype):
+		return []
+	meta = frappe.get_meta(lab_doctype)
+	sc, si = frappe.db.get_value("Blood Donor Screening", screening, ["sample_collection", "sales_invoice"])
+	pairs = [(f, sc) for f in _ref_fields(meta, SAMPLE_FIELDS, "Sample Collection")]
+	pairs += [(f, si) for f in _ref_fields(meta, INVOICE_FIELDS, "Sales Invoice")]
+	seen, out = set(), []
+	for field, value in pairs:
+		if not value:
+			continue
+		for r in frappe.get_all(lab_doctype, filters={field: value, "docstatus": ["<", 2]}, fields=["name", "docstatus"], order_by="creation asc"):
+			if r.name not in seen:
+				seen.add(r.name)
+				out.append(r)
+	return out
 
 
 def _ref_fields(meta, names, target):

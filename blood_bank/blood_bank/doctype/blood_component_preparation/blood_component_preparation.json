@@ -9,10 +9,15 @@
   "source_unit",
   "blood_group",
   "source_status",
+  "blood_donation",
+  "bag_type",
+  "max_components",
+  "collected_volume",
   "cb1",
   "preparation_datetime",
   "prepared_by",
   "source_status_before",
+  "split_help",
   "sb_i",
   "items",
   "amended_from"
@@ -42,6 +47,33 @@
    "fetch_from": "source_unit.status"
   },
   {
+   "fieldname": "blood_donation",
+   "fieldtype": "Link",
+   "label": "Blood Donation",
+   "options": "Blood Donation",
+   "read_only": 1,
+   "fetch_from": "source_unit.blood_donation"
+  },
+  {
+   "fieldname": "bag_type",
+   "fieldtype": "Data",
+   "label": "Bag Type",
+   "read_only": 1,
+   "description": "From the donation"
+  },
+  {
+   "fieldname": "max_components",
+   "fieldtype": "Int",
+   "label": "Components Allowed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "collected_volume",
+   "fieldtype": "Int",
+   "label": "Collected Volume (ml)",
+   "read_only": 1
+  },
+  {
    "fieldname": "cb1",
    "fieldtype": "Column Break"
   },
@@ -65,6 +97,12 @@
    "label": "Source Status Before",
    "hidden": 1,
    "no_copy": 1
+  },
+  {
+   "fieldname": "split_help",
+   "fieldtype": "HTML",
+   "label": "Split Help",
+   "options": "<div class=\"small\" style=\"border:1px solid var(--border-color);border-radius:6px;padding:8px 10px;margin-bottom:10px\"><b>Which bag type?</b> Count the pouches joined together in the bag set opened for this donor. Each pouch holds one component after the bag is spun.<table class=\"table table-bordered table-sm\" style=\"margin:6px 0\"><tr><th>Bag Type</th><th>Pouches</th><th>Can be split into</th></tr><tr><td>Single</td><td>1</td><td>Nothing. Stays Whole Blood</td></tr><tr><td>Double</td><td>2</td><td>Red Cells + FFP (or Plasma)</td></tr><tr><td>Triple</td><td>3</td><td>Red Cells + FFP + Platelets (most common)</td></tr><tr><td>Quadruple</td><td>4</td><td>Red Cells + FFP + Platelets + one more</td></tr></table>FFP and Plasma come from the same plasma: choose one. Wrong bag type on the donation? Officer: open the Donation, Actions &gt; Correct Bag Type, then split.</div>"
   },
   {
    "fieldname": "sb_i",

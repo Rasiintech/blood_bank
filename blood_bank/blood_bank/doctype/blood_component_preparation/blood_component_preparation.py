@@ -24,7 +24,13 @@ class BloodComponentPreparation(Document):
 		if max_h and get_datetime(self.preparation_datetime) > add_to_date(get_datetime(src.collection_datetime), hours=max_h):
 			frappe.throw(_("More than {0} hours have passed since collection").format(max_h))
 
-		bag = frappe.db.get_value("Blood Donation", src.blood_donation, "bag_type")
+		bag, volume = frappe.db.get_value("Blood Donation", src.blood_donation, ["bag_type", "volume_ml"])
+		self.blood_donation = src.blood_donation
+		self.bag_type, self.max_components, self.collected_volume = bag, bag_pouches(bag), cint(volume)
+		if bag == "Single":
+			frappe.throw(_("Donation {0} was collected in a Single bag: it has no extra pouches, so it stays Whole Blood.<br><br>"
+				"If a Double/Triple/Quadruple bag was really used, a Blood Bank Officer opens the donation and uses "
+				"Actions > Correct Bag Type.").format(src.blood_donation), title=_("Single bag cannot be split"))
 		if len(self.items) > bag_pouches(bag):
 			frappe.throw(_("Donation {0} was collected in a {1} bag, which can be split into at most {2} component(s), "
 				"but {3} rows are listed.<br><br>If the wrong bag type was entered, a Blood Bank Officer can open the donation "
@@ -45,6 +51,11 @@ class BloodComponentPreparation(Document):
 			seen.add(row.component)
 			row.expiry_datetime = component_expiry(row.component, src.collection_datetime)
 		self.source_status_before = src.status
+		total = sum(cint(r.volume_ml) for r in self.items)
+		if volume and total > cint(volume) + 150:
+			frappe.msgprint(_("Components total {0} ml but only {1} ml was collected. Check the volumes "
+				"(Red Cells may be up to about 100 ml more because of the additive solution).").format(total, volume),
+				title=_("Check Volumes"), indicator="orange")
 
 	def on_submit(self):
 		src = frappe.get_doc("Blood Unit", self.source_unit)
@@ -89,3 +100,41 @@ class BloodComponentPreparation(Document):
 				row.db_set("blood_unit", None)
 		update_unit(self.source_unit, status=self.source_status_before or "Quarantine")
 		self.db_set("source_status", self.source_status_before or "Quarantine")
+
+
+# Usual split per bag type: (abbreviation, share of collected volume; None = fixed ml)
+SPLIT_PLAN = {
+	"Double": [("RBC", 0.55), ("FFP", None)],
+	"Triple": [("RBC", 0.55), ("FFP", None), ("PLT", 50)],
+	"Quadruple": [("RBC", 0.55), ("FFP", None), ("PLT", 50)],
+}
+
+
+@frappe.whitelist()
+def get_split_plan(source_unit):
+	"""Bag type, how many components it allows, and the usual rows pre-filled (staff can change them)."""
+	src = frappe.db.get_value("Blood Unit", source_unit, ["blood_donation", "status"], as_dict=True) or {}
+	bag, volume = frappe.db.get_value("Blood Donation", src.get("blood_donation"), ["bag_type", "volume_ml"]) if src.get("blood_donation") else (None, 0)
+	volume = cint(volume)
+	rows, used = [], 0
+	plan = SPLIT_PLAN.get(bag, [])
+	for abbr, share in plan:
+		comp = frappe.db.get_value("Blood Component", {"abbreviation": abbr, "disabled": 0},
+			["name", "storage_type"], as_dict=True)
+		if not comp:
+			continue
+		if share is None:
+			continue
+		ml = int(round(volume * share / 10.0) * 10) if isinstance(share, float) else share
+		used += ml
+		rows.append({"component": comp.name, "volume_ml": ml, "storage": _storage_for(comp.storage_type), "abbr": abbr})
+	for abbr, share in plan:
+		if share is None:
+			comp = frappe.db.get_value("Blood Component", {"abbreviation": abbr, "disabled": 0}, ["name", "storage_type"], as_dict=True)
+			if comp:
+				rows.insert(1, {"component": comp.name, "volume_ml": max(volume - used, 0), "storage": _storage_for(comp.storage_type), "abbr": abbr})
+	return {"bag_type": bag, "max_components": bag_pouches(bag) if bag else 0, "collected_volume": volume, "rows": rows}
+
+
+def _storage_for(storage_type):
+	return frappe.db.get_value("Blood Storage", {"storage_type": storage_type, "disabled": 0}, "name") if storage_type else None
