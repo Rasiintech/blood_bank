@@ -221,6 +221,7 @@
   },
   {
    "default": "1",
+   "description": "Replacement donors without a Blood Request. A replacement donor linked to a Blood Request is always invoiced: that invoice is the patient's charge for the bag (screening + crossmatch), billed to the inpatient.",
    "fieldname": "charge_replacement_donors",
    "fieldtype": "Check",
    "label": "Charge Replacement Donors"

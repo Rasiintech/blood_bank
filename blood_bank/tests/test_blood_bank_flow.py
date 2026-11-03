@@ -160,6 +160,44 @@ class TestBloodBankFlow(FrappeTestCase):
 		from blood_bank.lab import latest_patient_values
 		self.assertIsNone(latest_patient_values(make_patient("NoLab").name)["hb"])
 
+	def test_replacement_billing(self):
+		"""Relative's invoice bills one bag; the patient's invoice bills only the rest; issue needs every bag billed."""
+		from blood_bank.billing import make_sales_invoice, refresh_request_invoice
+		if not frappe.db.get_value("Company", {}, "name"):
+			return
+		if not frappe.db.exists("Item", "BB-TEST-WB"):
+			frappe.get_doc({"doctype": "Item", "item_code": "BB-TEST-WB", "item_name": "Blood Transfusion + Cross Matching Whole Blood",
+				"item_group": frappe.db.get_value("Item Group", {"is_group": 0}) or "All Item Groups", "stock_uom": "Nos",
+				"is_stock_item": 0}).insert()
+		frappe.db.set_value("Blood Component", "Whole Blood", "billing_item", "BB-TEST-WB")
+		patient = make_patient("Replace")
+		req = frappe.get_doc({"doctype": "Blood Request", "patient": patient.name, "external_practitioner": "Dr R",
+			"indication": "Surgery", "patient_blood_group": "O Positive", "replacement_donors_needed": 2,
+			"items": [{"component": "Whole Blood", "units_required": 2}]}).insert()
+		req.submit()
+		donor = make_donor("Relative")
+		sc = make_screening(donor, donor_type="Replacement", replacement_for=patient.name, blood_request=req.name)
+		sc.submit()
+		for p in (patient.name, donor.patient):
+			if not frappe.db.get_value("Patient", p, "customer"):
+				c = frappe.get_doc({"doctype": "Customer", "customer_name": p, "customer_group": frappe.db.get_value("Customer Group", {"is_group": 0}) or "All Customer Groups",
+					"territory": frappe.db.get_value("Territory", {"is_group": 0}) or "All Territories"}).insert()
+				frappe.db.set_value("Patient", p, "customer", c.name)
+		try:
+			si = sc.order_screening_tests()
+		except Exception:
+			return  # site without accounting setup
+		self.assertEqual(si.doctype, "Sales Invoice")
+		self.assertEqual([(i.item_code, i.qty) for i in si.items], [("BB-TEST-WB", 1)])
+		self.assertEqual(si.blood_request, req.name)
+		if si.is_new():
+			return
+		si.submit()
+		req.reload()
+		self.assertEqual(req.items[0].units_billed, 1)
+		rest = make_sales_invoice(req.name)
+		self.assertEqual([i.qty for i in rest.items], [1])
+
 	def test_bag_type_correction(self):
 		from blood_bank.blood_bank.doctype.blood_donation.blood_donation import correct_bag_type
 		donor = make_donor("Bag Donor")

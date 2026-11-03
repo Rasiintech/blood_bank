@@ -49,14 +49,22 @@ frappe.ui.form.on("Blood Request", {
 		frm.page.set_indicator(__(frm.doc.status), REQUEST_COLORS[frm.doc.status] || "gray");
 		if (frm.doc.docstatus !== 1 || ["Completed", "Cancelled"].includes(frm.doc.status)) return;
 
-		if (!frm.doc.sales_invoice || frm.doc.invoice_status === "Cancelled") {
-			frm.add_custom_button(__("Sales Invoice"), () => {
-				frappe.call("blood_bank.billing.make_sales_invoice", { blood_request: frm.doc.name }).then(r => {
-					const doc = frappe.model.sync(r.message)[0];
-					frappe.set_route("Form", doc.doctype, doc.name);
-				});
+		const unbilled = (frm.doc.items || []).reduce((n, r) => n + Math.max((r.units_required || 0) - (r.units_billed || 0), 0), 0);
+		const relatives_pending = Math.max((frm.doc.replacement_donors_needed || 0) - (frm.doc.replacement_donations || 0), 0);
+		if (unbilled > 0) {
+			frm.add_custom_button(__("Sales Invoice ({0} unbilled)", [unbilled]), () => {
+				if (relatives_pending) {
+					return frappe.confirm(__("{0} replacement donor(s) are still expected. Each relative's invoice bills one bag. Bill the remaining {1} bag(s) to the patient now anyway?", [relatives_pending, unbilled]), make);
+				}
+				make();
 			}, __("Create"));
 		}
+		const make = () => {
+			frappe.call("blood_bank.billing.make_sales_invoice", { blood_request: frm.doc.name }).then(r => {
+				const doc = frappe.model.sync(r.message)[0];
+				frappe.set_route("Form", doc.doctype, doc.name);
+			});
+		};
 		const items = frm.doc.items || [];
 		const still_needed = items.some(r => (r.units_required || 0) > (r.units_reserved || 0) + (r.units_issued || 0));
 		const reserved = items.some(r => (r.units_reserved || 0) > 0);
@@ -76,10 +84,10 @@ frappe.ui.form.on("Blood Request", {
 		}, __("Create"));
 
 		if (frm.doc.invoice_status) {
-			frm.dashboard.add_comment(__("Invoice {0}: {1}", [frm.doc.sales_invoice, __(frm.doc.invoice_status)]),
-				frm.doc.invoice_status === "Paid" ? "green" : "orange", true);
+			frm.dashboard.add_comment(__("Billing: {0}", [__(frm.doc.invoice_status)]) + (unbilled ? " · " + __("{0} bag(s) not billed yet", [unbilled]) : ""),
+				unbilled ? "orange" : "green", true);
 		} else if (frm.doc.urgency !== "Emergency") {
-			frm.dashboard.add_comment(__("Not billed yet: create the Sales Invoice before issuing blood"), "orange", true);
+			frm.dashboard.add_comment(__("Not billed yet. Each replacement donor's invoice bills one bag; bill the rest with Create > Sales Invoice before issuing."), "orange", true);
 		}
 		if (frm.doc.replacement_donors_needed) {
 			frm.dashboard.add_comment(__("Replacement donors: {0} of {1}", [frm.doc.replacement_donations || 0, frm.doc.replacement_donors_needed]), "blue", true);

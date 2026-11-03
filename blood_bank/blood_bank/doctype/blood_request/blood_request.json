@@ -252,7 +252,7 @@
   },
   {
    "allow_on_submit": 1,
-   "description": "Leave empty: after Submit, click Create > Sales Invoice and it links here. If reception already billed the patient, pick that invoice.",
+   "description": "The patient's own invoice. Bags given by replacement donors are billed on the donors' invoices and counted in Units Billed. Use Create > Sales Invoice for the rest.",
    "fieldname": "sales_invoice",
    "fieldtype": "Link",
    "label": "Sales Invoice",

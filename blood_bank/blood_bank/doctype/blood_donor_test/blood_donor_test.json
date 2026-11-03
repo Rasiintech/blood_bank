@@ -24,6 +24,11 @@
   "hb_ok",
   "sb_tests",
   "tests",
+  "sb_xm",
+  "crossmatch_patient",
+  "crossmatch_result",
+  "cb_xm",
+  "crossmatch_lab_value",
   "sb_v",
   "overall_result",
   "tested_by",
@@ -189,6 +194,37 @@
    "no_copy": 1,
    "options": "Blood Donor Test",
    "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.crossmatch_patient",
+   "fieldname": "sb_xm",
+   "fieldtype": "Section Break",
+   "label": "Crossmatch With Patient"
+  },
+  {
+   "description": "The patient this replacement donor gives for",
+   "fieldname": "crossmatch_patient",
+   "fieldtype": "Link",
+   "label": "Patient",
+   "options": "Patient",
+   "read_only": 1
+  },
+  {
+   "description": "From the 'Cross Matching' line of the donor's lab result. Compatible bags from this donation are offered first at crossmatch.",
+   "fieldname": "crossmatch_result",
+   "fieldtype": "Select",
+   "label": "Crossmatch Result",
+   "options": "\nCompatible\nIncompatible"
+  },
+  {
+   "fieldname": "cb_xm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "crossmatch_lab_value",
+   "fieldtype": "Data",
+   "label": "Lab Value",
    "read_only": 1
   }
  ],

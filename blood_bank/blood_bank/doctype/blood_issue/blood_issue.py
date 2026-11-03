@@ -29,7 +29,7 @@ class BloodIssue(Document):
 			if self.docstatus == 0:
 				self.check_unit(row, frappe.get_doc("Blood Unit", row.blood_unit), req)
 		if self.docstatus == 0:
-			validate_payment_for_issue(req, self.emergency_release)
+			validate_payment_for_issue(req, self.emergency_release, [r.blood_unit for r in self.items])
 
 	def check_unit(self, row, u, req):
 		issue_time = get_datetime(self.issue_datetime)

@@ -138,6 +138,19 @@ def fill_donor_test(test_doc):
 			test_doc.hb_g_dl = hb
 			filled.append(_("Hb: {0}").format(hb))
 
+	if test_doc.meta.has_field("crossmatch_result") and test_doc.donor_screening:
+		patient = frappe.db.get_value("Blood Donor Screening", test_doc.donor_screening, "replacement_for")
+		xm_value = find_value(rows, lines(s.crossmatch_labels) or ["Cross Matching"])
+		if patient and xm_value:
+			test_doc.crossmatch_patient = patient
+			test_doc.crossmatch_lab_value = str(xm_value)[:140]
+			xm = classify_crossmatch(xm_value)
+			if xm:
+				test_doc.crossmatch_result = xm
+				filled.append(_("Crossmatch with patient: {0}").format(xm))
+			else:
+				unread.append(_("Crossmatch '{0}'").format(xm_value))
+
 	for item in test_doc.tests:
 		labels = lines(frappe.db.get_value("Blood Screening Test", item.screening_test, "lab_labels")) or [item.screening_test]
 		value = find_value(rows, labels)

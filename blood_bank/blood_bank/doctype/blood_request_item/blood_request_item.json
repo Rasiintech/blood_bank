@@ -7,6 +7,7 @@
  "field_order": [
   "component",
   "units_required",
+  "units_billed",
   "units_reserved",
   "units_issued",
   "units_transfused"
@@ -49,6 +50,15 @@
    "fieldtype": "Int",
    "in_list_view": 1,
    "label": "Units Transfused",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "description": "From all submitted invoices of this request, including the replacement donors' invoices",
+   "fieldname": "units_billed",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Units Billed",
    "no_copy": 1,
    "read_only": 1
   }

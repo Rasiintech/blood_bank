@@ -97,16 +97,36 @@ def get_compatible_units(blood_request, patient_blood_group=None, exclude=None):
 		rule = frappe.db.get_value("Blood Component", row.component, "compatibility_rule")
 		candidates = frappe.get_all("Blood Unit", filters={"component": row.component, "status": "Available",
 			"test_status": ["in", USABLE_TESTS], "expiry_datetime": [">", now_datetime()]},
-			fields=["name", "component", "blood_group", "expiry_datetime"], order_by="expiry_datetime asc")
-		exact, other = [], []
+			fields=["name", "component", "blood_group", "expiry_datetime", "donor_test"], order_by="expiry_datetime asc")
+		directed, exact, other = [], [], []
+		lab_xm = lab_crossmatches(req.patient)
 		for c in candidates:
 			if c.name in exclude:
 				continue
 			ok, msg = check_compatibility(rule, group, c.blood_group)
-			if ok:
-				(exact if c.blood_group == group else other).append(c)
-		# same group first, then compatible alternatives; each by earliest expiry
-		for c in (exact + other)[:needed]:
-			out.append({"blood_unit": c.name, "component": c.component, "unit_blood_group": c.blood_group,
-				"expiry_datetime": c.expiry_datetime})
+			if not ok:
+				continue
+			xm = lab_xm.get(c.donor_test)
+			if xm and xm.crossmatch_result == "Incompatible":
+				continue
+			c.lab_xm = xm
+			(directed if xm else exact if c.blood_group == group else other).append(c)
+		# the relatives' bags already crossmatched with this patient in the lab first, then same group, then compatible
+		for c in (directed + exact + other)[:needed]:
+			row = {"blood_unit": c.name, "component": c.component, "unit_blood_group": c.blood_group,
+				"expiry_datetime": c.expiry_datetime}
+			if c.lab_xm:
+				row.update(result="Compatible", remarks=_("Lab crossmatch {0} ({1})").format(
+					c.lab_xm.crossmatch_lab_value or "Compatible", c.lab_xm.lab_reference or c.lab_xm.name)[:140])
+			out.append(row)
 	return out
+
+
+def lab_crossmatches(patient):
+	"""Donor Tests whose lab result already crossmatched the donor with this patient (replacement donors)."""
+	if not frappe.get_meta("Blood Donor Test").has_field("crossmatch_result"):
+		return {}
+	rows = frappe.get_all("Blood Donor Test", filters={"crossmatch_patient": patient, "docstatus": 1,
+		"crossmatch_result": ["in", ["Compatible", "Incompatible"]]},
+		fields=["name", "crossmatch_result", "crossmatch_lab_value", "lab_reference"])
+	return {r.name: r for r in rows}
