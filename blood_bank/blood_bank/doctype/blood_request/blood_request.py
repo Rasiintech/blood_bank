@@ -33,6 +33,16 @@ class BloodRequest(Document):
 			set_patient_blood_group(self.patient, self.patient_blood_group)
 		self.update_counts_and_status()
 
+	def onload(self):
+		# billing changes on invoices, so recount whenever the form opens
+		if self.docstatus == 1:
+			from blood_bank.billing import billing_plan, refresh_request_invoice
+			refresh_request_invoice(self.name)
+			for row in self.items:
+				row.units_billed = frappe.db.get_value("Blood Request Item", row.name, "units_billed")
+			self.invoice_status = frappe.db.get_value("Blood Request", self.name, "invoice_status")
+			self.set_onload("billing", billing_plan(self))
+
 	def on_update_after_submit(self):
 		from blood_bank.billing import refresh_request_invoice
 		refresh_request_invoice(self.name)

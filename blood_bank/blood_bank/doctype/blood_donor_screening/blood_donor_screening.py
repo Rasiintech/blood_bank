@@ -174,7 +174,11 @@ class BloodDonorScreening(Document):
 		patient = frappe.db.get_value("Blood Donor", self.donor, "patient")
 		if self.donor_type == "Replacement" and self.blood_request:
 			# the relative's tests are the patient's charge for the bag: invoiced, billed to the patient
-			return make_replacement_invoice(self, patient)
+			doc = make_replacement_invoice(self, patient)
+			if doc:
+				return doc
+			if not templates:
+				frappe.throw(_("All bags of {0} are already billed. Add the Lab Tests to Order in Blood Bank Settings to test extra relatives.").format(self.blood_request))
 		charge = cint(setting("charge_replacement_donors" if self.donor_type == "Replacement" else "charge_voluntary_donors"))
 		doc = make_screening_invoice(self, patient, templates) if charge else make_sample_collection(self, patient, templates)
 		return doc
@@ -329,8 +333,10 @@ def make_replacement_invoice(screening, donor_patient):
 	req = frappe.get_doc("Blood Request", screening.blood_request)
 	refresh_request_invoice(req.name)
 	req.reload()
-	row = next((r for r in req.items if cint(r.units_required) > cint(r.units_billed)), req.items[0] if req.items else None)
-	item = frappe.db.get_value("Blood Component", row.component, "billing_item") if row else None
+	row = next((r for r in req.items if cint(r.units_required) > cint(r.units_billed)), None)
+	if not row:
+		return None  # every bag of the request is already billed: this relative is tested like a voluntary donor
+	item = frappe.db.get_value("Blood Component", row.component, "billing_item")
 	if not item:
 		frappe.throw(_("Set a Billing Item on Blood Component {0} first (e.g. 'Blood Transfusion + Cross Matching Whole Blood')")
 			.format(row.component if row else "-"))

@@ -65,6 +65,10 @@ def before_install():
 def after_install():
 	create_roles()
 	create_masters()
+	try:
+		ensure_component_lab_templates()
+	except Exception:
+		frappe.log_error(title="Blood Bank: could not create component lab test templates")
 	setup_settings()
 	make_custom_fields()
 	from blood_bank.home_tiles import create_home_tiles
@@ -122,6 +126,58 @@ def create_masters():
 		if not frappe.db.exists("Blood Storage", storage):
 			frappe.get_doc({"doctype": "Blood Storage", "storage_name": storage, "storage_type": stype,
 				"min_temp": tmin, "max_temp": tmax}).insert(ignore_permissions=True)
+
+
+# Lines of the bag test when a hospital has no 'Blood Transfusion + Cross Matching' template to copy
+BAG_TEST_LINES = ["HB", "BLOOD GROUPING", "HBSAG SCREENING", "ANTI-HCV SCREENING", "HIV Screening", "Syphilis",
+	"Malaria", "Cross Matching"]
+
+
+def ensure_component_lab_templates():
+	"""Every Blood Component needs a billing item: the hospital's existing 'Blood Transfusion + Cross Matching ...'
+	lab test for that component. Components without one get a new template (copied from the Whole Blood one when it
+	exists, so the lab sees the same result lines); existing templates are never changed."""
+	if not frappe.db.exists("DocType", "Lab Test Template"):
+		return []
+	model = None
+	for comp in frappe.get_all("Blood Component", fields=["billing_item"], filters={"billing_item": ["is", "set"]}):
+		name = frappe.db.get_value("Lab Test Template", {"item": comp.billing_item})
+		if name:
+			model = frappe.get_doc("Lab Test Template", name)
+			if "whole" in name.lower():
+				break
+	department = (model.department if model else None) or frappe.db.get_value("Medical Department", "Haematology") \
+		or frappe.db.get_value("Medical Department", {})
+	group = (model.lab_test_group if model else None) or frappe.db.get_value("Item Group", "Laboratory") \
+		or frappe.db.get_value("Item Group", {"is_group": 0})
+	rate = model.lab_test_rate if model else 0
+	if not (department and group and rate):
+		# no existing bag test to copy the price from: staff set the Billing Item on each Blood Component by hand
+		return []
+	created = []
+	for comp in frappe.get_all("Blood Component", fields=["name", "billing_item"], filters={"disabled": 0}):
+		if comp.billing_item and frappe.db.exists("Item", comp.billing_item):
+			continue
+		title = "Blood Transfusion + Cross Matching " + comp.name
+		existing = frappe.db.get_value("Lab Test Template", {"lab_test_name": title}, "item")
+		if not existing:
+			t = frappe.new_doc("Lab Test Template")
+			t.lab_test_name = title
+			t.lab_test_code = title
+			t.department = department
+			t.lab_test_group = group
+			t.is_billable = 1
+			t.lab_test_rate = rate  # same price as the hospital's existing bag test; change it on the template if needed
+			t.lab_test_template_type = "Compound"
+			lines = [r.lab_test_event for r in model.normal_test_templates] if model and model.normal_test_templates else BAG_TEST_LINES
+			for line in lines:
+				t.append("normal_test_templates", {"lab_test_event": line})
+			t.insert(ignore_permissions=True)
+			existing = frappe.db.get_value("Lab Test Template", t.name, "item")
+			created.append(title)
+		if existing:
+			frappe.db.set_value("Blood Component", comp.name, "billing_item", existing)
+	return created
 
 
 def setup_settings():

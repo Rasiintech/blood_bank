@@ -195,8 +195,24 @@ class TestBloodBankFlow(FrappeTestCase):
 		si.submit()
 		req.reload()
 		self.assertEqual(req.items[0].units_billed, 1)
+		from blood_bank.billing import billing_plan
+		req.reload()
+		plan = billing_plan(req)
+		self.assertEqual((plan["relative_invoices"], plan["relatives_to_bill"], plan["patient_to_bill"]), (1, 1, 0))
+		with self.assertRaises(frappe.ValidationError):
+			make_sales_invoice(req.name)  # the second bag waits for the second relative
+		req.db_set("replacement_donors_needed", 1)  # the second relative will not come
+		req.reload()
 		rest = make_sales_invoice(req.name)
 		self.assertEqual([i.qty for i in rest.items], [1])
+
+	def test_component_lab_templates(self):
+		from blood_bank.install import ensure_component_lab_templates
+		frappe.db.set_value("Blood Component", "Platelets (PLT)", "billing_item", None)
+		ensure_component_lab_templates()
+		item = frappe.db.get_value("Blood Component", "Platelets (PLT)", "billing_item")
+		if item:
+			self.assertTrue(frappe.db.exists("Lab Test Template", {"item": item}))
 
 	def test_bag_type_correction(self):
 		from blood_bank.blood_bank.doctype.blood_donation.blood_donation import correct_bag_type

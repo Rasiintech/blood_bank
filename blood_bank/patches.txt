@@ -6,3 +6,4 @@ blood_bank.patches.v0_1.donor_lab_tests
 blood_bank.patches.v0_1.prep_source_status
 blood_bank.patches.v0_1.request_settings
 blood_bank.patches.v0_1.request_units_billed
+blood_bank.patches.v0_1.component_lab_templates

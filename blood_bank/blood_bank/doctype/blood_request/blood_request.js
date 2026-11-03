@@ -49,15 +49,9 @@ frappe.ui.form.on("Blood Request", {
 		frm.page.set_indicator(__(frm.doc.status), REQUEST_COLORS[frm.doc.status] || "gray");
 		if (frm.doc.docstatus !== 1 || ["Completed", "Cancelled"].includes(frm.doc.status)) return;
 
-		const unbilled = (frm.doc.items || []).reduce((n, r) => n + Math.max((r.units_required || 0) - (r.units_billed || 0), 0), 0);
-		const relatives_pending = Math.max((frm.doc.replacement_donors_needed || 0) - (frm.doc.replacement_donations || 0), 0);
-		if (unbilled > 0) {
-			frm.add_custom_button(__("Sales Invoice ({0} unbilled)", [unbilled]), () => {
-				if (relatives_pending) {
-					return frappe.confirm(__("{0} replacement donor(s) are still expected. Each relative's invoice bills one bag. Bill the remaining {1} bag(s) to the patient now anyway?", [relatives_pending, unbilled]), make);
-				}
-				make();
-			}, __("Create"));
+		const plan = frm.doc.__onload && frm.doc.__onload.billing || {};
+		if (plan.patient_to_bill > 0) {
+			frm.add_custom_button(__("Sales Invoice ({0} bag(s) for the patient)", [plan.patient_to_bill]), () => make(), __("Create"));
 		}
 		const make = () => {
 			frappe.call("blood_bank.billing.make_sales_invoice", { blood_request: frm.doc.name }).then(r => {
@@ -83,12 +77,13 @@ frappe.ui.form.on("Blood Request", {
 			frappe.new_doc("Blood Donor Screening", { donor_type: "Replacement", replacement_for: frm.doc.patient, blood_request: frm.doc.name });
 		}, __("Create"));
 
-		if (frm.doc.invoice_status) {
-			frm.dashboard.add_comment(__("Billing: {0}", [__(frm.doc.invoice_status)]) + (unbilled ? " · " + __("{0} bag(s) not billed yet", [unbilled]) : ""),
-				unbilled ? "orange" : "green", true);
-		} else if (frm.doc.urgency !== "Emergency") {
-			frm.dashboard.add_comment(__("Not billed yet. Each replacement donor's invoice bills one bag; bill the rest with Create > Sales Invoice before issuing."), "orange", true);
-		}
+		const billed = (frm.doc.items || []).reduce((n, r) => n + (r.units_billed || 0), 0);
+		const required = (frm.doc.items || []).reduce((n, r) => n + (r.units_required || 0), 0);
+		const parts = [__("Billed {0} of {1} bag(s)", [billed, required])];
+		if (plan.relative_invoices) parts.push(__("{0} on relatives' invoices", [plan.relative_invoices]));
+		if (plan.relatives_to_bill) parts.push(__("{0} still to come on relatives' invoices (Order Screening Tests on each relative)", [plan.relatives_to_bill]));
+		if (plan.patient_to_bill) parts.push(__("{0} to bill to the patient: Create > Sales Invoice", [plan.patient_to_bill]));
+		frm.dashboard.add_comment(parts.join(" · "), billed >= required ? "green" : "orange", true);
 		if (frm.doc.replacement_donors_needed) {
 			frm.dashboard.add_comment(__("Replacement donors: {0} of {1}", [frm.doc.replacement_donations || 0, frm.doc.replacement_donors_needed]), "blue", true);
 		}

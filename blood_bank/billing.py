@@ -50,6 +50,26 @@ def save_draft(si):
 	return si
 
 
+def billing_plan(req):
+	"""Who pays for which bag. Each relative's invoice bills one bag (on the relative's sample, billed to the
+	inpatient); the patient's own invoice bills the bags no relative is expected to cover. Rows are filled in order,
+	so relatives cover the first component (e.g. Whole Blood / Red Cells) first."""
+	relative_invoices = frappe.db.count("Sales Invoice", {"blood_request": req.name, "docstatus": 1,
+		"blood_donor_screening": ["is", "set"]}) if frappe.get_meta("Sales Invoice").has_field("blood_donor_screening") else 0
+	expected = max(cint(req.replacement_donors_needed) - relative_invoices, 0)
+	rows, patient_total, relatives_total = [], 0, 0
+	for row in req.items:
+		unbilled = max(cint(row.units_required) - cint(row.units_billed), 0)
+		by_relatives = min(unbilled, expected)
+		expected -= by_relatives
+		rows.append({"component": row.component, "billed": cint(row.units_billed), "by_relatives": by_relatives,
+			"by_patient": unbilled - by_relatives})
+		patient_total += unbilled - by_relatives
+		relatives_total += by_relatives
+	return {"rows": rows, "patient_to_bill": patient_total, "relatives_to_bill": relatives_total,
+		"relative_invoices": relative_invoices}
+
+
 @frappe.whitelist()
 def make_sales_invoice(blood_request):
 	"""The patient's invoice for the bags not already billed on replacement donors' invoices."""
@@ -68,8 +88,9 @@ def make_sales_invoice(blood_request):
 	if si.meta.has_field("blood_request"):
 		si.blood_request = req.name
 	missing = []
+	plan = {r["component"]: r["by_patient"] for r in billing_plan(req)["rows"]}
 	for row in req.items:
-		qty = cint(row.units_required) - cint(row.units_billed)
+		qty = plan.get(row.component, 0)
 		if qty <= 0:
 			continue
 		item = frappe.db.get_value("Blood Component", row.component, "billing_item")
@@ -80,8 +101,8 @@ def make_sales_invoice(blood_request):
 	if missing:
 		frappe.throw(_("Set a Billing Item on these Blood Components first: {0}").format(", ".join(missing)))
 	if not si.items:
-		frappe.throw(_("All units of this request are already billed (see Units Billed; replacement donors' invoices count)."),
-			title=_("Already Billed"))
+		frappe.throw(_("Nothing to bill to the patient: the bags are billed, or will be billed on the replacement donors' "
+			"invoices. If a relative will not come, lower Replacement Donors Needed and bill again."), title=_("Nothing to Bill"))
 	prepare_invoice(si, req.patient, req.practitioner, bill_to_inpatient=req.patient if req.inpatient_record else None)
 	si.set_missing_values()
 	si.calculate_taxes_and_totals()
