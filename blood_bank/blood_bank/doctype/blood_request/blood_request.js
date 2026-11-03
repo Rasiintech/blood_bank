@@ -16,8 +16,34 @@ frappe.ui.form.on("Blood Request", {
 		frappe.db.get_value("Patient", frm.doc.patient, "blood_group").then(r => {
 			if (r.message && r.message.blood_group) frm.set_value("patient_blood_group", r.message.blood_group);
 		});
-		frappe.db.get_list("Inpatient Record", { filters: { patient: frm.doc.patient, status: "Admitted" }, fields: ["name"], limit: 1 })
+		if (!frm.doc.inpatient_record) frappe.db.get_list("Inpatient Record", { filters: { patient: frm.doc.patient, status: "Admitted" }, fields: ["name"], limit: 1 })
 			.then(rows => { if (rows.length) frm.set_value("inpatient_record", rows[0].name); });
+		if (frm.doc.docstatus === 0) frm.trigger("get_lab_values");
+	},
+	onload(frm) {
+		if (frm.is_new() && frm.doc.patient) {
+			frm.trigger("get_lab_values");
+			if (!frm.doc.patient_blood_group) frm.trigger("patient");
+		}
+	},
+	get_lab_values(frm) {
+		if (!frm.doc.patient || frm.doc.docstatus !== 0) return;
+		frm.call("get_lab_values").then(r => {
+			frm.refresh_fields();
+			const v = r.message || {};
+			if (v.hb == null && v.platelets == null) {
+				frm.set_df_property("lab_values_from", "description", __("No recent submitted Hb / platelet result for this patient. Order a CBC, or type an outside result."));
+			}
+		});
+	},
+	replacement_donors_needed(frm) { frm.__rep_manual = true; },
+	suggest_donors(frm) {
+		if (frm.__rep_manual || frm.doc.docstatus !== 0) return;
+		frm.call("suggest_replacement_donors").then(r => {
+			frm.doc.replacement_donors_needed = r.message || 0;
+			frm.refresh_field("replacement_donors_needed");
+			frm.dirty();
+		});
 	},
 	refresh(frm) {
 		frm.page.set_indicator(__(frm.doc.status), REQUEST_COLORS[frm.doc.status] || "gray");
@@ -59,4 +85,10 @@ frappe.ui.form.on("Blood Request", {
 			frm.dashboard.add_comment(__("Replacement donors: {0} of {1}", [frm.doc.replacement_donations || 0, frm.doc.replacement_donors_needed]), "blue", true);
 		}
 	},
+});
+
+frappe.ui.form.on("Blood Request Item", {
+	component(frm) { frm.trigger("suggest_donors"); },
+	units_required(frm) { frm.trigger("suggest_donors"); },
+	items_remove(frm) { frm.trigger("suggest_donors"); },
 });

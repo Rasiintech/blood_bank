@@ -28,13 +28,16 @@
   "cb3",
   "hb_g_dl",
   "platelet_count",
+  "lab_values_from",
+  "get_lab_values",
   "previous_transfusion",
   "sb_items",
   "items",
   "sb_rep",
   "replacement_donors_needed",
-  "cb4",
   "replacement_donations",
+  "cb4",
+  "replacement_help",
   "sb_bill",
   "sales_invoice",
   "cb5",
@@ -119,7 +122,8 @@
    "fieldname": "practitioner",
    "fieldtype": "Link",
    "label": "Doctor",
-   "options": "Healthcare Practitioner"
+   "options": "Healthcare Practitioner",
+   "description": "Filled when the request is made from the Encounter or Inpatient Record"
   },
   {
    "fieldname": "practitioner_name",
@@ -148,7 +152,8 @@
    "fieldname": "encounter",
    "fieldtype": "Link",
    "label": "Patient Encounter",
-   "options": "Patient Encounter"
+   "options": "Patient Encounter",
+   "description": "Optional. Filled when the doctor makes the request from the Encounter"
   },
   {
    "fieldname": "medical_department",
@@ -174,12 +179,25 @@
   {
    "fieldname": "hb_g_dl",
    "fieldtype": "Float",
-   "label": "Latest Hb (g/dL)"
+   "label": "Latest Hb (g/dL)",
+   "description": "Taken from the patient's latest submitted lab result. Type it only for outside results."
   },
   {
    "fieldname": "platelet_count",
    "fieldtype": "Float",
-   "label": "Latest Platelet Count"
+   "label": "Latest Platelet Count (x10³/µL)"
+  },
+  {
+   "fieldname": "lab_values_from",
+   "fieldtype": "Data",
+   "label": "Lab Values From",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "get_lab_values",
+   "fieldtype": "Button",
+   "label": "Get Latest Lab Values"
   },
   {
    "fieldname": "previous_transfusion",
@@ -208,18 +226,24 @@
    "fieldname": "replacement_donors_needed",
    "fieldtype": "Int",
    "label": "Replacement Donors Needed",
-   "description": "How many relatives must donate (0 = none)"
+   "description": "Suggested from the units required; change if needed (0 = none)"
+  },
+  {
+   "fieldname": "replacement_donations",
+   "fieldtype": "Int",
+   "label": "Replacement Donations Received",
+   "read_only": 1,
+   "no_copy": 1
   },
   {
    "fieldname": "cb4",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "replacement_donations",
-   "fieldtype": "Int",
-   "label": "Replacement Donations",
-   "read_only": 1,
-   "no_copy": 1
+   "fieldname": "replacement_help",
+   "fieldtype": "HTML",
+   "label": "Replacement Help",
+   "options": "<div class=\"small\" style=\"border:1px solid var(--border-color);border-radius:6px;padding:8px 10px\"><b>How many replacement donors?</b> One donor gives one bag (about 450 ml) = 1 unit. Units are counted in bags, not millilitres. One split bag gives 1 Red Cells + 1 FFP + 1 Platelets, so one donor covers one unit of each.<table class=\"table table-bordered table-sm\" style=\"margin:6px 0\"><tr><th>Patient needs</th><th>Donors (1 per unit)</th></tr><tr><td>2 Whole Blood</td><td>2</td></tr><tr><td>2 Red Cells</td><td>2</td></tr><tr><td>2 Red Cells + 2 FFP</td><td>2 (same bags are split)</td></tr><tr><td>1 Whole Blood + 1 Red Cells</td><td>2 (each needs its own bag)</td></tr><tr><td>4 Platelets</td><td>4</td></tr></table>The number is filled for you from Settings &gt; Replacement Donors per Unit. Change it if the doctor or policy asks for more (e.g. 2 per unit to rebuild stock). Relatives do not need the patient&#39;s blood group: their blood restocks the bank.</div>"
   },
   {
    "fieldname": "sb_bill",
@@ -231,7 +255,9 @@
    "fieldtype": "Link",
    "label": "Sales Invoice",
    "options": "Sales Invoice",
-   "no_copy": 1
+   "no_copy": 1,
+   "allow_on_submit": 1,
+   "description": "Leave empty: after Submit, click Create > Sales Invoice and it links here. If reception already billed the patient, pick that invoice."
   },
   {
    "fieldname": "cb5",

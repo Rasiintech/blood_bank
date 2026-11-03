@@ -33,6 +33,25 @@ class BloodRequest(Document):
 			set_patient_blood_group(self.patient, self.patient_blood_group)
 		self.update_counts_and_status()
 
+	def on_update_after_submit(self):
+		from blood_bank.billing import refresh_request_invoice
+		refresh_request_invoice(self.name)
+
+	@frappe.whitelist()
+	def get_lab_values(self):
+		from blood_bank.lab import latest_patient_values
+		v = latest_patient_values(self.patient)
+		if v["hb"] is not None:
+			self.hb_g_dl = v["hb"]
+		if v["platelets"] is not None:
+			self.platelet_count = v["platelets"]
+		self.lab_values_from = "; ".join(v["sources"])[:140] or None
+		return v
+
+	@frappe.whitelist()
+	def suggest_replacement_donors(self):
+		return suggested_donors(self.items)
+
 	def on_cancel(self):
 		issued = frappe.get_all("Blood Unit", filters={"blood_request": self.name, "status": ["in", ["Issued", "Transfused"]]}, pluck="name")
 		if issued:
@@ -71,3 +90,23 @@ class BloodRequest(Document):
 			status = "Requested"
 		self.db_set({"status": status, "replacement_donations": donations}, update_modified=False)
 		self.status = status
+
+
+def suggested_donors(items):
+	"""One bag per donor. Red cells (Whole Blood / Red Cells) each need their own bag; plasma and platelets
+	come from the same split bags, so the largest of the three groups decides."""
+	import math
+	from blood_bank.utils import setting
+
+	red = plasma = plt = 0
+	for row in items or []:
+		abbr = frappe.db.get_value("Blood Component", row.get("component"), "abbreviation") if row.get("component") else None
+		units = cint(row.get("units_required"))
+		if abbr in ("WB", "RBC"):
+			red += units
+		elif abbr in ("FFP", "PL"):
+			plasma += units
+		else:
+			plt += units
+	per_unit = frappe.utils.flt(setting("replacement_donors_per_unit"))
+	return int(math.ceil(max(red, plasma, plt) * per_unit))

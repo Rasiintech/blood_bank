@@ -150,6 +150,16 @@ class TestBloodBankFlow(FrappeTestCase):
 		self.assertFalse(sc.sample_collection)
 		self.assertFalse(frappe.db.exists("Sample Collection", doc.name))
 
+	def test_suggested_donors_and_lab_values(self):
+		from blood_bank.blood_bank.doctype.blood_request.blood_request import suggested_donors
+		self.assertEqual(suggested_donors([{"component": "Whole Blood", "units_required": 2}]), 2)
+		self.assertEqual(suggested_donors([{"component": "Red Cells (RBC)", "units_required": 2},
+			{"component": "Fresh Frozen Plasma (FFP)", "units_required": 2}]), 2)
+		self.assertEqual(suggested_donors([{"component": "Whole Blood", "units_required": 1},
+			{"component": "Red Cells (RBC)", "units_required": 1}]), 2)
+		from blood_bank.lab import latest_patient_values
+		self.assertIsNone(latest_patient_values(make_patient("NoLab").name)["hb"])
+
 	def test_bag_type_correction(self):
 		from blood_bank.blood_bank.doctype.blood_donation.blood_donation import correct_bag_type
 		donor = make_donor("Bag Donor")

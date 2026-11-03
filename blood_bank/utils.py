@@ -28,6 +28,8 @@ DEFAULTS = {
 	"testing_mode": "Test Donor First", "test_validity_hours": 72,
 	"received_units_status": "Available", "crossmatch_validity_hours": 72,
 	"return_window_minutes": 30, "transfusion_max_hours": 4, "expiry_warning_days": 3,
+	"platelet_labels": "PLT\nPlatelet\nPlatelets\nPlatelet Count", "hb_labels": "HB\nHGB\nHaemoglobin\nHemoglobin",
+	"lab_values_max_age_days": 3, "replacement_donors_per_unit": 1,
 }
 
 

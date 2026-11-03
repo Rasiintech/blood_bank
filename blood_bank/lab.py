@@ -329,3 +329,34 @@ def lab_document_for_screening(lab_doctype, screening):
 			if rows:
 				return rows[0]
 	return None
+
+
+def latest_patient_values(patient):
+	"""Latest Hb and platelet count from the patient's submitted lab documents (newest first, within the age limit)."""
+	from frappe.utils import add_days, now_datetime
+	from blood_bank.utils import setting
+
+	lab_dt = get_settings().lab_doctype
+	out = {"hb": None, "platelets": None, "sources": []}
+	if not (patient and lab_dt and frappe.db.exists("DocType", lab_dt) and frappe.get_meta(lab_dt).has_field("patient")):
+		return out
+	days = frappe.utils.cint(setting("lab_values_max_age_days")) or 3
+	docs = frappe.get_all(lab_dt, filters={"patient": patient, "docstatus": 1, "modified": [">=", add_days(now_datetime(), -days)]},
+		fields=["name", "modified"], order_by="modified desc", limit=30)
+	hb_labels = lines(setting("hb_labels"))
+	plt_labels = lines(setting("platelet_labels"))
+	for d in docs:
+		rows = get_lab_rows(lab_dt, d.name)
+		if out["hb"] is None:
+			v = parse_number(find_value(rows, hb_labels))
+			if v:
+				out["hb"] = v
+				out["sources"].append(_("Hb {0} from {1} ({2})").format(v, d.name, frappe.format(d.modified, "Datetime")))
+		if out["platelets"] is None:
+			v = parse_number(find_value(rows, plt_labels))
+			if v:
+				out["platelets"] = v
+				out["sources"].append(_("Platelets {0} from {1} ({2})").format(v, d.name, frappe.format(d.modified, "Datetime")))
+		if out["hb"] is not None and out["platelets"] is not None:
+			break
+	return out

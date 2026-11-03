@@ -48,7 +48,9 @@
   "cb_l1",
   "blood_group_labels",
   "hb_labels",
+  "platelet_labels",
   "crossmatch_labels",
+  "lab_values_max_age_days",
   "sb_kw",
   "non_reactive_keywords",
   "reactive_keywords",
@@ -63,6 +65,7 @@
   "return_window_minutes",
   "transfusion_max_hours",
   "expiry_warning_days",
+  "replacement_donors_per_unit",
   "sb_stock",
   "stock_levels",
   "sb_label",
@@ -317,10 +320,24 @@
    "description": "The Hb line of the CBC, as the lab writes it"
   },
   {
+   "fieldname": "platelet_labels",
+   "fieldtype": "Small Text",
+   "label": "Platelet Test Names",
+   "default": "PLT\nPlatelet\nPlatelets\nPlatelet Count",
+   "description": "The platelet line of the CBC, as the lab writes it"
+  },
+  {
    "fieldname": "crossmatch_labels",
    "fieldtype": "Small Text",
    "label": "Crossmatch Test Names",
    "default": "Cross Matching"
+  },
+  {
+   "fieldname": "lab_values_max_age_days",
+   "fieldtype": "Int",
+   "label": "Use Patient Lab Values Up To (days old)",
+   "default": "3",
+   "description": "Blood Request takes the patient's latest Hb and platelet count from submitted lab results this recent"
   },
   {
    "fieldname": "sb_kw",
@@ -400,6 +417,13 @@
    "fieldtype": "Int",
    "label": "Expiry Warning Days",
    "default": "3"
+  },
+  {
+   "fieldname": "replacement_donors_per_unit",
+   "fieldtype": "Float",
+   "label": "Replacement Donors per Unit",
+   "default": "1",
+   "description": "Hospital policy: relatives asked to donate for each bag the patient needs. Used to suggest Replacement Donors Needed on the Blood Request."
   },
   {
    "fieldname": "sb_stock",

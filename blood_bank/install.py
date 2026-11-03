@@ -127,7 +127,8 @@ def create_masters():
 def setup_settings():
 	s = frappe.get_single("Blood Bank Settings")
 	for df in s.meta.fields:
-		if df.default and df.fieldtype not in ("Table", "Section Break", "Column Break") and s.get(df.fieldname) in (None, ""):
+		empty = s.get(df.fieldname) in (None, "") or (df.fieldtype in ("Int", "Float") and not s.get(df.fieldname))
+		if df.default and df.fieldtype not in ("Table", "Section Break", "Column Break") and empty:
 			s.set(df.fieldname, df.default)
 	if not s.lab_doctype or not frappe.db.exists("DocType", s.lab_doctype):
 		s.lab_doctype = next((dt for dt in ("Lab Result", "Lab Test") if frappe.db.exists("DocType", dt)), None)

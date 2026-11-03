@@ -4,10 +4,16 @@
 frappe.ui.form.on("Blood Donor Screening", {
 	setup(frm) {
 		frm.set_query("donor", () => ({ filters: { status: ["!=", "Permanently Deferred"] } }));
-		frm.set_query("blood_request", () => ({ filters: { docstatus: 1, status: ["not in", ["Completed", "Cancelled"]] } }));
+		frm.set_query("blood_request", () => {
+			const filters = { docstatus: 1, status: ["not in", ["Completed", "Cancelled"]] };
+			if (frm.doc.replacement_for) filters.patient = frm.doc.replacement_for;
+			return { filters };
+		});
 		frm.set_query("vital_signs", () => ({ filters: { patient: frm.__donor_patient || "", docstatus: ["<", 2] } }));
 	},
 	refresh(frm) {
+		frm.set_df_property("blood_request", "description",
+			__("The patient's open Blood Request, filled automatically. It counts this donor toward the relatives needed."));
 		if (frm.doc.result) {
 			frm.page.set_indicator(__(frm.doc.result), frm.doc.result === "Accepted" ? "green" : "red");
 		}
@@ -104,6 +110,18 @@ frappe.ui.form.on("Blood Donor Screening", {
 	get_vital_signs(frm) {
 		if (!frm.doc.donor) return frappe.msgprint(__("Select the donor first"));
 		frm.call("fetch_vital_signs").then(() => frm.refresh_fields());
+	},
+	replacement_for(frm) {
+		// link the donation to the patient's open request so the request counts its replacement donors
+		if (!frm.doc.replacement_for || frm.doc.blood_request) return;
+		frappe.db.get_list("Blood Request", { filters: { patient: frm.doc.replacement_for, docstatus: 1,
+			status: ["not in", ["Completed", "Cancelled"]] }, fields: ["name"], order_by: "creation desc", limit: 2 }).then(rows => {
+			if (rows.length === 1) frm.set_value("blood_request", rows[0].name);
+			else if (!rows.length) frappe.show_alert({ message: __("This patient has no submitted Blood Request yet"), indicator: "orange" });
+		});
+	},
+	donor_type(frm) {
+		frm.toggle_reqd("replacement_for", frm.doc.donor_type === "Replacement");
 	},
 	blood_request(frm) {
 		if (frm.doc.blood_request) {

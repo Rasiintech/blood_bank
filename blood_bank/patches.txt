@@ -4,3 +4,4 @@
 blood_bank.patches.v0_1.settings_defaults
 blood_bank.patches.v0_1.donor_lab_tests
 blood_bank.patches.v0_1.prep_source_status
+blood_bank.patches.v0_1.request_settings

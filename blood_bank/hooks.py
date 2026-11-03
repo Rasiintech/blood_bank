@@ -17,6 +17,8 @@ after_migrate = "blood_bank.install.after_migrate"
 doctype_js = {
 	"Patient": "public/js/patient.js",
 	"Sales Invoice": "public/js/sales_invoice.js",
+	"Patient Encounter": "public/js/patient_encounter.js",
+	"Inpatient Record": "public/js/inpatient_record.js",
 }
 
 # Document events
