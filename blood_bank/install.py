@@ -200,19 +200,79 @@ def create_billing_items_safely(*args, **kwargs):
 		frappe.log_error(title="Blood Bank: could not create billing items")
 
 
+def reference_item():
+	"""An existing blood billing item to copy accounts and site-specific mandatory fields from
+	(e.g. 'Blood Transfusion + Cross Matching Whole Blood'), so new items fit the hospital's setup."""
+	names = [c.billing_item for c in frappe.get_all("Blood Component", fields=["billing_item", "is_whole_blood"],
+		filters={"billing_item": ["is", "set"]}, order_by="is_whole_blood desc")
+		if not str(c.billing_item).startswith("BB-")]
+	for n in names:
+		if frappe.db.exists("Item", n):
+			return frappe.get_doc("Item", n)
+	for filters in ({"item_group": "Laboratory", "disabled": 0, "is_sales_item": 1}, {"disabled": 0, "is_sales_item": 1, "is_stock_item": 0}):
+		n = frappe.db.get_value("Item", dict(filters, name=["not like", "BB-%"]))
+		if n:
+			return frappe.get_doc("Item", n)
+	return None
+
+
+DEFAULT_FIELDS = ("company", "income_account", "selling_cost_center", "default_discount_account", "default_price_list")
+
+
+def copy_defaults(rows, target, table):
+	"""Company defaults (income account, cost center...) from rows into target's table; fills gaps, never overwrites."""
+	for r in rows or []:
+		if not r.get("company"):
+			continue
+		row = next((t for t in target.get(table) or [] if t.company == r.company), None)
+		if not row:
+			row = target.append(table, {"company": r.company})
+		for f in DEFAULT_FIELDS:
+			if r.get(f) and not row.get(f):
+				row.set(f, r.get(f))
+
+
+def fill_mandatory(doc, ref):
+	"""Fields the hospital made mandatory on its own (e.g. an Income Account custom field): take them from ref."""
+	if not ref:
+		return
+	for df in doc.meta.fields:
+		if df.reqd and df.fieldtype not in ("Table", "Table MultiSelect", "Section Break", "Column Break", "Tab Break") \
+				and not doc.get(df.fieldname) and ref.get(df.fieldname):
+			doc.set(df.fieldname, ref.get(df.fieldname))
+
+
 def create_billing_items(switch_components=False):
 	"""Create the BB- service items (never changes existing ones) and use them where nothing better is set.
-	switch_components: also move components still billed with an old lab test template item to the BB- item."""
+	switch_components: also move components still billed with an old lab test template item to the BB- item.
+	Accounts and any site-specific mandatory fields are copied from the hospital's existing blood item."""
+	ref = reference_item()
+	ref_group = frappe.get_doc("Item Group", ref.item_group) if ref and ref.item_group and frappe.db.exists("Item Group", ref.item_group) else None
 	if not frappe.db.exists("Item Group", "Blood Bank Services"):
-		frappe.get_doc({"doctype": "Item Group", "item_group_name": "Blood Bank Services", "is_group": 0,
-			"parent_item_group": frappe.db.get_value("Item Group", {"is_group": 1, "parent_item_group": ["in", ["", None]]}) or "All Item Groups"}).insert(ignore_permissions=True)
+		group = frappe.get_doc({"doctype": "Item Group", "item_group_name": "Blood Bank Services", "is_group": 0,
+			"parent_item_group": frappe.db.get_value("Item Group", {"is_group": 1, "parent_item_group": ["in", ["", None]]}) or "All Item Groups"})
+	else:
+		group = frappe.get_doc("Item Group", "Blood Bank Services")
+	if ref_group:
+		copy_defaults(ref_group.get("item_group_defaults"), group, "item_group_defaults")
+	if ref:
+		copy_defaults(ref.get("item_defaults"), group, "item_group_defaults")
+	fill_mandatory(group, ref_group)
+	group.flags.ignore_permissions = True
+	group.save()
 	uom = "Nos" if frappe.db.exists("UOM", "Nos") else frappe.db.get_value("UOM", {})
+	created = []
 	changes = []
 	for code, name, target in BILLING_ITEMS:
 		if not frappe.db.exists("Item", code):
-			frappe.get_doc({"doctype": "Item", "item_code": code, "item_name": name, "item_group": "Blood Bank Services",
+			item = frappe.get_doc({"doctype": "Item", "item_code": code, "item_name": name, "item_group": "Blood Bank Services",
 				"stock_uom": uom, "is_stock_item": 0, "is_sales_item": 1, "include_item_in_manufacturing": 0,
-				"description": name}).insert(ignore_permissions=True)
+				"description": name})
+			if ref:
+				copy_defaults(ref.get("item_defaults"), item, "item_defaults")
+			fill_mandatory(item, ref)
+			item.insert(ignore_permissions=True)
+			created.append(code)
 		if target.endswith("_item"):
 			if not frappe.db.get_single_value("Blood Bank Settings", target):
 				frappe.db.set_single_value("Blood Bank Settings", target, code)
