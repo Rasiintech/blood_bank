@@ -1,6 +1,6 @@
 {
  "actions": [],
- "allow_rename": 0,
+ "autoname": "BTRX-.YYYY.-.#####",
  "creation": "2026-11-02 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -48,57 +48,57 @@
    "reqd": 1
   },
   {
+   "fetch_from": "blood_transfusion.patient",
    "fieldname": "patient",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Patient",
    "options": "Patient",
-   "read_only": 1,
-   "fetch_from": "blood_transfusion.patient",
-   "in_list_view": 1,
-   "in_standard_filter": 1
+   "read_only": 1
   },
   {
+   "fetch_from": "blood_transfusion.patient_name",
    "fieldname": "patient_name",
    "fieldtype": "Data",
    "label": "Patient Name",
-   "read_only": 1,
-   "fetch_from": "blood_transfusion.patient_name"
+   "read_only": 1
   },
   {
+   "fetch_from": "blood_transfusion.blood_unit",
    "fieldname": "blood_unit",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Blood Unit",
    "options": "Blood Unit",
-   "read_only": 1,
-   "fetch_from": "blood_transfusion.blood_unit",
-   "in_list_view": 1
+   "read_only": 1
   },
   {
    "fieldname": "cb1",
    "fieldtype": "Column Break"
   },
   {
+   "default": "Now",
    "fieldname": "onset_datetime",
    "fieldtype": "Datetime",
    "label": "Onset",
-   "reqd": 1,
-   "default": "Now"
+   "reqd": 1
   },
   {
    "fieldname": "reaction_type",
    "fieldtype": "Select",
-   "label": "Reaction Type",
-   "options": "\nFebrile Non-Haemolytic\nAllergic (Mild)\nAnaphylactic\nAcute Haemolytic\nDelayed Haemolytic\nCirculatory Overload (TACO)\nLung Injury (TRALI)\nBacterial Contamination\nOther / Unknown",
    "in_list_view": 1,
-   "in_standard_filter": 1
+   "in_standard_filter": 1,
+   "label": "Reaction Type",
+   "options": "\nFebrile Non-Haemolytic\nAllergic (Mild)\nAnaphylactic\nAcute Haemolytic\nDelayed Haemolytic\nCirculatory Overload (TACO)\nLung Injury (TRALI)\nBacterial Contamination\nOther / Unknown"
   },
   {
    "fieldname": "severity",
    "fieldtype": "Select",
-   "label": "Severity",
-   "options": "\nMild\nModerate\nSevere\nLife-Threatening\nDeath",
    "in_list_view": 1,
-   "in_standard_filter": 1
+   "in_standard_filter": 1,
+   "label": "Severity",
+   "options": "\nMild\nModerate\nSevere\nLife-Threatening\nDeath"
   },
   {
    "fieldname": "sb_s",
@@ -186,11 +186,11 @@
    "options": "\nRecovered\nRecovering\nLasting Harm\nDeath\nUnknown"
   },
   {
+   "default": "__user",
    "fieldname": "reported_by",
    "fieldtype": "Link",
    "label": "Reported By",
-   "options": "User",
-   "default": "__user"
+   "options": "User"
   },
   {
    "fieldname": "sb_i",
@@ -222,93 +222,87 @@
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
-   "options": "Blood Transfusion Reaction",
-   "read_only": 1,
    "no_copy": 1,
-   "print_hide": 1
+   "options": "Blood Transfusion Reaction",
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
- "index_web_pages_for_search": 0,
+ "is_submittable": 1,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Transfusion Reaction",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Officer",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   },
   {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Nursing User",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 0,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
    "share": 1,
    "submit": 1,
-   "cancel": 0,
-   "amend": 0
+   "write": 1
   },
   {
-   "role": "Physician",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 0,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
-   "share": 1,
-   "submit": 1,
+   "amend": 1,
    "cancel": 1,
-   "amend": 1
-  },
-  {
-   "role": "Blood Bank Technician",
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
    "read": 1,
    "report": 1,
-   "print": 1
+   "role": "Physician",
+   "share": 1,
+   "submit": 1,
+   "write": 1
   },
   {
-   "role": "System Manager",
+   "print": 1,
    "read": 1,
-   "write": 1,
+   "report": 1,
+   "role": "Blood Bank Technician"
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
-   "report": 1,
+   "email": 1,
    "export": 1,
    "print": 1,
-   "email": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   }
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1,
- "is_submittable": 1,
- "autoname": "BTRX-.YYYY.-.#####",
- "naming_rule": "Expression (old style)",
- "title_field": "patient_name"
+ "title_field": "patient_name",
+ "track_changes": 1
 }

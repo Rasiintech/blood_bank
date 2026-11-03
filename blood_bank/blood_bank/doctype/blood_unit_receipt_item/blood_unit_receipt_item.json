@@ -1,6 +1,5 @@
 {
  "actions": [],
- "allow_rename": 0,
  "creation": "2026-11-02 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -19,25 +18,25 @@
   {
    "fieldname": "external_unit_number",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Supplier Unit No.",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
    "fieldname": "component",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Component",
    "options": "Blood Component",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
    "fieldname": "blood_group",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "Blood Group",
    "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
    "fieldname": "volume_ml",
@@ -52,28 +51,28 @@
   {
    "fieldname": "expiry_datetime",
    "fieldtype": "Datetime",
+   "in_list_view": 1,
    "label": "Expiry",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
    "fieldname": "storage",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Storage",
-   "options": "Blood Storage",
-   "in_list_view": 1
+   "options": "Blood Storage"
   },
   {
    "fieldname": "blood_unit",
    "fieldtype": "Link",
-   "label": "Blood Unit",
-   "options": "Blood Unit",
-   "read_only": 1,
    "in_list_view": 1,
-   "no_copy": 1
+   "label": "Blood Unit",
+   "no_copy": 1,
+   "options": "Blood Unit",
+   "read_only": 1
   }
  ],
- "index_web_pages_for_search": 0,
+ "istable": 1,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
@@ -83,7 +82,5 @@
  "permissions": [],
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": [],
- "track_changes": 0,
- "istable": 1
+ "states": []
 }

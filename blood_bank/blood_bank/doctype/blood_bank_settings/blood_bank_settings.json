@@ -1,6 +1,5 @@
 {
  "actions": [],
- "allow_rename": 0,
  "creation": "2026-11-02 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -78,117 +77,117 @@
    "label": "Donor Eligibility"
   },
   {
+   "default": "18",
    "fieldname": "min_donor_age",
    "fieldtype": "Int",
-   "label": "Min Donor Age",
-   "default": "18"
+   "label": "Min Donor Age"
   },
   {
+   "default": "65",
    "fieldname": "max_donor_age",
    "fieldtype": "Int",
-   "label": "Max Donor Age",
-   "default": "65"
+   "label": "Max Donor Age"
   },
   {
+   "default": "45",
    "fieldname": "min_weight_kg",
    "fieldtype": "Float",
-   "label": "Minimum Weight (kg)",
-   "default": "45"
+   "label": "Minimum Weight (kg)"
   },
   {
    "fieldname": "cb_d1",
    "fieldtype": "Column Break"
   },
   {
+   "default": "13",
    "fieldname": "min_hb_male",
    "fieldtype": "Float",
-   "label": "Minimum Hb Male (g/dL)",
-   "default": "13"
+   "label": "Minimum Hb Male (g/dL)"
   },
   {
+   "default": "12.5",
    "fieldname": "min_hb_female",
    "fieldtype": "Float",
-   "label": "Minimum Hb Female (g/dL)",
-   "default": "12.5"
+   "label": "Minimum Hb Female (g/dL)"
   },
   {
    "fieldname": "cb_d2",
    "fieldtype": "Column Break"
   },
   {
+   "default": "84",
    "fieldname": "donation_interval_male",
    "fieldtype": "Int",
-   "label": "Days Between Donations (Male)",
-   "default": "84"
+   "label": "Days Between Donations (Male)"
   },
   {
+   "default": "112",
    "fieldname": "donation_interval_female",
    "fieldtype": "Int",
-   "label": "Days Between Donations (Female)",
-   "default": "112"
+   "label": "Days Between Donations (Female)"
   },
   {
+   "description": "Set these from your national guideline. A value outside the range defers the donor.",
    "fieldname": "sb_vitals",
    "fieldtype": "Section Break",
-   "label": "Vital Sign Limits",
-   "description": "Set these from your national guideline. A value outside the range defers the donor."
+   "label": "Vital Sign Limits"
   },
   {
+   "default": "90",
    "fieldname": "min_systolic",
    "fieldtype": "Int",
-   "label": "Min Systolic",
-   "default": "90"
+   "label": "Min Systolic"
   },
   {
+   "default": "149",
    "fieldname": "max_systolic",
    "fieldtype": "Int",
-   "label": "Max Systolic",
-   "default": "149"
+   "label": "Max Systolic"
   },
   {
    "fieldname": "cb_v1",
    "fieldtype": "Column Break"
   },
   {
+   "default": "50",
    "fieldname": "min_diastolic",
    "fieldtype": "Int",
-   "label": "Min Diastolic",
-   "default": "50"
+   "label": "Min Diastolic"
   },
   {
+   "default": "99",
    "fieldname": "max_diastolic",
    "fieldtype": "Int",
-   "label": "Max Diastolic",
-   "default": "99"
+   "label": "Max Diastolic"
   },
   {
    "fieldname": "cb_v2",
    "fieldtype": "Column Break"
   },
   {
+   "default": "50",
    "fieldname": "min_pulse",
    "fieldtype": "Int",
-   "label": "Min Pulse",
-   "default": "50"
+   "label": "Min Pulse"
   },
   {
+   "default": "100",
    "fieldname": "max_pulse",
    "fieldtype": "Int",
-   "label": "Max Pulse",
-   "default": "100"
+   "label": "Max Pulse"
   },
   {
+   "default": "37.5",
    "fieldname": "max_temperature",
    "fieldtype": "Float",
-   "label": "Max Temperature (°C)",
-   "default": "37.5"
+   "label": "Max Temperature (\u00b0C)"
   },
   {
+   "default": "24",
+   "description": "Screening copies weight, BP, pulse and temperature from the donor's latest Vital Signs in this window",
    "fieldname": "vital_signs_max_age_hours",
    "fieldtype": "Int",
-   "label": "Use Vital Signs Recorded Within (hours)",
-   "default": "24",
-   "description": "Screening copies weight, BP, pulse and temperature from the donor's latest Vital Signs in this window"
+   "label": "Use Vital Signs Recorded Within (hours)"
   },
   {
    "fieldname": "sb_q",
@@ -202,29 +201,29 @@
    "options": "Blood Screening Question"
   },
   {
+   "description": "Order Screening Tests on an accepted screening orders these lab tests for the donor's Patient. Free: a Sample Collection is created directly. Charged: a Sales Invoice is created and your normal lab flow follows. The Donor Test fills itself when the Lab Result is submitted.",
    "fieldname": "sb_order",
    "fieldtype": "Section Break",
-   "label": "Donor Screening Order",
-   "description": "Order Screening Tests on an accepted screening orders these lab tests for the donor's Patient. Free: a Sample Collection is created directly. Charged: a Sales Invoice is created and your normal lab flow follows. The Donor Test fills itself when the Lab Result is submitted."
+   "label": "Donor Screening Order"
   },
   {
+   "description": "Your existing Lab Test Templates, e.g. CBC (for Hb), BLOOD GROUPING, HBSAG SCREENING, ANTI-HCV SCREENING, HIV Screening, Syphilis, Malaria",
    "fieldname": "donor_lab_tests",
    "fieldtype": "Table",
    "label": "Lab Tests to Order",
-   "options": "Blood Donor Lab Test",
-   "description": "Your existing Lab Test Templates, e.g. CBC (for Hb), BLOOD GROUPING, HBSAG SCREENING, ANTI-HCV SCREENING, HIV Screening, Syphilis, Malaria"
+   "options": "Blood Donor Lab Test"
   },
   {
+   "description": "Off: no invoice, the Sample Collection is created directly",
    "fieldname": "charge_voluntary_donors",
    "fieldtype": "Check",
-   "label": "Charge Voluntary Donors",
-   "description": "Off: no invoice, the Sample Collection is created directly"
+   "label": "Charge Voluntary Donors"
   },
   {
+   "default": "1",
    "fieldname": "charge_replacement_donors",
    "fieldtype": "Check",
-   "label": "Charge Replacement Donors",
-   "default": "1"
+   "label": "Charge Replacement Donors"
   },
   {
    "fieldname": "sb_test",
@@ -232,146 +231,146 @@
    "label": "Testing"
   },
   {
+   "default": "Test Donor First",
+   "description": "Test Donor First: results must be clear before the bag is collected. Test the Bag: bag is collected first and stays in Quarantine until results are clear.",
    "fieldname": "testing_mode",
    "fieldtype": "Select",
    "label": "Testing Mode",
-   "options": "Test Donor First\nTest the Bag",
-   "default": "Test Donor First",
-   "description": "Test Donor First: results must be clear before the bag is collected. Test the Bag: bag is collected first and stays in Quarantine until results are clear."
+   "options": "Test Donor First\nTest the Bag"
   },
   {
+   "default": "72",
+   "description": "Test Donor First mode: a donor test older than this cannot be used for a donation.",
    "fieldname": "test_validity_hours",
    "fieldtype": "Int",
-   "label": "Test Result Valid For (hours)",
-   "default": "72",
-   "description": "Test Donor First mode: a donor test older than this cannot be used for a donation."
+   "label": "Test Result Valid For (hours)"
   },
   {
    "fieldname": "cb_t1",
    "fieldtype": "Column Break"
   },
   {
+   "description": "Off (recommended): the Blood Bank Officer releases each unit. On: units become Available as soon as tests are clear.",
    "fieldname": "auto_release_cleared_units",
    "fieldtype": "Check",
-   "label": "Auto Release Cleared Units",
-   "description": "Off (recommended): the Blood Bank Officer releases each unit. On: units become Available as soon as tests are clear."
+   "label": "Auto Release Cleared Units"
   },
   {
+   "default": "Available",
    "fieldname": "received_units_status",
    "fieldtype": "Select",
    "label": "Status of Received Units",
-   "options": "Available\nQuarantine",
-   "default": "Available"
+   "options": "Available\nQuarantine"
   },
   {
+   "default": "0",
+   "description": "0 = no limit",
    "fieldname": "max_hours_to_split",
    "fieldtype": "Int",
-   "label": "Max Hours From Collection to Split",
-   "default": "0",
-   "description": "0 = no limit"
+   "label": "Max Hours From Collection to Split"
   },
   {
+   "collapsible": 1,
    "fieldname": "sb_lab",
    "fieldtype": "Section Break",
-   "label": "Lab Integration",
-   "collapsible": 1
+   "label": "Lab Integration"
   },
   {
+   "description": "Doctype that holds lab results (e.g. Lab Result or Lab Test). Leave empty to type results manually.",
    "fieldname": "lab_doctype",
    "fieldtype": "Link",
    "label": "Lab Doctype",
-   "options": "DocType",
-   "description": "Doctype that holds lab results (e.g. Lab Result or Lab Test). Leave empty to type results manually."
+   "options": "DocType"
   },
   {
+   "description": "Leave empty to detect automatically",
    "fieldname": "lab_results_table",
    "fieldtype": "Data",
-   "label": "Results Child Table Field",
-   "description": "Leave empty to detect automatically"
+   "label": "Results Child Table Field"
   },
   {
+   "description": "Leave empty to detect automatically",
    "fieldname": "lab_test_name_field",
    "fieldtype": "Data",
-   "label": "Test Name Field (in child table)",
-   "description": "Leave empty to detect automatically"
+   "label": "Test Name Field (in child table)"
   },
   {
+   "description": "Leave empty to detect automatically",
    "fieldname": "lab_result_value_field",
    "fieldtype": "Data",
-   "label": "Result Value Field (in child table)",
-   "description": "Leave empty to detect automatically"
+   "label": "Result Value Field (in child table)"
   },
   {
    "fieldname": "cb_l1",
    "fieldtype": "Column Break"
   },
   {
+   "default": "BLOOD GROUPING\nBlood group (recheck)",
+   "description": "One per line, as written in the lab template",
    "fieldname": "blood_group_labels",
    "fieldtype": "Small Text",
-   "label": "Blood Group Test Names",
-   "default": "BLOOD GROUPING\nBlood group (recheck)",
-   "description": "One per line, as written in the lab template"
+   "label": "Blood Group Test Names"
   },
   {
+   "default": "HB\nHGB\nHaemoglobin\nHemoglobin",
+   "description": "The Hb line of the CBC, as the lab writes it",
    "fieldname": "hb_labels",
    "fieldtype": "Small Text",
-   "label": "Hb Test Names",
-   "default": "HB\nHGB\nHaemoglobin\nHemoglobin",
-   "description": "The Hb line of the CBC, as the lab writes it"
+   "label": "Hb Test Names"
   },
   {
+   "default": "PLT\nPlatelet\nPlatelets\nPlatelet Count",
+   "description": "The platelet line of the CBC, as the lab writes it",
    "fieldname": "platelet_labels",
    "fieldtype": "Small Text",
-   "label": "Platelet Test Names",
-   "default": "PLT\nPlatelet\nPlatelets\nPlatelet Count",
-   "description": "The platelet line of the CBC, as the lab writes it"
+   "label": "Platelet Test Names"
   },
   {
+   "default": "Cross Matching",
    "fieldname": "crossmatch_labels",
    "fieldtype": "Small Text",
-   "label": "Crossmatch Test Names",
-   "default": "Cross Matching"
+   "label": "Crossmatch Test Names"
   },
   {
+   "default": "3",
+   "description": "Blood Request takes the patient's latest Hb and platelet count from submitted lab results this recent",
    "fieldname": "lab_values_max_age_days",
    "fieldtype": "Int",
-   "label": "Use Patient Lab Values Up To (days old)",
-   "default": "3",
-   "description": "Blood Request takes the patient's latest Hb and platelet count from submitted lab results this recent"
+   "label": "Use Patient Lab Values Up To (days old)"
   },
   {
+   "collapsible": 1,
    "fieldname": "sb_kw",
    "fieldtype": "Section Break",
-   "label": "Result Keywords",
-   "collapsible": 1
+   "label": "Result Keywords"
   },
   {
+   "default": "non-reactive\nnon reactive\nnonreactive\nnegative\nneg\n-ve\nnot detected\nnil\nnr",
    "fieldname": "non_reactive_keywords",
    "fieldtype": "Small Text",
-   "label": "Non Reactive Keywords",
-   "default": "non-reactive\nnon reactive\nnonreactive\nnegative\nneg\n-ve\nnot detected\nnil\nnr"
+   "label": "Non Reactive Keywords"
   },
   {
+   "default": "reactive\npositive\npos\n+ve\ndetected",
    "fieldname": "reactive_keywords",
    "fieldtype": "Small Text",
-   "label": "Reactive Keywords",
-   "default": "reactive\npositive\npos\n+ve\ndetected"
+   "label": "Reactive Keywords"
   },
   {
    "fieldname": "cb_kw",
    "fieldtype": "Column Break"
   },
   {
+   "default": "compatible\nmatched\nno agglutination",
    "fieldname": "compatible_keywords",
    "fieldtype": "Small Text",
-   "label": "Compatible Keywords",
-   "default": "compatible\nmatched\nno agglutination"
+   "label": "Compatible Keywords"
   },
   {
+   "default": "incompatible\nnot compatible\nagglutination",
    "fieldname": "incompatible_keywords",
    "fieldtype": "Small Text",
-   "label": "Incompatible Keywords",
-   "default": "incompatible\nnot compatible\nagglutination"
+   "label": "Incompatible Keywords"
   },
   {
    "fieldname": "sb_issue",
@@ -379,17 +378,17 @@
    "label": "Crossmatch, Issue and Transfusion"
   },
   {
+   "default": "72",
    "fieldname": "crossmatch_validity_hours",
    "fieldtype": "Int",
-   "label": "Crossmatch Valid For (hours)",
-   "default": "72"
+   "label": "Crossmatch Valid For (hours)"
   },
   {
+   "default": "1",
+   "description": "Blood is issued only when the request has a submitted Sales Invoice (except Emergency).",
    "fieldname": "require_invoice_before_issue",
    "fieldtype": "Check",
-   "label": "Require Invoice Before Issue",
-   "default": "1",
-   "description": "Blood is issued only when the request has a submitted Sales Invoice (except Emergency)."
+   "label": "Require Invoice Before Issue"
   },
   {
    "fieldname": "require_paid_invoice",
@@ -401,29 +400,29 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "30",
    "fieldname": "return_window_minutes",
    "fieldtype": "Int",
-   "label": "Return Window (minutes)",
-   "default": "30"
+   "label": "Return Window (minutes)"
   },
   {
+   "default": "4",
    "fieldname": "transfusion_max_hours",
    "fieldtype": "Int",
-   "label": "Transfusion Must Finish Within (hours of issue)",
-   "default": "4"
+   "label": "Transfusion Must Finish Within (hours of issue)"
   },
   {
+   "default": "3",
    "fieldname": "expiry_warning_days",
    "fieldtype": "Int",
-   "label": "Expiry Warning Days",
-   "default": "3"
+   "label": "Expiry Warning Days"
   },
   {
+   "default": "1",
+   "description": "Hospital policy: relatives asked to donate for each bag the patient needs. Used to suggest Replacement Donors Needed on the Blood Request.",
    "fieldname": "replacement_donors_per_unit",
    "fieldtype": "Float",
-   "label": "Replacement Donors per Unit",
-   "default": "1",
-   "description": "Hospital policy: relatives asked to donate for each bag the patient needs. Used to suggest Replacement Donors Needed on the Blood Request."
+   "label": "Replacement Donors per Unit"
   },
   {
    "fieldname": "sb_stock",
@@ -447,7 +446,7 @@
    "label": "Hospital Name on Labels"
   }
  ],
- "index_web_pages_for_search": 0,
+ "issingle": 1,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
@@ -456,39 +455,38 @@
  "owner": "Administrator",
  "permissions": [
   {
+   "create": 1,
+   "print": 1,
+   "read": 1,
    "role": "Blood Bank Officer",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "print": 1
+   "write": 1
   },
   {
+   "create": 1,
+   "print": 1,
+   "read": 1,
    "role": "System Manager",
+   "write": 1
+  },
+  {
    "read": 1,
-   "write": 1,
-   "create": 1,
-   "print": 1
+   "role": "Blood Bank Technician"
   },
   {
-   "role": "Blood Bank Technician",
-   "read": 1
+   "read": 1,
+   "role": "Blood Bank Reception"
   },
   {
-   "role": "Blood Bank Reception",
-   "read": 1
+   "read": 1,
+   "role": "Physician"
   },
   {
-   "role": "Physician",
-   "read": 1
-  },
-  {
-   "role": "Nursing User",
-   "read": 1
+   "read": 1,
+   "role": "Nursing User"
   }
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1,
- "issingle": 1
+ "track_changes": 1
 }

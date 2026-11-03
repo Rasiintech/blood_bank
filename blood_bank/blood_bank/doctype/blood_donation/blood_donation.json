@@ -1,6 +1,6 @@
 {
  "actions": [],
- "allow_rename": 0,
+ "autoname": "naming_series:",
  "creation": "2026-11-02 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -36,47 +36,47 @@
  ],
  "fields": [
   {
+   "default": "BB-.YY.-.#####",
+   "description": "The donation number is printed on the bag label",
    "fieldname": "naming_series",
    "fieldtype": "Select",
-   "label": "Naming Series",
-   "options": "BB-.YY.-.#####",
-   "default": "BB-.YY.-.#####",
    "hidden": 1,
-   "description": "The donation number is printed on the bag label"
+   "label": "Naming Series",
+   "options": "BB-.YY.-.#####"
   },
   {
    "fieldname": "donor",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Donor",
    "options": "Blood Donor",
-   "reqd": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1
+   "reqd": 1
   },
   {
+   "fetch_from": "donor.donor_name",
    "fieldname": "donor_name",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Donor Name",
-   "read_only": 1,
-   "fetch_from": "donor.donor_name",
-   "in_list_view": 1
+   "read_only": 1
   },
   {
+   "fetch_from": "donor.sex",
    "fieldname": "sex",
    "fieldtype": "Data",
    "label": "Sex",
-   "read_only": 1,
-   "fetch_from": "donor.sex"
+   "read_only": 1
   },
   {
    "fieldname": "blood_group",
    "fieldtype": "Select",
-   "label": "Blood Group",
-   "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
-   "read_only": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "no_copy": 1
+   "label": "Blood Group",
+   "no_copy": 1,
+   "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
+   "read_only": 1
   },
   {
    "fieldname": "cb1",
@@ -90,35 +90,35 @@
    "reqd": 1
   },
   {
+   "description": "Required when testing mode is Test Donor First",
    "fieldname": "donor_test",
    "fieldtype": "Link",
    "label": "Donor Test",
-   "options": "Blood Donor Test",
-   "description": "Required when testing mode is Test Donor First"
+   "options": "Blood Donor Test"
   },
   {
+   "fetch_from": "donor_screening.donor_type",
    "fieldname": "donor_type",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Donor Type",
-   "read_only": 1,
-   "fetch_from": "donor_screening.donor_type",
-   "in_list_view": 1
+   "read_only": 1
   },
   {
+   "fetch_from": "donor_screening.replacement_for",
    "fieldname": "replacement_for",
    "fieldtype": "Link",
    "label": "Replacement For (Patient)",
    "options": "Patient",
-   "read_only": 1,
-   "fetch_from": "donor_screening.replacement_for"
+   "read_only": 1
   },
   {
+   "fetch_from": "donor_screening.blood_request",
    "fieldname": "blood_request",
    "fieldtype": "Link",
    "label": "Blood Request",
    "options": "Blood Request",
-   "read_only": 1,
-   "fetch_from": "donor_screening.blood_request"
+   "read_only": 1
   },
   {
    "fieldname": "sb_c",
@@ -126,25 +126,25 @@
    "label": "Collection"
   },
   {
+   "default": "Now",
    "fieldname": "collection_datetime",
    "fieldtype": "Datetime",
    "label": "Collection Datetime",
-   "reqd": 1,
-   "default": "Now"
+   "reqd": 1
   },
   {
+   "description": "Choose from the bag set used for this donor. See the table on the right.",
    "fieldname": "bag_type",
    "fieldtype": "Select",
    "label": "Bag Type",
    "options": "\nSingle\nDouble\nTriple\nQuadruple",
-   "reqd": 1,
-   "description": "Choose from the bag set used for this donor. See the table on the right."
+   "reqd": 1
   },
   {
+   "default": "450",
    "fieldname": "volume_ml",
    "fieldtype": "Int",
    "label": "Volume (ml)",
-   "default": "450",
    "reqd": 1
   },
   {
@@ -168,18 +168,18 @@
    "label": "End Time"
   },
   {
+   "description": "Where the whole blood bag is stored",
    "fieldname": "storage",
    "fieldtype": "Link",
    "label": "Storage",
-   "options": "Blood Storage",
-   "description": "Where the whole blood bag is stored"
+   "options": "Blood Storage"
   },
   {
+   "default": "__user",
    "fieldname": "collected_by",
    "fieldtype": "Link",
    "label": "Collected By",
-   "options": "User",
-   "default": "__user"
+   "options": "User"
   },
   {
    "fieldname": "sb_r",
@@ -192,10 +192,10 @@
    "label": "Donor Had a Reaction"
   },
   {
+   "depends_on": "donor_reaction",
    "fieldname": "reaction_notes",
    "fieldtype": "Small Text",
-   "label": "Reaction Notes",
-   "depends_on": "donor_reaction"
+   "label": "Reaction Notes"
   },
   {
    "fieldname": "sb_u",
@@ -206,80 +206,78 @@
    "fieldname": "blood_unit",
    "fieldtype": "Link",
    "label": "Whole Blood Unit",
+   "no_copy": 1,
    "options": "Blood Unit",
-   "read_only": 1,
-   "no_copy": 1
+   "read_only": 1
   },
   {
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
-   "options": "Blood Donation",
-   "read_only": 1,
    "no_copy": 1,
-   "print_hide": 1
+   "options": "Blood Donation",
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
- "index_web_pages_for_search": 0,
+ "is_submittable": 1,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Donation",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Officer",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   },
   {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Technician",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   },
   {
-   "role": "System Manager",
-   "read": 1,
-   "write": 1,
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
-   "report": 1,
+   "email": 1,
    "export": 1,
    "print": 1,
-   "email": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   }
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1,
- "is_submittable": 1,
- "autoname": "naming_series:",
- "naming_rule": "By \"Naming Series\" field",
- "title_field": "donor_name"
+ "title_field": "donor_name",
+ "track_changes": 1
 }

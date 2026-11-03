@@ -1,6 +1,5 @@
 {
  "actions": [],
- "allow_rename": 0,
  "creation": "2026-11-02 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -15,26 +14,26 @@
   {
    "fieldname": "question",
    "fieldtype": "Small Text",
-   "label": "Question",
-   "reqd": 1,
    "in_list_view": 1,
-   "read_only": 1
+   "label": "Question",
+   "read_only": 1,
+   "reqd": 1
   },
   {
+   "columns": 2,
    "fieldname": "answer",
    "fieldtype": "Select",
-   "label": "Answer",
-   "options": "\nYes\nNo",
    "in_list_view": 1,
-   "columns": 2
+   "label": "Answer",
+   "options": "\nYes\nNo"
   },
   {
+   "columns": 1,
    "fieldname": "defer_if_answer",
    "fieldtype": "Select",
    "label": "Defer If Answer",
    "options": "Yes\nNo",
-   "read_only": 1,
-   "columns": 1
+   "read_only": 1
   },
   {
    "fieldname": "deferral_reason",
@@ -44,7 +43,7 @@
    "read_only": 1
   }
  ],
- "index_web_pages_for_search": 0,
+ "istable": 1,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
@@ -54,7 +53,5 @@
  "permissions": [],
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": [],
- "track_changes": 0,
- "istable": 1
+ "states": []
 }

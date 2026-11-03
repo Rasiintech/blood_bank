@@ -1,6 +1,6 @@
 {
  "actions": [],
- "allow_rename": 0,
+ "autoname": "naming_series:",
  "creation": "2026-11-02 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -31,46 +31,46 @@
  ],
  "fields": [
   {
+   "default": "BD-.#####",
    "fieldname": "naming_series",
    "fieldtype": "Select",
+   "hidden": 1,
    "label": "Naming Series",
-   "options": "BD-.#####",
-   "default": "BD-.#####",
-   "hidden": 1
+   "options": "BD-.#####"
   },
   {
+   "description": "Pick the person's Patient record (create one first if new). Name, sex, age and mobile come from it.",
    "fieldname": "patient",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Patient",
    "options": "Patient",
    "reqd": 1,
-   "unique": 1,
-   "in_list_view": 1,
-   "description": "Pick the person's Patient record (create one first if new). Name, sex, age and mobile come from it."
+   "unique": 1
   },
   {
+   "bold": 1,
+   "fetch_from": "patient.patient_name",
    "fieldname": "donor_name",
    "fieldtype": "Data",
-   "label": "Full Name",
-   "read_only": 1,
-   "fetch_from": "patient.patient_name",
    "in_list_view": 1,
-   "bold": 1
+   "label": "Full Name",
+   "read_only": 1
   },
   {
+   "fetch_from": "patient.sex",
    "fieldname": "sex",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Sex",
-   "read_only": 1,
-   "fetch_from": "patient.sex",
-   "in_list_view": 1
+   "read_only": 1
   },
   {
+   "fetch_from": "patient.dob",
    "fieldname": "date_of_birth",
    "fieldtype": "Date",
    "label": "Date Of Birth",
-   "read_only": 1,
-   "fetch_from": "patient.dob"
+   "read_only": 1
   },
   {
    "fieldname": "age_years",
@@ -83,29 +83,29 @@
    "fieldtype": "Column Break"
   },
   {
+   "fetch_from": "patient.mobile",
    "fieldname": "mobile_no",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Mobile No",
-   "read_only": 1,
-   "fetch_from": "patient.mobile",
-   "in_list_view": 1
+   "read_only": 1
   },
   {
+   "description": "Set by the first donor test; also saved on the Patient. To change it use Correct Blood Group (Blood Bank Officer).",
    "fieldname": "blood_group",
    "fieldtype": "Select",
-   "label": "Blood Group",
-   "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
-   "read_only": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "description": "Set by the first donor test; also saved on the Patient. To change it use Correct Blood Group (Blood Bank Officer)."
+   "label": "Blood Group",
+   "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
+   "read_only": 1
   },
   {
+   "default": "Voluntary",
    "fieldname": "default_donor_type",
    "fieldtype": "Select",
    "label": "Default Donor Type",
-   "options": "Voluntary\nReplacement",
-   "default": "Voluntary"
+   "options": "Voluntary\nReplacement"
   },
   {
    "fieldname": "sb_status",
@@ -113,14 +113,14 @@
    "label": "Eligibility"
   },
   {
+   "default": "Active",
    "fieldname": "status",
    "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Status",
    "options": "Active\nTemporarily Deferred\nPermanently Deferred",
-   "default": "Active",
-   "read_only": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1
+   "read_only": 1
   },
   {
    "fieldname": "deferred_until",
@@ -138,18 +138,18 @@
   {
    "fieldname": "deferral_source",
    "fieldtype": "Dynamic Link",
+   "hidden": 1,
    "label": "Deferral Source",
    "options": "deferral_source_type",
-   "read_only": 1,
-   "hidden": 1
+   "read_only": 1
   },
   {
    "fieldname": "deferral_source_type",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Deferral Source Type",
    "options": "DocType",
-   "read_only": 1,
-   "hidden": 1
+   "read_only": 1
   },
   {
    "fieldname": "cb2",
@@ -184,70 +184,66 @@
    "label": "Notes"
   }
  ],
- "index_web_pages_for_search": 0,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Donor",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Officer",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
-   "share": 1
+   "share": 1,
+   "write": 1
   },
   {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Technician",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 0,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
-   "share": 1
+   "share": 1,
+   "write": 1
   },
   {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Reception",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 0,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
-   "share": 1
+   "share": 1,
+   "write": 1
   },
   {
-   "role": "System Manager",
-   "read": 1,
-   "write": 1,
    "create": 1,
    "delete": 1,
-   "report": 1,
+   "email": 1,
    "export": 1,
    "print": 1,
-   "email": 1,
-   "share": 1
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
   }
  ],
+ "search_fields": "donor_name,patient,mobile_no,blood_group",
+ "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1,
- "autoname": "naming_series:",
- "naming_rule": "By \"Naming Series\" field",
  "title_field": "donor_name",
- "search_fields": "donor_name,patient,mobile_no,blood_group",
- "show_title_field_in_link": 1
+ "track_changes": 1
 }

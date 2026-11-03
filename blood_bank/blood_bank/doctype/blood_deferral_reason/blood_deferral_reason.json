@@ -1,6 +1,6 @@
 {
  "actions": [],
- "allow_rename": 0,
+ "autoname": "field:reason",
  "creation": "2026-11-02 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -15,25 +15,25 @@
   {
    "fieldname": "reason",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Reason",
    "reqd": 1,
-   "unique": 1,
-   "in_list_view": 1
+   "unique": 1
   },
   {
    "fieldname": "deferral_type",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "Deferral Type",
    "options": "Temporary\nPermanent",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
+   "depends_on": "eval:doc.deferral_type=='Temporary'",
    "fieldname": "default_days",
    "fieldtype": "Int",
-   "label": "Deferral Days",
    "in_list_view": 1,
-   "depends_on": "eval:doc.deferral_type=='Temporary'"
+   "label": "Deferral Days"
   },
   {
    "fieldname": "description",
@@ -41,55 +41,53 @@
    "label": "Description"
   }
  ],
- "index_web_pages_for_search": 0,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Deferral Reason",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Officer",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
-   "share": 1
+   "share": 1,
+   "write": 1
   },
   {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "System Manager",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
    "print": 1,
-   "email": 1,
-   "share": 1
-  },
-  {
-   "role": "Blood Bank Technician",
    "read": 1,
    "report": 1,
-   "print": 1
+   "role": "Blood Bank Technician"
   },
   {
-   "role": "Blood Bank Reception",
+   "print": 1,
    "read": 1,
    "report": 1,
-   "print": 1
+   "role": "Blood Bank Reception"
   }
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1,
- "autoname": "field:reason",
- "naming_rule": "By fieldname"
+ "track_changes": 1
 }

@@ -1,6 +1,6 @@
 {
  "actions": [],
- "allow_rename": 0,
+ "autoname": "BR-.YYYY.-.#####",
  "creation": "2026-11-02 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -48,54 +48,54 @@
   {
    "fieldname": "patient",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Patient",
    "options": "Patient",
-   "reqd": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1
+   "reqd": 1
   },
   {
+   "fetch_from": "patient.patient_name",
    "fieldname": "patient_name",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Patient Name",
-   "read_only": 1,
-   "fetch_from": "patient.patient_name",
-   "in_list_view": 1
+   "read_only": 1
   },
   {
+   "fetch_from": "patient.sex",
    "fieldname": "sex",
    "fieldtype": "Data",
    "label": "Sex",
-   "read_only": 1,
-   "fetch_from": "patient.sex"
+   "read_only": 1
   },
   {
+   "description": "Taken from the patient record; enter it from the grouping result if empty",
    "fieldname": "patient_blood_group",
    "fieldtype": "Select",
    "label": "Patient Blood Group",
-   "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
-   "description": "Taken from the patient record; enter it from the grouping result if empty"
+   "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative"
   },
   {
    "fieldname": "cb1",
    "fieldtype": "Column Break"
   },
   {
+   "default": "Now",
    "fieldname": "request_datetime",
    "fieldtype": "Datetime",
    "label": "Request Datetime",
-   "reqd": 1,
-   "default": "Now"
+   "reqd": 1
   },
   {
+   "default": "Routine",
    "fieldname": "urgency",
    "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Urgency",
    "options": "Routine\nUrgent\nEmergency",
-   "default": "Routine",
-   "reqd": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1
+   "reqd": 1
   },
   {
    "fieldname": "required_by",
@@ -103,15 +103,15 @@
    "label": "Required By"
   },
   {
+   "default": "Draft",
    "fieldname": "status",
    "fieldtype": "Select",
-   "label": "Status",
-   "options": "Draft\nRequested\nAwaiting Donor\nCrossmatched\nPartially Issued\nIssued\nCompleted\nCancelled",
-   "default": "Draft",
-   "read_only": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "no_copy": 1
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nRequested\nAwaiting Donor\nCrossmatched\nPartially Issued\nIssued\nCompleted\nCancelled",
+   "read_only": 1
   },
   {
    "fieldname": "sb_src",
@@ -119,24 +119,24 @@
    "label": "Ordered By"
   },
   {
+   "description": "Filled when the request is made from the Encounter or Inpatient Record",
    "fieldname": "practitioner",
    "fieldtype": "Link",
    "label": "Doctor",
-   "options": "Healthcare Practitioner",
-   "description": "Filled when the request is made from the Encounter or Inpatient Record"
+   "options": "Healthcare Practitioner"
   },
   {
+   "fetch_from": "practitioner.practitioner_name",
    "fieldname": "practitioner_name",
    "fieldtype": "Data",
    "label": "Doctor Name",
-   "read_only": 1,
-   "fetch_from": "practitioner.practitioner_name"
+   "read_only": 1
   },
   {
+   "description": "For patients referred with a paper request",
    "fieldname": "external_practitioner",
    "fieldtype": "Data",
-   "label": "External Doctor",
-   "description": "For patients referred with a paper request"
+   "label": "External Doctor"
   },
   {
    "fieldname": "cb2",
@@ -149,11 +149,11 @@
    "options": "Inpatient Record"
   },
   {
+   "description": "Optional. Filled when the doctor makes the request from the Encounter",
    "fieldname": "encounter",
    "fieldtype": "Link",
    "label": "Patient Encounter",
-   "options": "Patient Encounter",
-   "description": "Optional. Filled when the doctor makes the request from the Encounter"
+   "options": "Patient Encounter"
   },
   {
    "fieldname": "medical_department",
@@ -177,22 +177,22 @@
    "fieldtype": "Column Break"
   },
   {
+   "description": "Taken from the patient's latest submitted lab result. Type it only for outside results.",
    "fieldname": "hb_g_dl",
    "fieldtype": "Float",
-   "label": "Latest Hb (g/dL)",
-   "description": "Taken from the patient's latest submitted lab result. Type it only for outside results."
+   "label": "Latest Hb (g/dL)"
   },
   {
    "fieldname": "platelet_count",
    "fieldtype": "Float",
-   "label": "Latest Platelet Count (x10³/µL)"
+   "label": "Latest Platelet Count (x10\u00b3/\u00b5L)"
   },
   {
    "fieldname": "lab_values_from",
    "fieldtype": "Data",
    "label": "Lab Values From",
-   "read_only": 1,
-   "no_copy": 1
+   "no_copy": 1,
+   "read_only": 1
   },
   {
    "fieldname": "get_lab_values",
@@ -223,17 +223,17 @@
    "label": "Replacement Donors"
   },
   {
+   "description": "Suggested from the units required; change if needed (0 = none)",
    "fieldname": "replacement_donors_needed",
    "fieldtype": "Int",
-   "label": "Replacement Donors Needed",
-   "description": "Suggested from the units required; change if needed (0 = none)"
+   "label": "Replacement Donors Needed"
   },
   {
    "fieldname": "replacement_donations",
    "fieldtype": "Int",
    "label": "Replacement Donations Received",
-   "read_only": 1,
-   "no_copy": 1
+   "no_copy": 1,
+   "read_only": 1
   },
   {
    "fieldname": "cb4",
@@ -251,13 +251,13 @@
    "label": "Billing"
   },
   {
+   "allow_on_submit": 1,
+   "description": "Leave empty: after Submit, click Create > Sales Invoice and it links here. If reception already billed the patient, pick that invoice.",
    "fieldname": "sales_invoice",
    "fieldtype": "Link",
    "label": "Sales Invoice",
-   "options": "Sales Invoice",
    "no_copy": 1,
-   "allow_on_submit": 1,
-   "description": "Leave empty: after Submit, click Create > Sales Invoice and it links here. If reception already billed the patient, pick that invoice."
+   "options": "Sales Invoice"
   },
   {
    "fieldname": "cb5",
@@ -267,118 +267,112 @@
    "fieldname": "invoice_status",
    "fieldtype": "Data",
    "label": "Invoice Status",
-   "read_only": 1,
-   "no_copy": 1
+   "no_copy": 1,
+   "read_only": 1
   },
   {
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
-   "options": "Blood Request",
-   "read_only": 1,
    "no_copy": 1,
-   "print_hide": 1
+   "options": "Blood Request",
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
- "index_web_pages_for_search": 0,
+ "is_submittable": 1,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Request",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Officer",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   },
   {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Technician",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   },
   {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Reception",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 0,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
    "share": 1,
    "submit": 1,
-   "cancel": 0,
-   "amend": 0
+   "write": 1
   },
   {
-   "role": "Physician",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 0,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
-   "share": 1,
-   "submit": 1,
+   "amend": 1,
    "cancel": 1,
-   "amend": 1
-  },
-  {
-   "role": "Nursing User",
-   "read": 1,
-   "write": 1,
    "create": 1,
-   "submit": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
    "report": 1,
-   "print": 1
+   "role": "Physician",
+   "share": 1,
+   "submit": 1,
+   "write": 1
   },
   {
-   "role": "System Manager",
+   "create": 1,
+   "print": 1,
    "read": 1,
-   "write": 1,
+   "report": 1,
+   "role": "Nursing User",
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
-   "report": 1,
+   "email": 1,
    "export": 1,
    "print": 1,
-   "email": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   }
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1,
- "is_submittable": 1,
- "autoname": "BR-.YYYY.-.#####",
- "naming_rule": "Expression (old style)",
- "title_field": "patient_name"
+ "title_field": "patient_name",
+ "track_changes": 1
 }

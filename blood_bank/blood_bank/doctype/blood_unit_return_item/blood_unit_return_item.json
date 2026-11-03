@@ -1,6 +1,5 @@
 {
  "actions": [],
- "allow_rename": 0,
  "creation": "2026-11-02 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -17,42 +16,42 @@
   {
    "fieldname": "blood_unit",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Blood Unit",
    "options": "Blood Unit",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
+   "fetch_from": "blood_unit.component",
    "fieldname": "component",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Component",
    "options": "Blood Component",
-   "read_only": 1,
-   "in_list_view": 1,
-   "fetch_from": "blood_unit.component"
+   "read_only": 1
   },
   {
+   "default": "1",
    "fieldname": "seal_intact",
    "fieldtype": "Check",
-   "label": "Seal Intact",
-   "default": "1",
-   "in_list_view": 1
+   "in_list_view": 1,
+   "label": "Seal Intact"
   },
   {
    "fieldname": "minutes_out",
    "fieldtype": "Int",
-   "label": "Minutes Out of Storage",
-   "read_only": 1,
    "in_list_view": 1,
-   "no_copy": 1
+   "label": "Minutes Out of Storage",
+   "no_copy": 1,
+   "read_only": 1
   },
   {
    "fieldname": "outcome",
    "fieldtype": "Data",
-   "label": "Outcome",
-   "read_only": 1,
    "in_list_view": 1,
-   "no_copy": 1
+   "label": "Outcome",
+   "no_copy": 1,
+   "read_only": 1
   },
   {
    "fieldname": "remarks",
@@ -60,7 +59,7 @@
    "label": "Remarks"
   }
  ],
- "index_web_pages_for_search": 0,
+ "istable": 1,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
@@ -70,7 +69,5 @@
  "permissions": [],
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": [],
- "track_changes": 0,
- "istable": 1
+ "states": []
 }

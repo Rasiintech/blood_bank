@@ -1,6 +1,6 @@
 {
  "actions": [],
- "allow_rename": 0,
+ "autoname": "BRT-.YYYY.-.#####",
  "creation": "2026-11-02 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -21,37 +21,37 @@
   {
    "fieldname": "blood_issue",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Blood Issue",
    "options": "Blood Issue",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
+   "fetch_from": "blood_issue.patient",
    "fieldname": "patient",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Patient",
    "options": "Patient",
-   "read_only": 1,
-   "fetch_from": "blood_issue.patient",
-   "in_list_view": 1
+   "read_only": 1
   },
   {
+   "fetch_from": "blood_issue.patient_name",
    "fieldname": "patient_name",
    "fieldtype": "Data",
    "label": "Patient Name",
-   "read_only": 1,
-   "fetch_from": "blood_issue.patient_name"
+   "read_only": 1
   },
   {
    "fieldname": "cb1",
    "fieldtype": "Column Break"
   },
   {
+   "default": "Now",
    "fieldname": "return_datetime",
    "fieldtype": "Datetime",
    "label": "Return Datetime",
-   "reqd": 1,
-   "default": "Now"
+   "reqd": 1
   },
   {
    "fieldname": "returned_by",
@@ -59,11 +59,11 @@
    "label": "Returned By"
   },
   {
+   "default": "__user",
    "fieldname": "received_by",
    "fieldtype": "Link",
    "label": "Received By",
-   "options": "User",
-   "default": "__user"
+   "options": "User"
   },
   {
    "fieldname": "sb_i",
@@ -81,71 +81,69 @@
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
-   "options": "Blood Unit Return",
-   "read_only": 1,
    "no_copy": 1,
-   "print_hide": 1
+   "options": "Blood Unit Return",
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
- "index_web_pages_for_search": 0,
+ "is_submittable": 1,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Unit Return",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Officer",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   },
   {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Technician",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   },
   {
-   "role": "System Manager",
-   "read": 1,
-   "write": 1,
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
-   "report": 1,
+   "email": 1,
    "export": 1,
    "print": 1,
-   "email": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   }
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1,
- "is_submittable": 1,
- "autoname": "BRT-.YYYY.-.#####",
- "naming_rule": "Expression (old style)"
+ "track_changes": 1
 }

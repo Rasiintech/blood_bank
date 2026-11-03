@@ -1,6 +1,6 @@
 {
  "actions": [],
- "allow_rename": 0,
+ "autoname": "BTR-.YYYY.-.#####",
  "creation": "2026-11-02 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -67,62 +67,62 @@
   {
    "fieldname": "blood_unit",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Blood Unit",
    "options": "Blood Unit",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
+   "fetch_from": "blood_unit.component",
    "fieldname": "component",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Component",
    "options": "Blood Component",
-   "read_only": 1,
-   "fetch_from": "blood_unit.component",
-   "in_list_view": 1
+   "read_only": 1
   },
   {
+   "fetch_from": "blood_unit.blood_group",
    "fieldname": "unit_blood_group",
    "fieldtype": "Data",
    "label": "Unit Blood Group",
-   "read_only": 1,
-   "fetch_from": "blood_unit.blood_group"
+   "read_only": 1
   },
   {
    "fieldname": "cb1",
    "fieldtype": "Column Break"
   },
   {
+   "fetch_from": "blood_issue.patient",
    "fieldname": "patient",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Patient",
    "options": "Patient",
-   "read_only": 1,
-   "fetch_from": "blood_issue.patient",
-   "in_list_view": 1,
-   "in_standard_filter": 1
+   "read_only": 1
   },
   {
+   "fetch_from": "blood_issue.patient_name",
    "fieldname": "patient_name",
    "fieldtype": "Data",
    "label": "Patient Name",
-   "read_only": 1,
-   "fetch_from": "blood_issue.patient_name"
+   "read_only": 1
   },
   {
+   "fetch_from": "blood_issue.patient_blood_group",
    "fieldname": "patient_blood_group",
    "fieldtype": "Data",
    "label": "Patient Blood Group",
-   "read_only": 1,
-   "fetch_from": "blood_issue.patient_blood_group"
+   "read_only": 1
   },
   {
+   "fetch_from": "blood_issue.blood_request",
    "fieldname": "blood_request",
    "fieldtype": "Link",
    "label": "Blood Request",
    "options": "Blood Request",
-   "read_only": 1,
-   "fetch_from": "blood_issue.blood_request"
+   "read_only": 1
   },
   {
    "fieldname": "sb_chk",
@@ -149,11 +149,11 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "__user",
    "fieldname": "first_checker",
    "fieldtype": "Link",
    "label": "First Checker",
    "options": "User",
-   "default": "__user",
    "reqd": 1
   },
   {
@@ -169,11 +169,11 @@
    "label": "Transfusion"
   },
   {
+   "default": "Now",
    "fieldname": "start_datetime",
    "fieldtype": "Datetime",
    "label": "Start",
-   "reqd": 1,
-   "default": "Now"
+   "reqd": 1
   },
   {
    "fieldname": "end_datetime",
@@ -190,26 +190,26 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "In Progress",
    "fieldname": "outcome",
    "fieldtype": "Select",
-   "label": "Outcome",
-   "options": "In Progress\nCompleted\nStopped - Reaction\nStopped - Other",
-   "default": "In Progress",
    "in_list_view": 1,
-   "in_standard_filter": 1
+   "in_standard_filter": 1,
+   "label": "Outcome",
+   "options": "In Progress\nCompleted\nStopped - Reaction\nStopped - Other"
   },
   {
+   "depends_on": "eval:doc.outcome && doc.outcome.indexOf('Stopped')===0",
    "fieldname": "stop_reason",
    "fieldtype": "Small Text",
-   "label": "Stop Reason",
-   "depends_on": "eval:doc.outcome && doc.outcome.indexOf('Stopped')===0"
+   "label": "Stop Reason"
   },
   {
    "fieldname": "exceeded_time_limit",
    "fieldtype": "Check",
    "label": "Exceeded Time Limit",
-   "read_only": 1,
-   "no_copy": 1
+   "no_copy": 1,
+   "read_only": 1
   },
   {
    "fieldname": "reaction_observed",
@@ -224,7 +224,7 @@
   {
    "fieldname": "pre_temperature",
    "fieldtype": "Float",
-   "label": "Temperature (°C)"
+   "label": "Temperature (\u00b0C)"
   },
   {
    "fieldname": "pre_pulse",
@@ -258,7 +258,7 @@
   {
    "fieldname": "mid_temperature",
    "fieldtype": "Float",
-   "label": "Temperature (°C)"
+   "label": "Temperature (\u00b0C)"
   },
   {
    "fieldname": "mid_pulse",
@@ -292,7 +292,7 @@
   {
    "fieldname": "post_temperature",
    "fieldtype": "Float",
-   "label": "Temperature (°C)"
+   "label": "Temperature (\u00b0C)"
   },
   {
    "fieldname": "post_pulse",
@@ -332,93 +332,88 @@
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
-   "options": "Blood Transfusion",
-   "read_only": 1,
    "no_copy": 1,
-   "print_hide": 1
+   "options": "Blood Transfusion",
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
- "index_web_pages_for_search": 0,
+ "is_submittable": 1,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Transfusion",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Officer",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   },
   {
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Nursing User",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 0,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 0
+   "write": 1
   },
   {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Physician",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 0,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   },
   {
-   "role": "Blood Bank Technician",
+   "print": 1,
    "read": 1,
    "report": 1,
-   "print": 1
+   "role": "Blood Bank Technician"
   },
   {
-   "role": "System Manager",
-   "read": 1,
-   "write": 1,
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
-   "report": 1,
+   "email": 1,
    "export": 1,
    "print": 1,
-   "email": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   }
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1,
- "is_submittable": 1,
- "autoname": "BTR-.YYYY.-.#####",
- "naming_rule": "Expression (old style)",
- "title_field": "patient_name"
+ "title_field": "patient_name",
+ "track_changes": 1
 }

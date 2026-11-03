@@ -1,7 +1,8 @@
 {
  "actions": [],
- "allow_rename": 0,
+ "autoname": "field:unit_number",
  "creation": "2026-11-02 12:00:00.000000",
+ "default_print_format": "Blood Unit Label",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -50,31 +51,31 @@
  ],
  "fields": [
   {
+   "bold": 1,
    "fieldname": "unit_number",
    "fieldtype": "Data",
    "label": "Unit Number",
-   "reqd": 1,
-   "unique": 1,
    "read_only": 1,
-   "bold": 1
+   "reqd": 1,
+   "unique": 1
   },
   {
+   "default": "Quarantine",
    "fieldname": "status",
    "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Status",
    "options": "Quarantine\nAvailable\nReserved\nIssued\nTransfused\nDiscarded\nExpired\nProcessed",
-   "default": "Quarantine",
-   "read_only": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1
+   "read_only": 1
   },
   {
    "fieldname": "test_status",
    "fieldtype": "Select",
+   "in_standard_filter": 1,
    "label": "Test Status",
    "options": "Pending\nCleared\nReactive\nOn Hold\nNot Required",
-   "read_only": 1,
-   "in_standard_filter": 1
+   "read_only": 1
   },
   {
    "fieldname": "cb1",
@@ -83,22 +84,22 @@
   {
    "fieldname": "component",
    "fieldtype": "Link",
-   "label": "Component",
-   "options": "Blood Component",
-   "reqd": 1,
-   "read_only": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1
-  },
-  {
-   "fieldname": "blood_group",
-   "fieldtype": "Select",
-   "label": "Blood Group",
-   "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
-   "read_only": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "description": "Empty only while a first-time donor's bag waits for grouping"
+   "label": "Component",
+   "options": "Blood Component",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "description": "Empty only while a first-time donor's bag waits for grouping",
+   "fieldname": "blood_group",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Blood Group",
+   "options": "\nA Positive\nA Negative\nB Positive\nB Negative\nAB Positive\nAB Negative\nO Positive\nO Negative",
+   "read_only": 1
   },
   {
    "fieldname": "volume_ml",
@@ -117,20 +118,20 @@
    "read_only": 1
   },
   {
+   "description": "Collection time + the component's shelf life (see Blood Component)",
    "fieldname": "expiry_datetime",
    "fieldtype": "Datetime",
-   "label": "Expiry",
-   "reqd": 1,
-   "read_only": 1,
    "in_list_view": 1,
-   "description": "Collection time + the component's shelf life (see Blood Component)"
+   "label": "Expiry",
+   "read_only": 1,
+   "reqd": 1
   },
   {
    "fieldname": "storage",
    "fieldtype": "Link",
+   "in_standard_filter": 1,
    "label": "Storage",
-   "options": "Blood Storage",
-   "in_standard_filter": 1
+   "options": "Blood Storage"
   },
   {
    "fieldname": "sb_src",
@@ -140,10 +141,10 @@
   {
    "fieldname": "source",
    "fieldtype": "Select",
+   "in_standard_filter": 1,
    "label": "Source",
    "options": "Donation\nReceived\nPrepared",
-   "read_only": 1,
-   "in_standard_filter": 1
+   "read_only": 1
   },
   {
    "fieldname": "blood_donation",
@@ -201,16 +202,16 @@
    "fieldtype": "Link",
    "label": "Donor",
    "options": "Blood Donor",
-   "read_only": 1,
-   "permlevel": 1
+   "permlevel": 1,
+   "read_only": 1
   },
   {
    "fieldname": "donor_test",
    "fieldtype": "Link",
    "label": "Donor Test",
    "options": "Blood Donor Test",
-   "read_only": 1,
-   "permlevel": 1
+   "permlevel": 1,
+   "read_only": 1
   },
   {
    "fieldname": "sb_alloc",
@@ -225,11 +226,11 @@
    "read_only": 1
   },
   {
+   "fetch_from": "reserved_for.patient_name",
    "fieldname": "reserved_patient_name",
    "fieldtype": "Data",
    "label": "Patient Name",
-   "read_only": 1,
-   "fetch_from": "reserved_for.patient_name"
+   "read_only": 1
   },
   {
    "fieldname": "blood_request",
@@ -322,83 +323,80 @@
    "label": "Remarks"
   }
  ],
- "index_web_pages_for_search": 0,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Unit",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
-   "role": "Blood Bank Officer",
-   "read": 1,
-   "write": 1,
-   "report": 1,
    "export": 1,
    "print": 1,
-   "share": 1
-  },
-  {
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Officer",
-   "read": 1,
-   "write": 1,
-   "permlevel": 1
+   "share": 1,
+   "write": 1
   },
   {
+   "permlevel": 1,
+   "read": 1,
+   "role": "Blood Bank Officer",
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Technician",
-   "read": 1,
-   "write": 1,
-   "report": 1,
-   "print": 1
+   "write": 1
   },
   {
-   "role": "Blood Bank Technician",
+   "permlevel": 1,
    "read": 1,
-   "permlevel": 1
+   "role": "Blood Bank Technician"
   },
   {
-   "role": "Blood Bank Reception",
+   "print": 1,
    "read": 1,
    "report": 1,
-   "print": 1
+   "role": "Blood Bank Reception"
   },
   {
-   "role": "Physician",
+   "print": 1,
    "read": 1,
    "report": 1,
-   "print": 1
+   "role": "Physician"
   },
   {
-   "role": "Nursing User",
+   "print": 1,
    "read": 1,
    "report": 1,
-   "print": 1
+   "role": "Nursing User"
   },
   {
-   "role": "System Manager",
-   "read": 1,
-   "write": 1,
    "create": 1,
    "delete": 1,
-   "report": 1,
    "export": 1,
-   "print": 1
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "write": 1
   },
   {
-   "role": "System Manager",
+   "permlevel": 1,
    "read": 1,
-   "write": 1,
-   "permlevel": 1
+   "role": "System Manager",
+   "write": 1
   }
  ],
+ "search_fields": "component,blood_group,status",
  "sort_field": "expiry_datetime",
  "sort_order": "ASC",
  "states": [],
- "track_changes": 1,
- "autoname": "field:unit_number",
- "naming_rule": "By fieldname",
  "title_field": "unit_number",
- "search_fields": "component,blood_group,status",
- "default_print_format": "Blood Unit Label"
+ "track_changes": 1
 }

@@ -11,10 +11,18 @@
  "owner": "Administrator",
  "page_name": "blood-bank-dashboard",
  "roles": [
-  {"role": "Blood Bank Officer"},
-  {"role": "Blood Bank Technician"},
-  {"role": "Blood Bank Reception"},
-  {"role": "System Manager"}
+  {
+   "role": "Blood Bank Officer"
+  },
+  {
+   "role": "Blood Bank Technician"
+  },
+  {
+   "role": "Blood Bank Reception"
+  },
+  {
+   "role": "System Manager"
+  }
  ],
  "script": null,
  "standard": "Yes",

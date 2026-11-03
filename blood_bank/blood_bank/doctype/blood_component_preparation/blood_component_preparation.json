@@ -1,6 +1,6 @@
 {
  "actions": [],
- "allow_rename": 0,
+ "autoname": "BCP-.YYYY.-.#####",
  "creation": "2026-11-02 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -26,40 +26,40 @@
   {
    "fieldname": "source_unit",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Whole Blood Unit",
    "options": "Blood Unit",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
+   "fetch_from": "source_unit.blood_group",
    "fieldname": "blood_group",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Blood Group",
-   "read_only": 1,
-   "fetch_from": "source_unit.blood_group",
-   "in_list_view": 1
+   "read_only": 1
   },
   {
+   "fetch_from": "source_unit.status",
    "fieldname": "source_status",
    "fieldtype": "Data",
    "label": "Unit Status",
-   "read_only": 1,
-   "fetch_from": "source_unit.status"
+   "read_only": 1
   },
   {
+   "fetch_from": "source_unit.blood_donation",
    "fieldname": "blood_donation",
    "fieldtype": "Link",
    "label": "Blood Donation",
    "options": "Blood Donation",
-   "read_only": 1,
-   "fetch_from": "source_unit.blood_donation"
+   "read_only": 1
   },
   {
+   "description": "From the donation",
    "fieldname": "bag_type",
    "fieldtype": "Data",
    "label": "Bag Type",
-   "read_only": 1,
-   "description": "From the donation"
+   "read_only": 1
   },
   {
    "fieldname": "max_components",
@@ -78,24 +78,24 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "Now",
    "fieldname": "preparation_datetime",
    "fieldtype": "Datetime",
    "label": "Preparation Datetime",
-   "reqd": 1,
-   "default": "Now"
+   "reqd": 1
   },
   {
+   "default": "__user",
    "fieldname": "prepared_by",
    "fieldtype": "Link",
    "label": "Prepared By",
-   "options": "User",
-   "default": "__user"
+   "options": "User"
   },
   {
    "fieldname": "source_status_before",
    "fieldtype": "Data",
-   "label": "Source Status Before",
    "hidden": 1,
+   "label": "Source Status Before",
    "no_copy": 1
   },
   {
@@ -120,71 +120,69 @@
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
-   "options": "Blood Component Preparation",
-   "read_only": 1,
    "no_copy": 1,
-   "print_hide": 1
+   "options": "Blood Component Preparation",
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
- "index_web_pages_for_search": 0,
+ "is_submittable": 1,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Component Preparation",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Officer",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   },
   {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Technician",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   },
   {
-   "role": "System Manager",
-   "read": 1,
-   "write": 1,
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
-   "report": 1,
+   "email": 1,
    "export": 1,
    "print": 1,
-   "email": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
    "share": 1,
    "submit": 1,
-   "cancel": 1,
-   "amend": 1
+   "write": 1
   }
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1,
- "is_submittable": 1,
- "autoname": "BCP-.YYYY.-.#####",
- "naming_rule": "Expression (old style)"
+ "track_changes": 1
 }

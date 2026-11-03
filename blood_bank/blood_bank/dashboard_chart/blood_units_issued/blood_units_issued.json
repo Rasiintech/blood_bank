@@ -2,6 +2,7 @@
  "based_on": "issue_datetime",
  "chart_name": "Blood Units Issued",
  "chart_type": "Count",
+ "color": "#c0392b",
  "creation": "2026-11-02 12:00:00.000000",
  "docstatus": 0,
  "doctype": "Dashboard Chart",
@@ -18,9 +19,11 @@
  "name": "Blood Units Issued",
  "number_of_groups": 0,
  "owner": "Administrator",
+ "roles": [],
  "time_interval": "Monthly",
  "timeseries": 1,
  "timespan": "Last Year",
  "type": "Bar",
- "color": "#c0392b"
+ "use_report_chart": 0,
+ "y_axis": []
 }

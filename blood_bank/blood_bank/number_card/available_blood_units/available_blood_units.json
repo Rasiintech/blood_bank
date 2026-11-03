@@ -1,4 +1,5 @@
 {
+ "color": "Green",
  "creation": "2026-11-02 12:00:00.000000",
  "docstatus": 0,
  "doctype": "Number Card",
@@ -16,6 +17,5 @@
  "owner": "Administrator",
  "show_percentage_stats": 0,
  "stats_time_interval": "Daily",
- "type": "Document Type",
- "color": "Green"
+ "type": "Document Type"
 }

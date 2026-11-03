@@ -1,6 +1,6 @@
 {
  "actions": [],
- "allow_rename": 0,
+ "autoname": "field:component_name",
  "creation": "2026-11-02 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -28,19 +28,19 @@
   {
    "fieldname": "component_name",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Component Name",
    "reqd": 1,
-   "unique": 1,
-   "in_list_view": 1
+   "unique": 1
   },
   {
+   "description": "Used as suffix on unit numbers, e.g. RBC",
    "fieldname": "abbreviation",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Abbreviation",
    "reqd": 1,
-   "unique": 1,
-   "in_list_view": 1,
-   "description": "Used as suffix on unit numbers, e.g. RBC"
+   "unique": 1
   },
   {
    "fieldname": "is_whole_blood",
@@ -48,19 +48,19 @@
    "label": "Is Whole Blood"
   },
   {
+   "default": "1",
    "fieldname": "can_prepare_from_whole_blood",
    "fieldtype": "Check",
-   "label": "Can Prepare From Whole Blood",
-   "default": "1"
+   "label": "Can Prepare From Whole Blood"
   },
   {
+   "description": "Identical: same ABO. Red Cell: patient can receive own group or O (RhD negative patient needs negative). Plasma: reverse rule. Any: no ABO block (warning only).",
    "fieldname": "compatibility_rule",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "Compatibility Rule",
    "options": "Identical\nRed Cell\nPlasma\nAny",
-   "reqd": 1,
-   "in_list_view": 1,
-   "description": "Identical: same ABO. Red Cell: patient can receive own group or O (RhD negative patient needs negative). Plasma: reverse rule. Any: no ABO block (warning only)."
+   "reqd": 1
   },
   {
    "fieldname": "cb1",
@@ -69,44 +69,44 @@
   {
    "fieldname": "storage_type",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "Storage Type",
-   "options": "Refrigerator\nFreezer\nPlatelet Agitator\nRoom Temperature",
-   "in_list_view": 1
+   "options": "Refrigerator\nFreezer\nPlatelet Agitator\nRoom Temperature"
   },
   {
    "fieldname": "min_temp",
    "fieldtype": "Float",
-   "label": "Min Storage Temp (°C)"
+   "label": "Min Storage Temp (\u00b0C)"
   },
   {
    "fieldname": "max_temp",
    "fieldtype": "Float",
-   "label": "Max Storage Temp (°C)"
+   "label": "Max Storage Temp (\u00b0C)"
   },
   {
    "fieldname": "shelf_life_days",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Shelf Life Days",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
+   "description": "Added to shelf life days",
    "fieldname": "shelf_life_hours",
    "fieldtype": "Int",
-   "label": "Shelf Life Hours",
-   "description": "Added to shelf life days"
+   "label": "Shelf Life Hours"
   },
   {
+   "collapsible": 1,
    "fieldname": "sb_help",
    "fieldtype": "Section Break",
-   "label": "Storage and Shelf Life Standards",
-   "collapsible": 1
+   "label": "Storage and Shelf Life Standards"
   },
   {
    "fieldname": "shelf_life_help",
    "fieldtype": "HTML",
    "label": "Shelf Life Help",
-   "options": "<div class=\"small\" style=\"border:1px solid var(--border-color);border-radius:6px;padding:8px 10px\"><b>Where the expiry comes from.</b> Expiry = collection time + the shelf life below. These are the international defaults (WHO / AABB / EU guide). Change them only on your medical director&#39;s instruction.<table class=\"table table-bordered table-sm\" style=\"margin:6px 0\"><tr><th>Component</th><th>Store at</th><th>Shelf life</th><th>Why</th></tr><tr><td>Whole Blood</td><td>2 to 6 °C fridge</td><td>35 days (CPDA-1 bag)</td><td>Cold slows the cells. After 35 days fewer than 75% of the red cells survive in the patient. CPD bags without adenine: 21 days.</td></tr><tr><td>Red Cells (RBC)</td><td>2 to 6 °C fridge</td><td>42 days (SAGM additive)</td><td>The additive solution feeds the cells longer. Without additive: 35 days.</td></tr><tr><td>Platelets (PLT)</td><td>20 to 24 °C on an agitator</td><td>5 days</td><td>Platelets die in the cold, so they are kept warm and shaken. Warm storage lets bacteria grow, so the life is short. Never put them in the fridge.</td></tr><tr><td>Fresh Frozen Plasma (FFP)</td><td>-18 °C or colder</td><td>1 year</td><td>Freezing within 8 hours keeps the clotting factors (V and VIII). After thawing: use within 24 hours, kept at 2 to 6 °C.</td></tr><tr><td>Plasma</td><td>-18 °C or colder</td><td>1 year</td><td>Plasma frozen later than FFP. Fewer clotting factors, same storage.</td></tr></table>Read the bag packet: the anticoagulant printed on it (CPDA-1, CPD + SAGM) decides the Whole Blood and Red Cell life.</div>"
+   "options": "<div class=\"small\" style=\"border:1px solid var(--border-color);border-radius:6px;padding:8px 10px\"><b>Where the expiry comes from.</b> Expiry = collection time + the shelf life below. These are the international defaults (WHO / AABB / EU guide). Change them only on your medical director&#39;s instruction.<table class=\"table table-bordered table-sm\" style=\"margin:6px 0\"><tr><th>Component</th><th>Store at</th><th>Shelf life</th><th>Why</th></tr><tr><td>Whole Blood</td><td>2 to 6 \u00b0C fridge</td><td>35 days (CPDA-1 bag)</td><td>Cold slows the cells. After 35 days fewer than 75% of the red cells survive in the patient. CPD bags without adenine: 21 days.</td></tr><tr><td>Red Cells (RBC)</td><td>2 to 6 \u00b0C fridge</td><td>42 days (SAGM additive)</td><td>The additive solution feeds the cells longer. Without additive: 35 days.</td></tr><tr><td>Platelets (PLT)</td><td>20 to 24 \u00b0C on an agitator</td><td>5 days</td><td>Platelets die in the cold, so they are kept warm and shaken. Warm storage lets bacteria grow, so the life is short. Never put them in the fridge.</td></tr><tr><td>Fresh Frozen Plasma (FFP)</td><td>-18 \u00b0C or colder</td><td>1 year</td><td>Freezing within 8 hours keeps the clotting factors (V and VIII). After thawing: use within 24 hours, kept at 2 to 6 \u00b0C.</td></tr><tr><td>Plasma</td><td>-18 \u00b0C or colder</td><td>1 year</td><td>Plasma frozen later than FFP. Fewer clotting factors, same storage.</td></tr></table>Read the bag packet: the anticoagulant printed on it (CPDA-1, CPD + SAGM) decides the Whole Blood and Red Cell life.</div>"
   },
   {
    "fieldname": "sb_bill",
@@ -114,11 +114,11 @@
    "label": "Billing"
   },
   {
+   "description": "Item charged to the patient, e.g. the 'Blood transfusion + cross matching (RBC)' lab template item",
    "fieldname": "billing_item",
    "fieldtype": "Link",
    "label": "Billing Item",
-   "options": "Item",
-   "description": "Item charged to the patient, e.g. the 'Blood transfusion + cross matching (RBC)' lab template item"
+   "options": "Item"
   },
   {
    "fieldname": "disabled",
@@ -131,67 +131,65 @@
    "label": "Description"
   }
  ],
- "index_web_pages_for_search": 0,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Component",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Officer",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
-   "share": 1
+   "share": 1,
+   "write": 1
   },
   {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "System Manager",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
    "print": 1,
-   "email": 1,
-   "share": 1
-  },
-  {
-   "role": "Blood Bank Technician",
    "read": 1,
    "report": 1,
-   "print": 1
+   "role": "Blood Bank Technician"
   },
   {
-   "role": "Blood Bank Reception",
+   "print": 1,
    "read": 1,
    "report": 1,
-   "print": 1
+   "role": "Blood Bank Reception"
   },
   {
-   "role": "Physician",
+   "print": 1,
    "read": 1,
    "report": 1,
-   "print": 1
+   "role": "Physician"
   },
   {
-   "role": "Nursing User",
+   "print": 1,
    "read": 1,
    "report": 1,
-   "print": 1
+   "role": "Nursing User"
   }
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1,
- "autoname": "field:component_name",
- "naming_rule": "By fieldname"
+ "track_changes": 1
 }

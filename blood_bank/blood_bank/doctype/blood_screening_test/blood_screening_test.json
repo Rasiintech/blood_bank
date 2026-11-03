@@ -1,6 +1,6 @@
 {
  "actions": [],
- "allow_rename": 0,
+ "autoname": "field:test_name",
  "creation": "2026-11-02 12:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -16,30 +16,30 @@
   {
    "fieldname": "test_name",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Test Name",
    "reqd": 1,
-   "unique": 1,
-   "in_list_view": 1
+   "unique": 1
   },
   {
+   "default": "1",
    "fieldname": "mandatory",
    "fieldtype": "Check",
-   "label": "Mandatory",
-   "default": "1",
-   "in_list_view": 1
+   "in_list_view": 1,
+   "label": "Mandatory"
   },
   {
+   "description": "Names of this test in the lab result, one per line (e.g. HIV Screening)",
    "fieldname": "lab_labels",
    "fieldtype": "Small Text",
-   "label": "Lab Test Names",
-   "description": "Names of this test in the lab result, one per line (e.g. HIV Screening)"
+   "label": "Lab Test Names"
   },
   {
+   "description": "Used when this test is reactive",
    "fieldname": "deferral_reason",
    "fieldtype": "Link",
    "label": "Deferral Reason",
-   "options": "Blood Deferral Reason",
-   "description": "Used when this test is reactive"
+   "options": "Blood Deferral Reason"
   },
   {
    "fieldname": "disabled",
@@ -47,55 +47,53 @@
    "label": "Disabled"
   }
  ],
- "index_web_pages_for_search": 0,
  "links": [],
  "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Screening Test",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "Blood Bank Officer",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
-   "print": 1,
-   "email": 1,
-   "share": 1
+   "share": 1,
+   "write": 1
   },
   {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
    "role": "System Manager",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "report": 1,
-   "export": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
    "print": 1,
-   "email": 1,
-   "share": 1
-  },
-  {
-   "role": "Blood Bank Technician",
    "read": 1,
    "report": 1,
-   "print": 1
+   "role": "Blood Bank Technician"
   },
   {
-   "role": "Blood Bank Reception",
+   "print": 1,
    "read": 1,
    "report": 1,
-   "print": 1
+   "role": "Blood Bank Reception"
   }
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1,
- "autoname": "field:test_name",
- "naming_rule": "By fieldname"
+ "track_changes": 1
 }
