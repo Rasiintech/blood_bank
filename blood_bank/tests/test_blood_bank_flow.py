@@ -303,10 +303,10 @@ class TestBloodBankFlow(FrappeTestCase):
 			"indication": "Anaemia", "patient_blood_group": "O Positive",
 			"items": [{"component": "Whole Blood", "units_required": 1}]}).insert()
 		other.submit()
-		self.assertNotIn(o_pos.name, [u["blood_unit"] for u in get_compatible_units(other.name)])
+		self.assertNotIn(o_pos.name, [u["blood_unit"] for u in get_compatible_units(other.name)["units"]])
 		self.assertEqual(frappe.db.get_value("Blood Request", req.name, "replacement_donations"), 2)
 		release_directed(o_pos.name, "Patient discharged")
-		self.assertIn(o_pos.name, [u["blood_unit"] for u in get_compatible_units(other.name)])
+		self.assertIn(o_pos.name, [u["blood_unit"] for u in get_compatible_units(other.name)["units"]])
 
 	def test_times_must_follow_each_other(self):
 		patient = make_patient("Times")
@@ -366,7 +366,7 @@ class TestBloodBankFlow(FrappeTestCase):
 			"indication": "Anaemia", "patient_blood_group": "A Positive",
 			"items": [{"component": "Red Cells (RBC)", "units_required": 1}]}).insert()
 		req.submit()
-		self.assertIn(rbc, [u["blood_unit"] for u in get_compatible_units(req.name)])
+		self.assertIn(rbc, [u["blood_unit"] for u in get_compatible_units(req.name)["units"]])
 		xm = frappe.get_doc({"doctype": "Blood Crossmatch", "blood_request": req.name, "patient_blood_group": "A Positive",
 			"items": [{"blood_unit": rbc, "result": "Compatible"}]}).insert()
 		xm.submit()

@@ -38,6 +38,8 @@
   "replacement_donations",
   "cb4",
   "replacement_help",
+  "sb_donors",
+  "donors_html",
   "sb_bill",
   "sales_invoice",
   "cb5",
@@ -365,11 +367,22 @@
    "label": "Waive Reason",
    "no_copy": 1,
    "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.docstatus==1",
+   "fieldname": "sb_donors",
+   "fieldtype": "Section Break",
+   "label": "Donors for this Request"
+  },
+  {
+   "fieldname": "donors_html",
+   "fieldtype": "HTML",
+   "label": "Donors"
   }
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-03 15:32:15.569529",
+ "modified": "2026-11-05 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Request",

@@ -37,6 +37,12 @@ frappe.ui.form.on("Blood Request", {
 		});
 	},
 	replacement_donors_needed(frm) { frm.__rep_manual = true; },
+	render_donors(frm) {
+		const field = frm.get_field("donors_html");
+		if (!field || frm.doc.docstatus !== 1) return;
+		frappe.call("blood_bank.request_summary.request_donors_panel", { blood_request: frm.doc.name })
+			.then(r => field.$wrapper.html(r.message || ""));
+	},
 	suggest_donors(frm) {
 		if (frm.__rep_manual || frm.doc.docstatus !== 0) return;
 		frm.call("suggest_replacement_donors").then(r => {
@@ -49,6 +55,9 @@ frappe.ui.form.on("Blood Request", {
 		frm.page.set_indicator(__(frm.doc.status), REQUEST_COLORS[frm.doc.status] || "gray");
 		if (frm.doc.docstatus !== 1) return;
 		const info = frm.doc.__onload || {};
+		frm.trigger("render_donors");
+		frm.add_custom_button(__("Donor Screenings"), () => frappe.set_route("List", "Blood Donor Screening", { blood_request: frm.doc.name }), __("View"));
+		frm.add_custom_button(__("Donations"), () => frappe.set_route("List", "Blood Donation", { blood_request: frm.doc.name }), __("View"));
 		frm.trigger("billing_summary");
 		if (info.charges_pending || frappe.user.has_role(["Blood Bank Officer", "Accounts User", "System Manager"])) {
 			frm.add_custom_button(__("Update Charges"), () => {

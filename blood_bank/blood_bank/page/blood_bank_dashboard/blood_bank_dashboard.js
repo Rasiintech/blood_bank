@@ -4,12 +4,17 @@
 frappe.pages["blood-bank-dashboard"].on_page_load = function (wrapper) {
 	const page = frappe.ui.make_app_page({ parent: wrapper, title: __("Blood Bank Dashboard"), single_column: true });
 	const dash = new BloodBankDashboard(page);
+	wrapper.bb_dash = dash;
 	page.set_primary_action(__("Refresh"), () => dash.refresh(), "refresh");
 	page.add_inner_button(__("New Donor"), () => frappe.new_doc("Blood Donor"));
 	page.add_inner_button(__("Receive Units"), () => frappe.new_doc("Blood Unit Receipt"));
 	page.add_inner_button(__("Temperature Reading"), () => frappe.new_doc("Blood Storage Temperature Log"));
-	dash.refresh();
 	setInterval(() => { if (frappe.get_route_str() === "blood-bank-dashboard") dash.refresh(); }, 60000);
+};
+
+// the page is built once and kept; reload the numbers every time it is opened again
+frappe.pages["blood-bank-dashboard"].on_page_show = function (wrapper) {
+	if (wrapper.bb_dash) wrapper.bb_dash.refresh();
 };
 
 class BloodBankDashboard {

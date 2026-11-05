@@ -176,6 +176,13 @@ def reconcile(req, reference=None, quiet=True):
 		req = frappe.get_doc("Blood Request", req)
 	if req.docstatus == 0:
 		return {}
+	drop_void_charges(req)
+	repriced = None
+	try:
+		reprice_drafts(req)
+	except Exception as e:
+		frappe.log_error(title=f"Blood Bank: could not update draft invoice of {req.name}")
+		repriced = _("Draft invoice not updated: {0}").format(frappe.utils.strip_html(str(e))[:300])
 	want = expected_charges(req)
 	have = charged_so_far(req)
 	add, remove = [], []
@@ -185,7 +192,7 @@ def reconcile(req, reference=None, quiet=True):
 			add.append((key[0], key[1], diff))
 		elif diff < 0:
 			remove.append((key[0], key[1], -diff))
-	summary = {"charged": [], "credited": [], "problems": []}
+	summary = {"charged": [], "credited": [], "problems": [repriced] if repriced else []}
 	reference = reference or req
 	if add:
 		try:
@@ -207,6 +214,49 @@ def reconcile(req, reference=None, quiet=True):
 		frappe.msgprint("<br>".join(summary["problems"]) + "<br>" + _("Fix it, then use Update Charges on the request."),
 			title=_("Billing"), indicator="orange")
 	return summary
+
+
+def drop_void_charges(req):
+	"""Forget charge rows whose invoice was deleted (a draft) or cancelled by the cashier, so Update Charges posts
+	them again (e.g. a draft made before the item prices were set)."""
+	void = []
+	for c in req.get("charges") or []:
+		status = frappe.db.get_value("Sales Invoice", c.sales_invoice, "docstatus") if c.sales_invoice else 2
+		if status is None or cint(status) == 2:
+			void.append(c)
+	if not void:
+		return
+	for c in void:
+		frappe.db.delete("Blood Request Charge", {"name": c.name})
+		req.charges.remove(c)
+	if req.sales_invoice and not frappe.db.exists("Sales Invoice", {"name": req.sales_invoice, "docstatus": ["<", 2]}):
+		first = next((c.sales_invoice for c in req.charges if c.sales_invoice), None)
+		req.db_set("sales_invoice", first, update_modified=False)
+
+
+def reprice_drafts(req):
+	"""Draft invoices of the request made before the item prices were set ($0 lines): fetch the prices again, and
+	submit them now if Settings say charge invoices are submitted automatically."""
+	for name in dict.fromkeys(c.sales_invoice for c in req.get("charges") or [] if c.sales_invoice):
+		if frappe.db.get_value("Sales Invoice", name, "docstatus") != 0:
+			continue
+		si = frappe.get_doc("Sales Invoice", name)
+		if any(flt(i.rate) == 0 for i in si.items):
+			lines = [(i.item_code, i.qty) for i in si.items]
+			si.set("items", [])
+			for item_code, qty in lines:
+				si.append("items", {"item_code": item_code, "qty": qty})
+			si.set_missing_values()
+			si.calculate_taxes_and_totals()
+			si.flags.ignore_permissions = True
+			si.save()
+		if cint(setting("submit_charge_invoices")) and not any(flt(i.rate) == 0 for i in si.items):
+			si.flags.ignore_permissions = True
+			si.submit()
+		rates = {i.item_code: flt(i.rate) for i in si.items}
+		for c in req.charges:
+			if c.sales_invoice == name and c.item_code in rates and flt(c.rate) != rates[c.item_code]:
+				c.db_set({"rate": rates[c.item_code], "amount": rates[c.item_code] * flt(c.qty)}, update_modified=False)
 
 
 def new_invoice(req):

@@ -47,6 +47,8 @@ class BloodCrossmatch(Document):
 			frappe.throw(_("Row {0}: unit {1} is a directed donation held for {2}").format(row.idx, u.name, u.directed_patient))
 		if u.component not in components:
 			frappe.throw(_("Row {0}: {1} was not requested").format(row.idx, u.component))
+		if not cint(frappe.db.get_value("Blood Component", u.component, "requires_crossmatch")):
+			frappe.throw(_("Row {0}: {1} is not crossmatched. Give it at Blood Issue (Get Reserved Units).").format(row.idx, u.component))
 		rule = frappe.db.get_value("Blood Component", u.component, "compatibility_rule")
 		ok, msg = check_compatibility(rule, self.patient_blood_group, u.blood_group)
 		if not ok:
@@ -93,57 +95,61 @@ class BloodCrossmatch(Document):
 
 @frappe.whitelist()
 def get_compatible_units(blood_request, patient_blood_group=None, exclude=None):
-	"""Suggest in-date, cleared, compatible units for what is still needed, earliest expiry first."""
+	"""Fill the table with the best compatible bags for what still needs a crossmatch (Whole Blood / Red Cells).
+	Plasma and platelets are not crossmatched: they are picked at Blood Issue, so they are only reported."""
+	from blood_bank.request_summary import compatible_units, needs_crossmatch, patient_group
 	req = frappe.get_doc("Blood Request", blood_request)
 	req.check_permission("read")
-	group = patient_blood_group or req.patient_blood_group or get_patient_blood_group(req.patient)
+	group = patient_group(req, patient_blood_group)
 	if not group:
 		frappe.throw(_("Enter the patient's blood group first (from the grouping result)"))
 	exclude = set(frappe.parse_json(exclude) if exclude else [])
-	out = []
+	out, notes = [], []
 	for row in req.items:
 		needed = cint(row.units_required) - cint(row.units_reserved) - cint(row.units_issued)
 		if needed <= 0:
 			continue
-		if not cint(frappe.db.get_value("Blood Component", row.component, "requires_crossmatch")):
-			continue  # plasma / platelets: issued by group, no crossmatch
-		rule = frappe.db.get_value("Blood Component", row.component, "compatibility_rule")
-		candidates = frappe.get_all("Blood Unit", filters={"component": row.component, "status": "Available",
-			"test_status": ["in", USABLE_TESTS], "expiry_datetime": [">", now_datetime()]},
-			fields=["name", "component", "blood_group", "expiry_datetime", "donor_test", "directed_request"], order_by="expiry_datetime asc")
-		directed, exact, other = [], [], []
-		lab_xm = lab_crossmatches(req.patient)
-		for c in candidates:
-			if c.name in exclude:
-				continue
-			ok, msg = check_compatibility(rule, group, c.blood_group)
-			if not ok:
-				continue
-			if c.directed_request and c.directed_request != req.name:
-				continue  # held for another patient
-			xm = lab_xm.get(c.donor_test)
-			if xm and xm.crossmatch_result == "Incompatible":
-				continue
-			c.lab_xm = xm
-			(directed if (xm or c.directed_request == req.name) else exact if c.blood_group == group else other).append(c)
-		# the relatives' bags already crossmatched with this patient in the lab first, then same group, then compatible
-		for c in (directed + exact + other)[:needed]:
-			row = {"blood_unit": c.name, "component": c.component, "unit_blood_group": c.blood_group,
-				"expiry_datetime": c.expiry_datetime}
-			if c.directed_request == req.name and not c.lab_xm:
-				row["remarks"] = _("Directed donation for this patient")
-			if c.lab_xm:
-				row.update(result="Compatible", remarks=_("Lab crossmatch {0} ({1})").format(
-					c.lab_xm.crossmatch_lab_value or "Compatible", c.lab_xm.lab_reference or c.lab_xm.name)[:140])
-			out.append(row)
-	return out
+		if not needs_crossmatch(row.component):
+			notes.append(_("{0} x {1}: no crossmatch, picked at Blood Issue > Get Reserved Units").format(needed, row.component))
+			continue
+		units = [u for u in compatible_units(req, group, row.component, exclude) if u.status == "Available"]
+		if len(units) < needed:
+			notes.append(_("{0}: {1} needed, only {2} compatible in stock").format(row.component, needed, len(units)))
+		for u in units[:needed]:
+			line = {"blood_unit": u.name, "component": u.component, "unit_blood_group": u.blood_group,
+				"expiry_datetime": u.expiry_datetime}
+			if u.tags:
+				line["remarks"] = ", ".join(u.tags)[:140]
+			if u.lab_xm and u.lab_xm.crossmatch_result == "Compatible":
+				line["result"] = "Compatible"
+				line["remarks"] = _("Lab crossmatch {0} ({1})").format(u.lab_xm.crossmatch_lab_value or "Compatible",
+					u.lab_xm.lab_reference or u.lab_xm.name)[:140]
+			out.append(line)
+	return {"units": out, "notes": notes}
 
 
-def lab_crossmatches(patient):
-	"""Donor Tests whose lab result already crossmatched the donor with this patient (replacement donors)."""
-	if not frappe.get_meta("Blood Donor Test").has_field("crossmatch_result"):
-		return {}
-	rows = frappe.get_all("Blood Donor Test", filters={"crossmatch_patient": patient, "docstatus": 1,
-		"crossmatch_result": ["in", ["Compatible", "Incompatible"]]},
-		fields=["name", "crossmatch_result", "crossmatch_lab_value", "lab_reference"])
-	return {r.name: r for r in rows}
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def unit_query(doctype, txt, searchfield, start, page_len, filters):
+	"""Blood Unit dropdown on the crossmatch: only bags this patient can receive, for requested components that
+	need a crossmatch, best first."""
+	from blood_bank.request_summary import compatible_units, needs_crossmatch, patient_group
+	if not filters.get("blood_request"):
+		return []
+	req = frappe.get_doc("Blood Request", filters.get("blood_request"))
+	group = patient_group(req, filters.get("patient_blood_group"))
+	if not group:
+		return []
+	exclude = set(frappe.parse_json(filters.get("exclude") or "[]"))
+	txt = (txt or "").lower()
+	rows = []
+	for comp in dict.fromkeys(r.component for r in req.items):
+		if not needs_crossmatch(comp):
+			continue
+		for u in compatible_units(req, group, comp, exclude):
+			if txt and txt not in u.name.lower() and txt not in (u.blood_group or "").lower():
+				continue
+			rows.append((u.name, "{0} · {1} · {2} {3}{4}".format(u.component, u.blood_group, _("exp"),
+				frappe.utils.format_date(u.expiry_datetime), (" · " + ", ".join(u.tags)) if u.tags else "")))
+	start, page_len = cint(start), cint(page_len) or 20
+	return rows[start:start + page_len]
