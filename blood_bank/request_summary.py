@@ -133,6 +133,62 @@ def crossmatch_panel(blood_request, patient_blood_group=None):
 	return box(html)
 
 
+def issue_candidates(req, group, exclude=None):
+	"""What can be issued now: crossmatched bags reserved for the request (still valid), then the best compatible
+	plasma / platelets in stock for what is still needed (no crossmatch). One list, in the order to pick them."""
+	exclude = set(exclude or [])
+	out = []
+	reserved = frappe.get_all("Blood Unit", filters={"blood_request": req.name, "status": "Reserved",
+		"reserved_until": [">", now_datetime()]}, fields=["name", "component", "blood_group", "expiry_datetime", "crossmatch"],
+		order_by="expiry_datetime asc")
+	for u in reserved:
+		if u.name not in exclude:
+			u.tags = [_("Crossmatched {0}").format(u.crossmatch)] if u.crossmatch else [_("Reserved")]
+			out.append(u)
+	if not group:
+		return out
+	for r in req.items:
+		if needs_crossmatch(r.component):
+			continue
+		needed = cint(r.units_required) - cint(r.units_issued)
+		if needed <= 0:
+			continue
+		units = [u for u in compatible_units(req, group, r.component, exclude) if u.status == "Available"]
+		out += units[:needed]
+	return out
+
+
+@frappe.whitelist()
+def issue_panel(blood_request):
+	req = frappe.get_doc("Blood Request", blood_request)
+	req.check_permission("read")
+	group = patient_group(req)
+	ready = {}
+	for u in issue_candidates(req, group):
+		ready.setdefault(u.component, []).append(u)
+	body = []
+	for r in req.items:
+		xm = needs_crossmatch(r.component)
+		left = max(cint(r.units_required) - cint(r.units_issued), 0)
+		units = ready.get(r.component, [])
+		if xm:
+			how = _("Crossmatched bags reserved for this patient")
+			if left > len(units):
+				how += " · <span style='color:var(--red-600)'>" + _("{0} more need a crossmatch first").format(left - len(units)) + "</span>"
+		else:
+			how = _("No crossmatch: compatible group from stock")
+			if left > len(units):
+				how += " · <span style='color:var(--red-600)'>" + _("only {0} in stock").format(len(units)) + "</span>"
+		bags = "<br>".join("{0} {1}{2}".format(link("Blood Unit", u.name), escape_html(u.blood_group),
+			(" · " + escape_html(", ".join(u.tags))) if u.get("tags") else "") for u in units[:max(left, 0)])
+		body.append([escape_html(r.component), cint(r.units_required), cint(r.units_issued), f"<b>{left}</b>" if left else "0",
+			how, bags or "-"])
+	html = "<b>{0}</b> {1}".format(_("Patient group:"), escape_html(group or _("unknown")))
+	html += table([_("Component"), _("Requested"), _("Issued"), _("Still to give"), _("How"), _("Bags to give now")], body)
+	html += _("<b>Get Reserved Units</b> fills the table with exactly these bags.")
+	return box(html)
+
+
 # ------------------------------------------------------------------ donors of a request
 def donors(req):
 	"""Screenings for this request with their donation and the bags made from it."""

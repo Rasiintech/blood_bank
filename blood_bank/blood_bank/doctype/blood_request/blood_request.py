@@ -16,6 +16,9 @@ class BloodRequest(Document):
 			self.patient_blood_group = on_file
 		elif on_file and self.patient_blood_group != on_file:
 			frappe.throw(_("Patient is recorded as {0}, not {1}").format(on_file, self.patient_blood_group), title=_("Blood Group Mismatch"))
+		if not self.inpatient_record and self.docstatus == 0:
+			from blood_bank.billing import current_admission
+			self.inpatient_record = current_admission(self.patient)
 		if not (self.practitioner or self.external_practitioner):
 			frappe.throw(_("Enter the ordering doctor (or External Doctor for referred patients)"))
 		seen = set()

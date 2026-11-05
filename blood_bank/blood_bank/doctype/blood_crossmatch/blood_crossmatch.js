@@ -41,6 +41,7 @@ frappe.ui.form.on("Blood Crossmatch", {
 			const rows = res.units || [];
 			// drop empty rows the user added by hand
 			frm.doc.items = (frm.doc.items || []).filter(r => r.blood_unit);
+			frm.doc.items.forEach((r, i) => { r.idx = i + 1; });
 			rows.forEach(u => Object.assign(frm.add_child("items"), u));
 			frm.refresh_field("items");
 			const notes = res.notes || [];

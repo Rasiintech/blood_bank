@@ -17,6 +17,8 @@
   "issued_by",
   "received_by",
   "sales_invoice",
+  "sb_needs",
+  "needs_html",
   "sb_em",
   "emergency_release",
   "authorised_by",
@@ -149,11 +151,22 @@
    "options": "Blood Issue",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.docstatus==0",
+   "fieldname": "sb_needs",
+   "fieldtype": "Section Break",
+   "label": "What this Patient Needs"
+  },
+  {
+   "fieldname": "needs_html",
+   "fieldtype": "HTML",
+   "label": "Needs"
   }
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-02 12:00:00.000000",
+ "modified": "2026-11-05 14:00:00.000000",
  "modified_by": "Administrator",
  "module": "Blood Bank",
  "name": "Blood Issue",

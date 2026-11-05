@@ -47,11 +47,22 @@ def si_fields():
 	return out
 
 
+ADMITTED = ("Admitted", "Admission Scheduled", "Discharge Scheduled")
+
+
+def current_admission(patient):
+	"""The patient's open Inpatient Record, if any (the request may have been made without picking it)."""
+	if not patient or not frappe.db.exists("DocType", "Inpatient Record"):
+		return None
+	return frappe.db.get_value("Inpatient Record", {"patient": patient, "status": ["in", ADMITTED]}, "name",
+		order_by="creation desc")
+
+
 def is_inpatient(req):
-	if not req.get("inpatient_record"):
+	record = req.get("inpatient_record") or current_admission(req.patient)
+	if not record:
 		return False
-	status = frappe.db.get_value("Inpatient Record", req.inpatient_record, "status")
-	return status in ("Admitted", "Admission Scheduled", "Discharge Scheduled")
+	return frappe.db.get_value("Inpatient Record", record, "status") in ADMITTED
 
 
 def billing_mode_for(req):
@@ -179,7 +190,7 @@ def reconcile(req, reference=None, quiet=True):
 	drop_void_charges(req)
 	repriced = None
 	try:
-		reprice_drafts(req)
+		reprice_drafts(req)  # $0 drafts made before prices were set
 	except Exception as e:
 		frappe.log_error(title=f"Blood Bank: could not update draft invoice of {req.name}")
 		repriced = _("Draft invoice not updated: {0}").format(frappe.utils.strip_html(str(e))[:300])
@@ -194,6 +205,13 @@ def reconcile(req, reference=None, quiet=True):
 			remove.append((key[0], key[1], -diff))
 	summary = {"charged": [], "credited": [], "problems": [repriced] if repriced else []}
 	reference = reference or req
+	# credits first, so a line that is no longer due is removed from a draft instead of being posted and credited
+	if remove:
+		try:
+			summary["credited"] = credit(req, remove, reference)
+		except Exception as e:
+			frappe.log_error(title=f"Blood Bank: could not credit {req.name}")
+			summary["problems"].append(_("Credit not posted: {0}").format(frappe.utils.strip_html(str(e))[:300]))
 	if add:
 		try:
 			si = post_invoice(req, add, reference)
@@ -201,12 +219,11 @@ def reconcile(req, reference=None, quiet=True):
 		except Exception as e:
 			frappe.log_error(title=f"Blood Bank: could not charge {req.name}")
 			summary["problems"].append(_("Charges not posted: {0}").format(frappe.utils.strip_html(str(e))[:300]))
-	if remove:
-		try:
-			summary["credited"] = credit(req, remove, reference)
-		except Exception as e:
-			frappe.log_error(title=f"Blood Bank: could not credit {req.name}")
-			summary["problems"].append(_("Credit not posted: {0}").format(frappe.utils.strip_html(str(e))[:300]))
+	try:
+		submit_drafts(req)
+	except Exception as e:
+		frappe.log_error(title=f"Blood Bank: could not submit invoice of {req.name}")
+		summary["problems"].append(_("Invoice not submitted: {0}").format(frappe.utils.strip_html(str(e))[:300]))
 	refresh_request_invoice(req.name)
 	if summary["problems"] and not quiet:
 		frappe.msgprint("<br>".join(summary["problems"]), title=_("Billing"), indicator="orange")
@@ -235,8 +252,7 @@ def drop_void_charges(req):
 
 
 def reprice_drafts(req):
-	"""Draft invoices of the request made before the item prices were set ($0 lines): fetch the prices again, and
-	submit them now if Settings say charge invoices are submitted automatically."""
+	"""Draft invoices of the request made before the item prices were set ($0 lines): fetch the prices again."""
 	for name in dict.fromkeys(c.sales_invoice for c in req.get("charges") or [] if c.sales_invoice):
 		if frappe.db.get_value("Sales Invoice", name, "docstatus") != 0:
 			continue
@@ -250,13 +266,35 @@ def reprice_drafts(req):
 			si.calculate_taxes_and_totals()
 			si.flags.ignore_permissions = True
 			si.save()
-		if cint(setting("submit_charge_invoices")) and not any(flt(i.rate) == 0 for i in si.items):
-			si.flags.ignore_permissions = True
-			si.submit()
 		rates = {i.item_code: flt(i.rate) for i in si.items}
 		for c in req.charges:
 			if c.sales_invoice == name and c.item_code in rates and flt(c.rate) != rates[c.item_code]:
 				c.db_set({"rate": rates[c.item_code], "amount": rates[c.item_code] * flt(c.qty)}, update_modified=False)
+
+
+def draft_invoices(req):
+	out = []
+	for n in dict.fromkeys(c.sales_invoice for c in req.get("charges") or [] if c.sales_invoice):
+		v = frappe.db.get_value("Sales Invoice", n, ["docstatus", "is_return"], as_dict=True)
+		if v and cint(v.docstatus) == 0 and not cint(v.is_return):
+			out.append(n)
+	return out
+
+
+def submit_drafts(req):
+	"""Submit the request's draft invoices (and draft credit notes) when Settings say so and every line has a price."""
+	if not cint(setting("submit_charge_invoices")):
+		return
+	names = dict.fromkeys(c.sales_invoice for c in req.get("charges") or [] if c.sales_invoice)
+	# invoices before their credit notes
+	for name in sorted(names, key=lambda n: cint(frappe.db.get_value("Sales Invoice", n, "is_return"))):
+		if frappe.db.get_value("Sales Invoice", name, "docstatus") != 0:
+			continue
+		si = frappe.get_doc("Sales Invoice", name)
+		if any(flt(i.rate) == 0 for i in si.items):
+			continue  # no price yet: leave it for the cashier
+		si.flags.ignore_permissions = True
+		si.submit()
 
 
 def new_invoice(req):
@@ -283,7 +321,10 @@ def new_invoice(req):
 
 
 def post_invoice(req, lines, reference):
-	si = new_invoice(req)
+	"""Add the lines to the request's open draft invoice, or to a new invoice. One charge row per line."""
+	drafts = draft_invoices(req)
+	si = frappe.get_doc("Sales Invoice", drafts[-1]) if drafts else new_invoice(req)
+	start = len(si.items)
 	missing = []
 	for charge_type, component, qty in lines:
 		item = item_for(charge_type, component)
@@ -294,14 +335,13 @@ def post_invoice(req, lines, reference):
 	if missing:
 		frappe.throw(_("No billing item for: {0}. Set it on the Blood Component or in Blood Bank Settings > Patient Billing.")
 			.format(", ".join(missing)))
-	si.remarks = _("Blood bank charges for {0} ({1} {2})").format(req.name, reference.doctype, reference.name)
+	if si.is_new():
+		si.remarks = _("Blood bank charges for {0} ({1} {2})").format(req.name, reference.doctype, reference.name)
 	si.set_missing_values()
 	si.calculate_taxes_and_totals()
 	si.flags.ignore_permissions = True
-	si.insert()
-	if cint(setting("submit_charge_invoices")):
-		si.submit()
-	for (charge_type, component, qty), item in zip(lines, si.items):
+	si.save()  # submitted later by submit_drafts(), after any credit in the same update
+	for (charge_type, component, qty), item in zip(lines, si.items[start:]):
 		add_charge_row(req, charge_type, component, qty, item.item_code, item.rate, item.amount, si.name, reference)
 	if not req.sales_invoice:
 		req.db_set("sales_invoice", si.name, update_modified=False)
@@ -347,7 +387,9 @@ def credit(req, lines, reference):
 				if si.items:
 					si.calculate_taxes_and_totals(); si.flags.ignore_permissions = True; si.save()
 				else:
-					frappe.delete_doc("Sales Invoice", invoice, ignore_permissions=True)
+					if req.sales_invoice == invoice:
+						req.db_set("sales_invoice", None, update_modified=False)
+					frappe.delete_doc("Sales Invoice", invoice, ignore_permissions=True, force=True)
 				rate = next((c.rate for c in rows if c.sales_invoice == invoice), 0)
 				add_charge_row(req, charge_type, component, -take, item, rate, -take * flt(rate), invoice, reference)
 				done.append(f"{charge_type} x {take:g} ({invoice})")
